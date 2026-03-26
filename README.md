@@ -1,6 +1,8 @@
 # Bibliagraphia
 
-The Holy Bible mapped as a graph database built with TypeDB enabling semantic searches across Bible verses and versions with geographical locations and region mapping.
+__Biblia__ & __Graphia__, A study of different versions of the Holy Bible using a [TypeDB](https://github.com/typedb/typedb) graphing database to map differnt versions and verses of the Bible together with locations and regions.
+
+
 
 ## Overview
 
@@ -147,10 +149,15 @@ bible-graph/
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request.
+**Bibliagraphia** is more than a database! It is an invitation to explore Scripture in a new transparent and collaborative way. Whether you're a developer, a scholar, priest, pastor or just curious, your contributions are welcome!
+
+To contribute, please open an issue or submit a pull request.
 
 ## Support
 
 For questions or issues, please do not hesitate to get in touch with me or open a GitHub issue.
+
+
+__Ave Christus Rex__
 
 ✝️
