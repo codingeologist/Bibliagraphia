@@ -52,7 +52,7 @@ The database is built from JSON files in the `/data` directory:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/bible-graph.git
+git clone https://github.com/codingeologist/Bibliagraphia.git
 cd bible-graph
 
 # Install dependencies

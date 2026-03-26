@@ -91,17 +91,17 @@ entity region,
 # Relations
 
 relation verse_in_book,
-    relates verse_role: verse,
-    relates book_role: book;
+    relates verse,
+    relates book;
 
 relation verse_in_version,
-    relates verse_role: verse,
-    relates version_role: version;
+    relates verse,
+    relates version;
 
 relation location_in_verse,
-    relates location_role: location,
-    relates verse_role: verse;
+    relates location,
+    relates verse;
 
 relation location_in_region,
-    relates location_role: location,
-    relates region_role: region;
+    relates location,
+    relates region;
