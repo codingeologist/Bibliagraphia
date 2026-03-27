@@ -18,7 +18,7 @@ The database is built from JSON files in the `/data` directory:
 
 - `books.json` - Bible books with translation names
 - `versions.json` - Bible version information
-- `verses.json` - Complete verse text (33M+ records)
+- `verses.json` - Complete verse text
 - `location_regions.json` - Geographical locations with coordinates
 - `regions.json` - Regional descriptions and keywords
 
