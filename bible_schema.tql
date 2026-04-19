@@ -46,7 +46,6 @@ entity version,
     owns version_code,
     owns version_name,
     owns version_full_name,
-    plays verse_in_version:verse;
 
 entity book,
     owns book_code,
@@ -55,7 +54,7 @@ entity book,
     owns rheims_name,
     owns kjv_name,
     owns note,
-    plays verse_in_book:verse;
+    plays verse_in_book:book;
 
 entity verse,
     owns version_code,
@@ -68,7 +67,6 @@ entity verse,
     owns verse_number,
     owns text,
     plays verse_in_book:book,
-    plays verse_in_version:version,
     plays location_in_verse:location;
 
 entity location,
@@ -93,10 +91,6 @@ entity region,
 relation verse_in_book,
     relates verse,
     relates book;
-
-relation verse_in_version,
-    relates verse,
-    relates version;
 
 relation location_in_verse,
     relates location,

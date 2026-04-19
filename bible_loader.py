@@ -4,21 +4,30 @@ Loads JSON data into TypeDB database
 """
 
 # Imports
+import os
+import sys
 import json
 import logging
+from datetime import datetime
 from typedb.driver import *
 
 
 # Configuration
+os.makedirs("logs", exist_ok=True)
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 DATABASE_NAME = "bible_graph"
 SCHEMA_FILE = "bible_schema.tql"
+LOG_FILE = f"logs/graph_load_{timestamp}.log"
+
 logging.basicConfig(
-    filename="typedb-data-loader.log",
-    filemode="a",
-    format="%(asctime)s %(name)s %(levelname)s %(message)s",
-    level=logging.DEBUG
+    level=logging.INFO,
+    format="[%(levelname)s/%(processName)s] %(asctime)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.FileHandler(LOG_FILE, mode="a", encoding="utf-8"),
+        logging.StreamHandler(sys.stdout)
+    ]
 )
-logger = logging.getLogger("typedb-data-loader")
 
 
 class BibleDataLoader:
@@ -43,7 +52,7 @@ class BibleDataLoader:
             with driver.transaction(database.name, TransactionType.SCHEMA, options) as tx:
                 answer = tx.query(schema).resolve()
                 if answer.is_ok():
-                    logger.info("Schema defined successfully")
+                    logging.info("Schema defined successfully")
                 tx.commit()
 
             # Write Versions
@@ -59,7 +68,7 @@ class BibleDataLoader:
                 with driver.transaction(database.name, TransactionType.WRITE, options) as tx:
                     tx.query(versions_query)
                     tx.commit()
-            logger.info("Loaded %s versions", len(versions))
+            logging.info("Loaded %s versions", len(versions))
 
 
             # Write Books
@@ -78,7 +87,7 @@ class BibleDataLoader:
                 with driver.transaction(database.name, TransactionType.WRITE, options) as tx:
                     tx.query(books_query)
                     tx.commit()
-            logger.info("Loaded %s books", len(books))
+            logging.info("Loaded %s books", len(books))
 
 
             # Write Verses
@@ -100,8 +109,8 @@ class BibleDataLoader:
                     tx.commit()
                 verse_count += 1
                 if verse_count % 1000 == 0:
-                    logger.info("Loaded %s/%s verses", verse_count, len(verses))
-            logger.info("Loaded %s verses", len(verses))
+                    logging.info("Loaded %s/%s verses", verse_count, len(verses))
+            logging.info("Loaded %s verses", len(verses))
 
 
             # Write Locations
@@ -125,7 +134,7 @@ class BibleDataLoader:
                     tx.commit()
                 location_count += 1
                 if location_count % 1000 == 0:
-                    logger.info("Loaded %s/%s locations", location_count, len(locations))
+                    logging.info("Loaded %s/%s locations", location_count, len(locations))
             logging.info("Loaded %s locations", len(locations))
 
 
@@ -145,7 +154,7 @@ class BibleDataLoader:
                     tx.commit()
             region_count += 1
             if region_count % 100 == 0:
-                logger.info("Loaded %s/%s regions", region_count, len(regions))
+                logging.info("Loaded %s/%s regions", region_count, len(regions))
             logging.info("Loaded %s regions", len(regions))
 
 
@@ -160,21 +169,7 @@ class BibleDataLoader:
             with driver.transaction(database.name, TransactionType.WRITE, options) as tx:
                 tx.query(v_b_query)
                 tx.commit()
-            logger.info("verse in book relation added!")
-
-
-            # Create verse_in_version relationships
-            v_ver_query = """
-            match
-                $v isa verse, has version_code $version_code, has verse_number $verse_number;
-                $ver isa version, has version_code $version_code;
-            insert
-                $rel($v, $ver) isa verse_in_version;
-            """
-            with driver.transaction(database.name, TransactionType.WRITE, options) as tx:
-                tx.query(v_ver_query)
-                tx.commit()
-            logger.info("verse in version relation added!")
+            logging.info("verse in book relation added!")
 
 
             # Create location_in_verse relationships
@@ -188,7 +183,7 @@ class BibleDataLoader:
             with driver.transaction(database.name, TransactionType.WRITE, options) as tx:
                 tx.query(loc_v_query)
                 tx.commit()
-            logger.info("location in verse relationadded!")
+            logging.info("location in verse relationadded!")
 
 
             # Create location_in_region relationships
@@ -202,9 +197,9 @@ class BibleDataLoader:
             with driver.transaction(database.name, TransactionType.WRITE, options) as tx:
                 tx.query(loc_r_query)
                 tx.commit()
-            logger.info("location in region relation added!")
+            logging.info("location in region relation added!")
 
 
 if __name__ == "__main__":
     BibleDataLoader().load_data()
-    logger.info("Data loading complete!")
+    logging.info("Data loading complete!")
