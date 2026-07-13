@@ -1,102 +1,75 @@
 define
 
 # attributes
-attribute version_code,
- value string;
-attribute version_name,
- value string;
-attribute version_full_name,
- value string;
-attribute testament,
- value string;
-attribute book_code,
- value string;
-attribute vulgate_name,
- value string;
-attribute rheims_name,
- value string;
-attribute kjv_name,
- value string;
-attribute note,
- value string;
-attribute chapter,
- value integer;
-attribute verse_number,
- value integer;
-attribute text,
- value string;
-attribute primary_name,
- value string;
-attribute secondary_name,
- value string;
-attribute region_name,
- value string;
-attribute latitude,
- value double;
-attribute longitude,
- value double;
-attribute keywords,
- value string;
-attribute description,
- value string;
+attribute version_code, value string;
+attribute version_name, value string;
+attribute version_full_name, value string;
+attribute testament, value string;
+attribute book_code, value string;
+attribute vulgate_name, value string;
+attribute rheims_name, value string;
+attribute kjv_name, value string;
+attribute note, value string;
+attribute chapter, value integer;
+attribute verse_number, value integer;
+attribute text, value string;
+attribute primary_name, value string;
+attribute secondary_name, value string;
+attribute region_name, value string;
+attribute latitude, value double;
+attribute longitude, value double;
+attribute keywords, value string;
+attribute description, value string;
 
 # Entities
 
 entity version,
-    owns version_code,
+    owns version_code @key,
     owns version_name,
     owns version_full_name,
-    plays verse_in_version:verse;
+    plays verse_in_version:version;
 
 entity book,
-    owns book_code,
+    owns book_code @key,
     owns testament,
     owns vulgate_name,
     owns rheims_name,
     owns kjv_name,
     owns note,
-    plays verse_in_book:verse;
+    plays verse_in_book:book;
 
 entity verse,
-    owns version_code,
-    owns version_name,
-    owns book_code,
-    owns vulgate_name,
-    owns rheims_name,
-    owns kjv_name,
-    owns chapter,
     owns verse_number,
+    owns chapter,
     owns text,
-    plays verse_in_book:book,
-    plays verse_in_version:version,
-    plays location_in_verse:location;
+    plays verse_in_book:verse,
+    plays verse_in_version:verse,
+    plays location_in_verse:verse;
 
 entity location,
     owns primary_name,
     owns secondary_name,
     owns region_name,
-    owns book_code,
-    owns chapter,
-    owns verse_number,
     owns latitude,
     owns longitude,
-    plays location_in_verse:verse;
+    plays location_in_verse:location,
+    plays location_in_region:location;
 
 entity region,
-    owns region_name,
+    owns region_name @key,
     owns keywords,
     owns description,
     plays location_in_region:region;
 
 # Relations
 
-relation verse_in_book,
-    relates verse,
-    relates book;
-
 relation verse_in_version,
-    relates verse,
-    relates version;
+    relates version,
+    relates verse;
+
+relation verse_in_book,
+    relates book,
+    relates verse;
 
 relation location_in_verse,
     relates location,
