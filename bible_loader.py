@@ -6,7 +6,7 @@ Loads JSON data into TypeDB database
 # Imports
 import json
 import logging
-from typedb.driver import *
+from typedb.driver import TypeDB, Credentials, DriverOptions, TransactionType, TransactionOptions
 
 
 # Configuration
