@@ -1,0 +1,31 @@
+# Bibliagraphia: the FastAPI API + single-page UI in one container.
+#
+# The same process serves the JSON endpoints (/search /traverse /path
+# /verse /health) and the frontend at / (app/static/), so there is one
+# service, `api`, on port 8000.
+#
+#   docker compose up -d --build
+#   open http://localhost:8000
+#
+# The host ./data directory (the canonical JSON sources) is mounted into
+# the container at /app/data. The DuckDB graph (data/bible.db) is built at
+# image time AND auto-rebuilt on first run if the volume's DB is missing,
+# so the container is self-contained.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bibliagraphia-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the canonical JSON sources + the generated DB location.
+      # The DB is built into here on first run if absent.
+      - ./data:/app/data
+    environment:
+      # Where the API reads/writes the DuckDB graph. Inside the mount.
+      - BIBLE_DB_PATH=/app/data/bible.db
+      - BIBLE_DATA_DIR=/app/data
+    restart: unless-stopped

@@ -1,4 +1,9 @@
 venv
-*.csv
-*.json
+__pycache__/
+*.pyc
 *.log
+*.egg-info/
+build/
+dist/
+data/
+data/bible.db

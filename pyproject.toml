@@ -1,0 +1,88 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bibliagraphia"
+version = "0.2.0"
+description = "A Bible graph (versions, verses, locations, regions) in a single-file DuckDB database, served by FastAPI."
+readme = "README.md"
+license = { text = "GPL-3.0-only" }
+requires-python = ">=3.9"
+authors = [{ name = "codingeologist" }]
+keywords = ["bible", "graph", "duckdb", "fastapi", "scripture"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: FastAPI",
+    "Intended Audience :: Religion",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Religion",
+    "Topic :: Database",
+]
+
+# Runtime dependencies — the API + the build script.
+dependencies = [
+    "duckdb>=1.1",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+]
+
+[project.optional-dependencies]
+# `uv pip install -e ".[dev]"` — tests + lint.
+dev = [
+    "pytest>=7.4",
+    "ruff>=0.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/codingeologist/Bibliagraphia"
+Source = "https://github.com/codingeologist/Bibliagraphia"
+
+[project.scripts]
+# Build the DuckDB graph from the JSON sources: `bibliagraphia-build`
+# (equivalent to `python scripts/build_db.py`).
+bibliagraphia-build = "bibliagraphia.cli:build"
+
+# Make the FastAPI app and the build script importable by package name
+# (e.g. `uvicorn app.api:app`) without a formal package, by exposing the
+# repo root on the path with a flat layout; no src/ migration.
+[tool.setuptools]
+py-modules = []
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*", "bibliagraphia*"]
+exclude = ["data*", "tests*", "scripts*", "sql*", "docs*"]
+
+# ---------------------------------------------------------------------------
+# Tool configuration
+# ---------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The test fixture builds data/bible.db into a tmp dir; keep tests from
+# touching the repo's generated DB by default.
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = ["data", "venv", ".venv", "docs", "stopwords.py", "bible_loader.py", "bible_schema.tql"]
+
+[tool.ruff.lint]
+# A sensible default set: pyflakes + pycodestyle + import sorting + the
+# modern pyupgrade checks. Don't enforce the whole pycodestyle suite.
+select = ["E", "F", "I", "UP", "B"]
+# The build script and api.py intentionally catch broad exceptions to
+# return error JSON; keep that ergonomic.
+ignore = ["E501", "E741"]  # line length -> formatter; E741 (`l` var) is common in graph code
+
+[tool.ruff.lint.per-file-ignores]
+"app/api.py" = ["B008"]  # FastAPI's Query() defaults in function signatures
+"tests/*" = ["B011"]     # assert False is fine in tests

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bibliagraphia — DuckDB Graph</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Bibliagraphia</h1>
+    <p class="tag">A Bible graph in a single DuckDB file —
+      <a href="https://github.com/codingeologist/Bibliagraphia">source</a></p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Search</h2>
+      <div class="row">
+        <input id="search-q" type="text" placeholder="e.g. Jerusalem, Genesis, Syria" />
+        <select id="search-label">
+          <option value="">any type</option>
+          <option value="book">book</option>
+          <option value="verse">verse</option>
+          <option value="location">location</option>
+          <option value="region">region</option>
+          <option value="version">version</option>
+        </select>
+        <button id="search-btn">Search</button>
+      </div>
+      <ul id="search-results" class="results"></ul>
+    </section>
+
+    <section class="panel">
+      <h2>Traverse (descendants along an edge)</h2>
+      <div class="row">
+        <input id="trav-node" type="text" placeholder="start node name (e.g. Genesis)" />
+        <select id="trav-label">
+          <option value="book">book</option>
+          <option value="region">region</option>
+          <option value="version">version</option>
+        </select>
+        <select id="trav-edge">
+          <option value="verse_in_book">verse_in_book</option>
+          <option value="location_in_region">location_in_region</option>
+          <option value="verse_in_version">verse_in_version</option>
+        </select>
+        <button id="trav-btn">Traverse</button>
+      </div>
+      <p class="hint" id="trav-summary"></p>
+      <ul id="trav-results" class="results"></ul>
+    </section>
+
+    <section class="panel">
+      <h2>Shortest path (verse → region)</h2>
+      <div class="row">
+        <input id="path-src" type="text" placeholder="source (e.g. John)" />
+        <select id="path-src-label">
+          <option value="verse">verse</option>
+          <option value="location">location</option>
+          <option value="book">book</option>
+        </select>
+        <span>→</span>
+        <input id="path-tgt" type="text" placeholder="target (e.g. Syria)" />
+        <select id="path-tgt-label">
+          <option value="region">region</option>
+          <option value="location">location</option>
+          <option value="book">book</option>
+        </select>
+        <button id="path-btn">Find path</button>
+      </div>
+      <ol id="path-results" class="path"></ol>
+    </section>
+
+    <section class="panel">
+      <h2>Cross-version verse</h2>
+      <div class="row">
+        <input id="vs-book" type="text" placeholder="book code (e.g. JOH)" />
+        <input id="vs-ch" type="number" placeholder="chapter" min="1" />
+        <input id="vs-vr" type="number" placeholder="verse" min="1" />
+        <button id="vs-btn">Compare</button>
+      </div>
+      <div id="verse-results" class="versions"></div>
+    </section>
+  </main>
+
+  <footer><span id="health"></span></footer>
+  <script src="/app.js"></script>
+</body>
+</html>
