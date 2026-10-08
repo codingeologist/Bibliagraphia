@@ -468,6 +468,81 @@ def graph(
         conn.close()
 
 
+@app.get("/map")
+def map_points(
+    region: str | None = None,  # region name, e.g. Syria
+    book: str | None = None,   # book code, e.g. JOH
+    limit: int = 1000,  # 10–3000, max points returned
+):
+    """Location points for the map view.
+
+    Every location mention-instance carries latitude/longitude in attrs.
+    The scope is required — 7,460 points at once is too much for the
+    browser — and is either a region (all mentions located in that region)
+    or a book (all places that book mentions). Popups show the KJV text,
+    so each point carries a short verse reference too.
+    """
+    conn = duckdb.connect(DB_PATH, read_only=True)
+    try:
+        where, params, scope = [], [], {}
+        if region:
+            region_id = _resolve(conn, "region", region)
+            if region_id is None:
+                return {"error": f"No region named '{region}'. Try Search first."}
+            region_name = conn.execute(
+                "SELECT name FROM nodes WHERE id = ?", [region_id]
+            ).fetchone()[0]
+            where.append("json_extract_string(attrs, 'region') = ?")
+            params.append(region_name)
+            scope["region"] = region_name
+        if book:
+            code = book.upper()
+            exists = conn.execute(
+                "SELECT count(*) FROM nodes WHERE label='book' AND UPPER(book_code) = ?",
+                [code],
+            ).fetchone()[0]
+            if not exists:
+                return {"error": f"No book with code '{book}'. Try Search, or a "
+                                "code like JOH or GEN."}
+            where.append("UPPER(book_code) = ?")
+            params.append(code)
+            scope["book"] = code
+        if not where:
+            return {"error": "Provide a region or a book to scope the map — "
+                            "the whole database is too large to draw."}
+
+        rows = conn.execute(
+            """
+            SELECT name,
+                   json_extract_string(attrs, 'secondary_name'),
+                   json_extract_string(attrs, 'region'),
+                   book_code, chapter, verse_number,
+                   json_extract(attrs, 'latitude')::DOUBLE,
+                   json_extract(attrs, 'longitude')::DOUBLE,
+                   json_extract_string(attrs, 'kjv_text')
+            FROM nodes
+            WHERE label = 'location'
+              AND json_extract_string(attrs, 'latitude') IS NOT NULL
+              AND """ + " AND ".join(where) + "\n            LIMIT ?;",
+            params + [limit],
+        ).fetchall()
+        return {
+            **scope,
+            "count": len(rows),
+            "truncated": len(rows) >= limit,
+            "points": [
+                {"name": r[0], "secondary_name": r[1], "region": r[2],
+                 "book_code": r[3], "chapter": r[4], "verse_number": r[5],
+                 "lat": r[6], "lng": r[7], "text": r[8]}
+                for r in rows
+            ],
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"error": str(exc)}
+    finally:
+        conn.close()
+
+
 @app.get("/verse")
 def verse(
     book_code: str = Query(...),

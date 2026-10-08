@@ -120,6 +120,18 @@ button:hover { background: #5e3717; }
 .path .edge { color: var(--muted); font-size: .75rem; }
 .error { color: #a33; }
 #health { color: var(--muted); font-size: .8rem; }
+#map {
+  height: 440px; margin-top: .6rem; border: 1px solid var(--line);
+  border-radius: 6px; background: var(--panel);
+}
+.leaflet-container { font: inherit; }
+.map-popup .p-name { font-weight: 600; }
+.map-popup .p-ref { color: var(--accent); font-size: .8rem; margin: .15rem 0; }
+.map-popup .p-text { font-size: .82rem; color: var(--ink); max-width: 260px; }
+
+#map:fullscreen { border: none; border-radius: 0; }
+#map:-webkit-full-screen { border: none; }
+
 footer { text-align: center; padding: 1rem; }
 /* Theme toggle in the header */
 #theme-toggle {

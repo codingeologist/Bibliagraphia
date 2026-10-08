@@ -87,6 +87,10 @@ async function doSearch() {
         $("path-src-label").value = node.label;
         $("graph-node").value = code || node.name;
         $("graph-label").value = node.label;
+        if (node.label === "region" || node.label === "book") {
+          $("map-scope").value = node.label;
+          $("map-q").value = code || node.name;
+        }
       } else if (node.label === "verse") {
         $("vs-book").value = node.book_code;
         $("vs-ch").value = node.chapter;
@@ -465,6 +469,140 @@ function renderLegend() {
   window.addEventListener("resize", () => { fitView(); drawGraph(); });
 })();
 
+// ---- map -----------------------------------------------------------------
+// Leaflet with a CARTO basemap and the DARE "imperium" overlay (the same
+// stack as the klokantech Roman Empire demo). Theme-aware: dark basemap
+// when the app is in dark mode.
+
+const m = { map: null, base: null, overlay: null, layer: null };
+
+const BASE_TILES = {
+  light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+  dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+  satellite: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+};
+const CARTO_ATTR = "© OpenStreetMap contributors © CARTO";
+const ESRI_ATTR = "Esri, Maxar, Earthstar Geographics — Esri World Imagery";
+const DARE_URL = "https://dare.ht.lu.se/tiles/imperium/{z}/{x}/{y}.png";
+
+// A fullscreen toggle that looks native: it lives inside a leaflet-bar,
+// so it renders exactly like the built-in zoom buttons.
+const FullscreenControl = L.Control.extend({
+  options: { position: "topleft" },
+  onAdd() {
+    const container = L.DomUtil.create("div", "leaflet-bar leaflet-control");
+    const a = L.DomUtil.create("a", "leaflet-control-fullscreen", container);
+    a.href = "#";
+    a.title = "Toggle fullscreen";
+    a.style.textDecoration = "none";
+    this._a = a;
+    L.DomEvent.on(container, "click", (e) => {
+      L.DomEvent.stopPropagation(e);
+      L.DomEvent.preventDefault(e);
+      const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+      if (fsEl) {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      } else {
+        const el = $("map");
+        (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+      }
+    });
+    this._sync = () => {
+      a.textContent = (document.fullscreenElement || document.webkitFullscreenElement)
+        ? "\u2715" : "\u26F6";
+    };
+    this._sync();
+    return container;
+  },
+  onRemove() {
+    L.DomEvent.off(this._a, "click");
+  },
+});
+
+function initMap() {
+  m.map = L.map("map", { maxZoom: 12 });
+  m.fsControl = new FullscreenControl().addTo(m.map);
+  // Keyless satellite imagery (Esri World Imagery); CARTO kept as a
+  // fallback in BASE_TILES in case we ever want a street-map variant.
+  m.base = L.tileLayer(BASE_TILES.satellite, { attribution: ESRI_ATTR, maxZoom: 19 }).addTo(m.map);
+  m.overlay = L.tileLayer(DARE_URL, {
+    attribution: "DARE: Digital Atlas of the Roman Empire",
+    maxZoom: 11, opacity: 0.85,
+  }).addTo(m.map);
+  m.layer = L.layerGroup().addTo(m.map);
+  m.map.setView([33, 40], 5); // Levant, where most biblical places are
+}
+
+function refreshMapTheme() {
+  // Satellite imagery works for both themes, so nothing to swap — kept
+  // as a hook in case a theme-dependent basemap returns.
+}
+
+function popupHtml(p) {
+  const name = p.secondary_name ? `${p.name} (${p.secondary_name})` : p.name;
+  return `<div class="map-popup">` +
+    `<div class="p-name">${name}</div>` +
+    `<div class="p-ref">${p.region} · ${p.book_code} ${p.chapter}:${p.verse_number}</div>` +
+    (p.text ? `<div class="p-text">${p.text}</div>` : "") +
+    `</div>`;
+}
+
+async function doMap() {
+  if (typeof L === "undefined") {
+    alert("Leaflet failed to load (offline or CDN blocked). " +
+          "The map needs internet access.");
+    return;
+  }
+  const scope = $("map-scope").value;
+  const q = $("map-q").value.trim();
+  if (!q) return;
+  if (!m.map) initMap();
+  m.map.scrollWheelZoom.disable(); // don't hijack page scroll on hover
+  $("map-summary").textContent = "querying…";
+  const param = scope === "region" ? `region=${encodeURIComponent(q)}` : `book=${encodeURIComponent(q)}`;
+  const r = await fetch(`/map?${param}`);
+  const j = await r.json();
+  if (j.error) { $("map-summary").textContent = ""; return alert(j.error); }
+  m.layer.clearLayers();
+  const color = cssVar("--node-location");
+  const bounds = [];
+  for (const p of j.points) {
+    L.circleMarker([p.lat, p.lng], {
+      radius: 5, weight: 1, color: "#fff", fillColor: color, fillOpacity: .9,
+    })
+      .bindPopup(() => popupHtml(p), { maxWidth: 300 })
+      .addTo(m.layer);
+    bounds.push([p.lat, p.lng]);
+  }
+  $("map-summary").textContent =
+    `${j.count} location mentions in ${scope === "region" ? j.region : j.book}` +
+    (j.truncated ? ` — capped at 1000, try a narrower scope` : "");
+  if (bounds.length) m.map.fitBounds(bounds, { padding: [30, 30], maxZoom: 9 });
+}
+
+// fullscreen change: let Leaflet re-measure its container, and update
+// the control's icon (⛶ <-> ✕) wherever it came from.
+document.addEventListener("fullscreenchange", onMapFsChange);
+document.addEventListener("webkitfullscreenchange", onMapFsChange);
+function onMapFsChange() {
+  if (m.fsControl && m.fsControl._sync) m.fsControl._sync();
+  if (!m.map) return;
+  // wait a frame for the new CSS size, then let Leaflet re-measure.
+  setTimeout(() => m.map.invalidateSize(), 100);
+}
+
+// keep basemap in sync with the theme toggle
+(function mapThemeHook() {
+  const btn = $("theme-toggle");
+  const orig = btn.onclick;
+  btn.onclick = () => { if (orig) orig(); refreshMapTheme(); };
+  // enable wheel-zoom after an explicit click on the map, like Google Maps
+  document.addEventListener("click", (e) => {
+    if (m.map && document.getElementById("map").contains(e.target))
+      m.map.scrollWheelZoom.enable();
+  });
+})();
+
 // ---- help toggle ---------------------------------------------------------
 $("help-toggle").onclick = () => {
   const body = $("help-body");
@@ -481,6 +619,8 @@ $("search-q").addEventListener("keydown", (e) => { if (e.key === "Enter") doSear
 $("trav-btn").onclick = doTraverse;
 $("path-btn").onclick = doPath;
 $("graph-btn").onclick = () => doGraph();
+$("map-btn").onclick = () => doMap();
+$("map-q").addEventListener("keydown", (e) => { if (e.key === "Enter") doMap(); });
 $("graph-node").addEventListener("keydown", (e) => { if (e.key === "Enter") doGraph(); });
 $("vs-btn").onclick = doVerse;
 health();
