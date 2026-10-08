@@ -8,16 +8,55 @@
 </head>
 <body>
   <header>
-    <h1>Bibliagraphia</h1>
-    <p class="tag">A Bible graph in a single DuckDB file —
-      <a href="https://github.com/codingeologist/Bibliagraphia">source</a></p>
+    <div class="bar">
+      <div>
+        <h1>Bibliagraphia</h1>
+        <p class="tag">A Bible graph in a single DuckDB file —
+          <a href="https://github.com/codingeologist/Bibliagraphia">source</a></p>
+      </div>
+      <button id="theme-toggle" title="Toggle dark mode">🌙</button>
+    </div>
   </header>
 
   <main>
+    <section class="panel help">
+      <h2>
+        <button id="help-toggle" aria-expanded="false">How to query the database ▸</button>
+      </h2>
+      <div id="help-body" hidden>
+        <p>
+          The Bible is stored as a <strong>property graph</strong> in one DuckDB file.
+          Everything is a <em>node</em> of one of five <strong>types</strong> (labels),
+          connected by three kinds of <strong>edges</strong>:
+        </p>
+        <ul class="help-list">
+          <li><span class="badge">book</span> identified by a 3-letter <strong>book code</strong> (<em>GEN</em>, <em>JOH</em>, <em>REV</em>) or its full name</li>
+          <li><span class="badge">verse</span> one verse of one Bible <em>version</em>, e.g. <em>Genesis 1:1 (KJV)</em></li>
+          <li><span class="badge">version</span> a Bible translation, identified by a 3-letter <strong>version code</strong>: <em>KJV</em>, <em>VUL</em>, <em>DRB</em></li>
+          <li><span class="badge">region</span> a broad geographic area, e.g. <em>Syria</em></li>
+          <li><span class="badge">location</span> a place mentioned in a verse, e.g. <em>Jerusalem</em></li>
+        </ul>
+        <ul class="help-list">
+          <li><code>verse_in_book</code> — book → its verses</li>
+          <li><code>verse_in_version</code> — version → the verses it contains</li>
+          <li><code>location_in_region</code> — location → the region it lies in</li>
+        </ul>
+        <p><strong>Typical queries:</strong></p>
+        <ul class="help-list">
+          <li><strong>Search</strong> to find a node by name — then <em>click a result</em> to load it into one of the tools below automatically.</li>
+          <li><strong>Traverse</strong> walks down one edge type from a start node, e.g. start at <em>Genesis</em> (book) via <code>verse_in_book</code> to list its verses. Books pair with <code>verse_in_book</code>, regions with <code>location_in_region</code>, versions with <code>verse_in_version</code>.</li>
+          <li><strong>Shortest path</strong> finds how two nodes connect through the graph (up to 10 hops), e.g. <em>John</em> → <em>Syria</em>.</li>
+          <li><strong>Cross-version verse</strong> shows the same verse side by side in every loaded version. Book codes are three-letter OSIS abbreviations, e.g. <em>GEN</em>, <em>JOH</em>, <em>MAT</em>.</li>
+          <li><strong>Graph explorer</strong> draws the neighborhood around a node (1–3 hops) as an interactive force-directed graph — the full database is too large to draw at once. Click any node in the drawing to re-center there.</li>
+        </ul>
+      </div>
+    </section>
+
     <section class="panel">
       <h2>Search</h2>
+      <p class="hint">Look up any node by name or code — book codes (<em>GEN</em>, <em>JOH</em>), version codes (<em>KJV</em>, <em>DRB</em>), places (<em>Jerusalem</em>), regions (<em>Syria</em>). Codes are unique 3-letter identifiers. Click a result to load it into the tools below.</p>
       <div class="row">
-        <input id="search-q" type="text" placeholder="e.g. Jerusalem, Genesis, Syria" />
+        <input id="search-q" type="text" placeholder="e.g. JOH, KJV, Jerusalem, Syria" />
         <select id="search-label">
           <option value="">any type</option>
           <option value="book">book</option>
@@ -33,8 +72,9 @@
 
     <section class="panel">
       <h2>Traverse (descendants along an edge)</h2>
+      <p class="hint">Follow one edge type downward from a start node: books → verses (<code>verse_in_book</code>), versions → verses (<code>verse_in_version</code>), regions → locations (<code>location_in_region</code>). Start by book code (<em>JOH</em>) or version code (<em>KJV</em>) — names also work. Example: start <em>GEN</em>, label <code>book</code>, edge <code>verse_in_book</code>.</p>
       <div class="row">
-        <input id="trav-node" type="text" placeholder="start node name (e.g. Genesis)" />
+        <input id="trav-node" type="text" placeholder="start node: code or name (e.g. GEN, KJV, Syria)" />
         <select id="trav-label">
           <option value="book">book</option>
           <option value="region">region</option>
@@ -53,19 +93,22 @@
 
     <section class="panel">
       <h2>Shortest path (verse → region)</h2>
+      <p class="hint">Find the chain of edges linking two nodes through the graph (e.g. verse → book → verse → location → region). Enter a book/version code (<em>JOH</em>, <em>KJV</em>) or a full name — regions and locations have no codes, so use names for them (<em>Syria</em>, <em>Jerusalem</em>). Easiest workflow: run Search first, then click a result to fill in this tool automatically.</p>
       <div class="row">
-        <input id="path-src" type="text" placeholder="source (e.g. John)" />
+        <input id="path-src" type="text" placeholder="source: code or name (e.g. JOH)" />
         <select id="path-src-label">
-          <option value="verse">verse</option>
-          <option value="location">location</option>
           <option value="book">book</option>
+          <option value="verse">verse</option>
+          <option value="version">version</option>
+          <option value="location">location</option>
         </select>
         <span>→</span>
-        <input id="path-tgt" type="text" placeholder="target (e.g. Syria)" />
+        <input id="path-tgt" type="text" placeholder="target: code or name (e.g. Syria)" />
         <select id="path-tgt-label">
           <option value="region">region</option>
           <option value="location">location</option>
           <option value="book">book</option>
+          <option value="version">version</option>
         </select>
         <button id="path-btn">Find path</button>
       </div>
@@ -73,7 +116,35 @@
     </section>
 
     <section class="panel">
+      <h2>Graph explorer (force-directed)</h2>
+      <p class="hint">Draw the neighborhood around a node as a force-directed graph. Pick a start node (code or name — e.g. <em>JOH</em>, <em>DRB</em>, <em>Syria</em>) and how many hops to include. Interactions: <strong>drag</strong> empty space to pan, <strong>scroll</strong> to zoom, <strong>hover</strong> a node to see its name, <strong>click</strong> a node to re-center the graph there.</p>
+      <div class="row">
+        <input id="graph-node" type="text" placeholder="start node: code or name (e.g. JOH)" />
+        <select id="graph-label">
+          <option value="book">book</option>
+          <option value="version">version</option>
+          <option value="region">region</option>
+          <option value="location">location</option>
+          <option value="verse">verse</option>
+        </select>
+        <select id="graph-hops">
+          <option value="1">1 hop</option>
+          <option value="2">2 hops</option>
+          <option value="3">3 hops</option>
+        </select>
+        <button id="graph-btn">Draw</button>
+      </div>
+      <p class="hint" id="graph-summary"></p>
+      <div class="graph-wrap" id="graph-wrap">
+        <button id="graph-fs" class="fs-btn" title="Toggle fullscreen">⛶</button>
+        <canvas id="graph-canvas"></canvas>
+        <div id="graph-legend"></div>
+      </div>
+    </section>
+
+    <section class="panel">
       <h2>Cross-version verse</h2>
+      <p class="hint">Compare one verse in every loaded Bible version. Use the three-letter book code (<em>JOH</em> = John, <em>GEN</em> = Genesis), plus chapter and verse numbers. Example: <em>JOH</em> 3 16.</p>
       <div class="row">
         <input id="vs-book" type="text" placeholder="book code (e.g. JOH)" />
         <input id="vs-ch" type="number" placeholder="chapter" min="1" />

@@ -121,15 +121,33 @@ def _row_to_node(row, columns) -> dict:
 
 
 def _resolve(conn, label: str, name: str) -> str | None:
-    """Resolve a node by name within a label; return its id or None."""
+    """Resolve a node by name within a label; return its id or None.
+
+    Codes are the canonical identifiers — short, unique, and stable
+    (books: GEN, JOH, REV; versions: KJV, VUL, DRB) — so they are tried
+    before names. Names go from exact to loose, so users can type any
+    of "JOH", "John", or "The Gospel According to John":
+      1. exact name match
+      2. book_code / version_code match (case-insensitive)
+      3. name prefix ("ACT" matches "Acts")
+      4. name contains ("John" matches "The Gospel According to John")
+    """
     row = conn.execute(
         """
         SELECT id FROM nodes
-        WHERE label = ? AND (name = ? OR name ILIKE ?)
-        ORDER BY name = ? DESC, name
+        WHERE label = ?
+          AND (name = ? OR name ILIKE ? OR name ILIKE ?
+               OR UPPER(book_code) = UPPER(?)
+               OR UPPER(version_code) = UPPER(?))
+        ORDER BY name = ? DESC,
+                 UPPER(book_code) = UPPER(?) DESC,
+                 UPPER(version_code) = UPPER(?) DESC,
+                 name ILIKE ? DESC,
+                 length(name), name
         LIMIT 1
         """,
-        [label, name, f"{name}%", name],
+        [label, name, f"{name}%", f"%{name}%", name, name,
+         name, name, name, f"{name}%"],
     ).fetchone()
     return row[0] if row else None
 
@@ -148,18 +166,28 @@ def search(
     label: str | None = Query(None, description="restrict to a node label"),
     limit: int = Query(20, le=100),
 ):
-    """Autocomplete: nodes whose name starts with `q`, optionally by label."""
+    """Autocomplete: nodes whose name or book/version code starts with `q`.
+
+    Codes are the canonical identifiers, so "JOH" finds John's Gospel even
+    though its name ("The Gospel According to John") doesn't start with JOH.
+    Books/versions/regions sort before locations and verses — the latter
+    are per-mention instances that also carry book_code, and would otherwise
+    flood the results for any code search.
+    """
     conn = duckdb.connect(DB_PATH, read_only=True)
     try:
+        like = f"{q}%"
         if label:
             rows = conn.execute(
                 """
                 SELECT id, label, name, book_code, chapter, verse_number, version_code
                 FROM nodes
-                WHERE label = ? AND name ILIKE ?
-                ORDER BY name LIMIT ?;
+                WHERE label = ?
+                  AND (name ILIKE ? OR UPPER(book_code) ILIKE UPPER(?)
+                       OR UPPER(version_code) ILIKE UPPER(?))
+                ORDER BY label IN ('location', 'verse'), label, name LIMIT ?;
                 """,
-                [label, f"{q}%", limit],
+                [label, like, like, like, limit],
             ).fetchall()
         else:
             rows = conn.execute(
@@ -167,9 +195,11 @@ def search(
                 SELECT id, label, name, book_code, chapter, verse_number, version_code
                 FROM nodes
                 WHERE name ILIKE ?
-                ORDER BY name LIMIT ?;
+                   OR UPPER(book_code) ILIKE UPPER(?)
+                   OR UPPER(version_code) ILIKE UPPER(?)
+                ORDER BY label IN ('location', 'verse'), label, name LIMIT ?;
                 """,
-                [f"{q}%", limit],
+                [like, like, like, limit],
             ).fetchall()
         return {"query": q, "results": [
             {"id": r[0], "label": r[1], "name": r[2],
@@ -284,9 +314,12 @@ def path(req: PathRequest):
         src_id = _resolve(conn, req.source_label, req.source)
         tgt_id = _resolve(conn, req.target_label, req.target)
         if src_id is None:
-            return {"error": f"No {req.source_label} named '{req.source}'"}
+            return {"error": f"No {req.source_label} named '{req.source}'. "
+                            "Try the Search tool to find the exact name, "
+                            "or a book code like JOH."}
         if tgt_id is None:
-            return {"error": f"No {req.target_label} named '{req.target}'"}
+            return {"error": f"No {req.target_label} named '{req.target}'. "
+                            "Try the Search tool to find the exact name."}
         if src_id == tgt_id:
             return {"found": True, "depth": 0, "source": req.source,
                     "target": req.target, "path": [src_id], "edges": []}
@@ -344,6 +377,90 @@ def path(req: PathRequest):
             "path": nodes,
             "edges": [{"source": path_ids[i], "target": path_ids[i + 1],
                        "label": path_labels[i]} for i in range(len(path_labels))],
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"error": str(exc)}
+    finally:
+        conn.close()
+
+
+@app.get("/graph")
+def graph(
+    node: str = Query(..., min_length=1, description="start node: code or name"),
+    label: str = Query(..., description="label of the start node"),
+    hops: int = 1,   # 1–3, neighborhood radius
+    limit: int = 200,  # 10–500, max nodes returned
+):
+    """Ego-graph for the force-directed visualisation.
+
+    The whole database (~150k nodes, 235k edges) is far too large to draw,
+    so the UI queries the neighborhood of one node instead: BFS out from
+    the start node up to `hops` levels, return every node reached (capped
+    at `limit`) plus the edges among them. Level-by-level BFS means the cap
+    cuts the *outermost* ring first — the start node and its immediate
+    neighborhood always survive.
+    """
+    from collections import deque
+
+    conn = duckdb.connect(DB_PATH, read_only=True)
+    try:
+        start_id = _resolve(conn, label, node)
+        if start_id is None:
+            return {"error": f"No {label} named '{node}'. Try Search, or a "
+                            "book/version code like JOH or KJV."}
+
+        rows = conn.execute("SELECT from_id, to_id, label FROM edges").fetchall()
+        adj: dict[str, list[tuple[str, str]]] = {}
+        for f, t, lbl in rows:
+            adj.setdefault(f, []).append((t, lbl))
+            adj.setdefault(t, []).append((f, lbl))
+
+        # Level-by-level BFS with a node cap.
+        included: dict[str, int] = {start_id: 0}  # id -> hop distance
+        truncated = False
+        frontier = [start_id]
+        for level in range(1, hops + 1):
+            if truncated:
+                break
+            next_frontier = []
+            for cur in frontier:
+                for nbr, lbl in adj.get(cur, []):
+                    if nbr in included:
+                        continue
+                    if len(included) >= limit:
+                        truncated = True
+                        break
+                    included[nbr] = level
+                    next_frontier.append(nbr)
+                if truncated:
+                    break
+            frontier = next_frontier
+            if not frontier:
+                break
+
+        # Edges among the included nodes only.
+        links = [
+            {"source": f, "target": t, "label": lbl}
+            for f, t, lbl in rows
+            if f in included and t in included
+        ]
+
+        node_rows = conn.execute(
+            "SELECT id,label,name,version_code,book_code,chapter,verse_number,attrs "
+            "FROM nodes WHERE id IN (SELECT unnest(?))",
+            [list(included)],
+        ).fetchall()
+        cols = [d[0] for d in conn.description]
+        nodes = [_row_to_node(r, cols) for r in node_rows]
+        for n in nodes:
+            n["dist"] = included[n["id"]]
+        nodes.sort(key=lambda n: (n["dist"], n["label"], n["name"] or ""))
+        return {
+            "start": node, "start_id": start_id, "hops": hops,
+            "truncated": truncated,
+            "count": len(nodes),
+            "nodes": nodes,
+            "links": links,
         }
     except Exception as exc:  # noqa: BLE001
         return {"error": str(exc)}
