@@ -12,6 +12,19 @@ with a single-page frontend.
 The original TypeDB loader (`bible_loader.py`) and schema
 (`bible_schema.tql`) are kept in the repo for reference.
 
+## What and Why?
+
+The Bible exists in many translations, and most tools treat it as a flat book: search by keyword, look up by reference.
+Bibliagraphia instead stores open-licensed translations (KJV, Latin Vulgate, Douay–Rheims and hopefully more...) in a single queryable graph: 
+- verses connect to their books and versions
+- every place mentioned connects to a geocoded location and its region.
+The result is a non-linear way to explore the scriptures: walk the graph around a verse, compare one verse side by side across translations,
+trace the shortest path from a book to a region, or plot every place a book mentions on a Roman Empire–era map.
+
+![Example Graph](docs/example_graph.png)
+
+![Example Map](docs/example_map.png)
+
 ## Overview
 
 The graph database maps Bible verses with:
