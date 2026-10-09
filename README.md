@@ -1,12 +1,15 @@
-<p align="center">
+<div align="center" style="background-color:#FFD54A; padding:24px 16px;">
+
   <a href="https://faithtech.com">
-    <img src="https://ftbuild.org.uk/assets/faithtech-icon.svg" alt="FaithTech" height="60">
+    <img src="https://ftbuild.org.uk/assets/faithtech-icon.svg" alt="FaithTech" height="40">
   </a>
   &nbsp;&nbsp;&nbsp;
   <a href="https://ftbuild.org.uk/projects.html#bibliagraphia">
     <img src="https://ftbuild.org.uk/assets/BUILD.svg" alt="FaithTech BUILD 26" height="60">
   </a>
-</p>
+
+</div>
+
 # Bibliagraphia
 
 __Biblia__ & __Graphia__ — a study of different versions of the Holy Bible
