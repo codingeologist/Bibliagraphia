@@ -85,6 +85,8 @@ nodes actually present (referential integrity), which keeps the graph clean.
 
 ## Quick start
 
+Python 3.9 or newer is supported.
+
 ```bash
 # Either install from pyproject (creates the `bibliagraphia` package + entrypoints):
 uv venv venv && source venv/bin/activate && uv pip install -e ".[dev]"
@@ -105,6 +107,29 @@ venv/bin/uvicorn app.api:app --reload
 The API auto-builds `data/bible.db` from the JSON on first run if it's
 missing, so step 1 is optional for local play.
 
+### Vite + React frontend
+
+The standalone React frontend lives in `frontend/` and uses the same API as
+the existing page in `app/static/`. Start the API in one terminal, then run:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend uses Vite, React, and Tailwind CSS. Tailwind utility classes can be
+used directly in the JSX components under `frontend/src/`.
+Open `/read` in the Vite app to read a Bible book. Choose a book, chapter,
+translation, or jump directly to a verse; previous/next controls move between
+chapters. Underlined place mentions that match graph locations open place
+details with links to the graph and map.
+
+Open the Vite URL shown in the terminal (normally `http://localhost:5173`).
+Vite proxies API requests to `http://127.0.0.1:8000`. For a deployed frontend
+or an API on another host, set `VITE_API_BASE_URL` before building, for example
+`VITE_API_BASE_URL=https://api.example.org npm run build`.
+
 ## API
 
 All endpoints use parameterized SQL (no string interpolation), so there is
@@ -116,7 +141,10 @@ no SQL-injection surface.
 | `GET /search?q=&label=`                                       | `q` prefix, optional `label` filter            | autocomplete node list                           |
 | `POST /traverse`                                              | `{start_node, label, edge}`                    | recursive descendants along `edge` + their edges |
 | `POST /path`                                                  | `{source, source_label, target, target_label}` | shortest path (BFS) between two nodes            |
+| `GET /graph?node=&label=&node_id=`                            | node name and label; optional exact node ID     | nearby nodes and relationship edges              |
 | `GET /verse?book_code=&chapter=&verse_number=`                | verse reference                                | the same verse across all versions               |
+| `GET /reader/catalog?version_code=`                           | optional version code (defaults to `KJV`)      | books, translations, and available chapters      |
+| `GET /chapter?book_code=&chapter=&version_code=`              | passage reference                              | ordered verse text and linked location nodes     |
 | `GET /`                                                       | —                                              | the single-page frontend                         |
 
 Examples:
@@ -150,6 +178,7 @@ Bibliagraphia/
 ├── app/
 │   ├── api.py                                 # FastAPI /search /traverse /path /verse /health
 │   └── static/                                # single-page frontend (index.html, app.js, style.css)
+├── frontend/                                  # Vite + React frontend
 ├── tests/
 │   └── test_graph.py                          # build + counts + traverse + path + verse
 ├── bible_loader.py                            # legacy TypeDB loader (kept for reference)
@@ -202,6 +231,12 @@ venv/bin/ruff check .          # lint (legacy TypeDB files excluded)
 ```
 
 Tool config (pytest paths, ruff rules) lives in `pyproject.toml`.
+
+The API startup compatibility check needs no source dataset:
+
+```bash
+python -m unittest discover -s tests -p test_api_startup.py
+```
 
 ## License
 

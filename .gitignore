@@ -6,3 +6,7 @@ __pycache__/
 build/
 dist/
 data/bible.db
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+.venv/
