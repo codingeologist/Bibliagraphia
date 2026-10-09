@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from typing import Optional
 
 import duckdb
 from fastapi import FastAPI, Query
@@ -120,7 +121,7 @@ def _row_to_node(row, columns) -> dict:
     return n
 
 
-def _resolve(conn, label: str, name: str) -> str | None:
+def _resolve(conn, label: str, name: str) -> Optional[str]:
     """Resolve a node by name within a label; return its id or None.
 
     Codes are the canonical identifiers — short, unique, and stable
@@ -163,7 +164,7 @@ def health():
 @app.get("/search")
 def search(
     q: str = Query(..., min_length=1),
-    label: str | None = Query(None, description="restrict to a node label"),
+    label: Optional[str] = Query(None, description="restrict to a node label"),
     limit: int = Query(20, le=100),
 ):
     """Autocomplete: nodes whose name or book/version code starts with `q`.
@@ -390,6 +391,7 @@ def graph(
     label: str = Query(..., description="label of the start node"),
     hops: int = 1,   # 1–3, neighborhood radius
     limit: int = 200,  # 10–500, max nodes returned
+    node_id: Optional[str] = None,
 ):
     """Ego-graph for the force-directed visualisation.
 
@@ -404,7 +406,14 @@ def graph(
 
     conn = duckdb.connect(DB_PATH, read_only=True)
     try:
-        start_id = _resolve(conn, label, node)
+        if node_id:
+            row = conn.execute(
+                "SELECT id FROM nodes WHERE id = ? AND label = ?",
+                [node_id, label],
+            ).fetchone()
+            start_id = row[0] if row else None
+        else:
+            start_id = _resolve(conn, label, node)
         if start_id is None:
             return {"error": f"No {label} named '{node}'. Try Search, or a "
                             "book/version code like JOH or KJV."}
@@ -470,8 +479,8 @@ def graph(
 
 @app.get("/map")
 def map_points(
-    region: str | None = None,  # region name, e.g. Syria
-    book: str | None = None,   # book code, e.g. JOH
+    region: Optional[str] = None,  # region name, e.g. Syria
+    book: Optional[str] = None,   # book code, e.g. JOH
     limit: int = 1000,  # 10–3000, max points returned
 ):
     """Location points for the map view.
@@ -564,6 +573,121 @@ def verse(
         return {"book_code": book_code, "chapter": chapter,
                 "verse_number": verse_number,
                 "verses": [{"id": r[0], "version": r[1], "text": r[2]} for r in rows]}
+    finally:
+        conn.close()
+
+
+@app.get("/reader/catalog")
+def reader_catalog(version_code: str = Query("KJV")):
+    """Return books, versions, and chapters available in the selected version."""
+    conn = duckdb.connect(DB_PATH, read_only=True)
+    try:
+        books = conn.execute(
+            """
+            SELECT book_code, name, json_extract_string(attrs, 'testament')
+            FROM nodes
+            WHERE label = 'book'
+            ORDER BY rowid;
+            """
+        ).fetchall()
+        versions = conn.execute(
+            """
+            SELECT version_code, name, json_extract_string(attrs, 'full_name')
+            FROM nodes
+            WHERE label = 'version'
+            ORDER BY rowid;
+            """
+        ).fetchall()
+        chapters = conn.execute(
+            """
+            SELECT book_code, list(DISTINCT chapter ORDER BY chapter)
+            FROM nodes
+            WHERE label = 'verse' AND version_code = UPPER(?)
+            GROUP BY book_code;
+            """,
+            [version_code],
+        ).fetchall()
+        return {
+            "books": [
+                {"code": row[0], "name": row[1], "testament": row[2]}
+                for row in books
+            ],
+            "versions": [
+                {"code": row[0], "name": row[1], "full_name": row[2]}
+                for row in versions
+            ],
+            "chapters": {row[0]: row[1] for row in chapters},
+        }
+    finally:
+        conn.close()
+
+
+@app.get("/chapter")
+def read_chapter(
+    book_code: str = Query(..., min_length=1),
+    chapter: int = Query(..., ge=1),
+    version_code: str = Query("KJV", min_length=1),
+):
+    """Return an ordered chapter of Bible text in the selected version."""
+    conn = duckdb.connect(DB_PATH, read_only=True)
+    try:
+        row = conn.execute(
+            """
+            SELECT name
+            FROM nodes
+            WHERE label = 'book' AND UPPER(book_code) = UPPER(?)
+            LIMIT 1;
+            """,
+            [book_code],
+        ).fetchone()
+        verses = conn.execute(
+            """
+            SELECT verse_number, json_extract_string(attrs, 'text') AS text
+            FROM nodes
+            WHERE label = 'verse'
+              AND UPPER(book_code) = UPPER(?)
+              AND chapter = ?
+              AND UPPER(version_code) = UPPER(?)
+            ORDER BY verse_number;
+            """,
+            [book_code, chapter, version_code],
+        ).fetchall()
+        locations = conn.execute(
+            """
+            SELECT l.id, l.verse_number, l.name,
+                   json_extract_string(l.attrs, 'secondary_name') AS secondary_name,
+                   json_extract_string(l.attrs, 'region') AS region
+            FROM nodes l
+            JOIN nodes v
+              ON v.label = 'verse'
+             AND v.book_code = l.book_code
+             AND v.chapter = l.chapter
+             AND v.verse_number = l.verse_number
+             AND UPPER(v.version_code) = UPPER(?)
+            WHERE l.label = 'location'
+              AND UPPER(l.book_code) = UPPER(?)
+              AND l.chapter = ?
+            ORDER BY l.verse_number, l.name, l.id;
+            """,
+            [version_code, book_code, chapter],
+        ).fetchall()
+        return {
+            "book_code": book_code.upper(),
+            "book_name": row[0] if row else book_code.upper(),
+            "chapter": chapter,
+            "version": version_code.upper(),
+            "verses": [{"number": verse[0], "text": verse[1]} for verse in verses],
+            "locations": [
+                {
+                    "id": location[0],
+                    "verse_number": location[1],
+                    "name": location[2],
+                    "aliases": [alias for alias in (location[2], location[3]) if alias],
+                    "region": location[4],
+                }
+                for location in locations
+            ],
+        }
     finally:
         conn.close()
 
