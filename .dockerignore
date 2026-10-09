@@ -1,0 +1,27 @@
+# Keep Docker builds clean: don't copy host artifacts into the build context.
+# (gitignore does NOT apply to Docker builds; this does.)
+
+# Frontend build artifacts / host node_modules
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Built databases and generic build output
+data/bible.db
+build/
+dist/
+
+# Repo/VCS and OS junk
+.git/
+.gitignore
+.DS_Store
+Dockerfile
+docker-compose.yml
+*.md
