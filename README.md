@@ -1,14 +1,18 @@
-<div align="center" style="background-color:#FFD54A; padding:24px 16px;">
-
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="120" viewBox="0 0 640 120">
+  <rect width="640" height="120" fill="#FFD54A"/>
+  <!-- FaithTech icon, positioned left-of-centre -->
+  <g transform="translate(180,30)">
   <a href="https://faithtech.com">
     <img src="https://ftbuild.org.uk/assets/faithtech-icon.svg" alt="FaithTech" height="40">
   </a>
-  &nbsp;&nbsp;&nbsp;
+  </g>
+  <!-- BUILD wordmark, positioned right-of-centre -->
+  <g transform="translate(320,20)">
   <a href="https://ftbuild.org.uk/projects.html#bibliagraphia">
     <img src="https://ftbuild.org.uk/assets/BUILD.svg" alt="FaithTech BUILD 26" height="60">
   </a>
-
-</div>
+  </g>
+</svg>
 
 # Bibliagraphia
 
