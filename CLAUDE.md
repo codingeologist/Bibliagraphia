@@ -86,7 +86,7 @@ This file serves as a **centralised guide** for:
 
 **Why is this important?**
 - Clear **intent, boundaries, and manual approvals** prevent accidents (e.g., pushing sensitive data, auto-deploying broken infrastructure).
-- **Transparency and accountability** are critical for biodiversity data, which often involves **sensitive, proprietary, or regulated information**.
+- **Transparency and accountability** are critical, which often involves **sensitive, proprietary, or regulated information**.
 
 ---
 ## **Core Principles**
@@ -102,10 +102,10 @@ AI Agents to provide assistance, but human intelligence should always inspect an
 **Example:**
 | AI Model Task             | Allowed? | Reason                                                  |
 |---------------------------|----------|---------------------------------------------------------|
-| Generate code             | Yes      | But **manual review required** before `terraform apply` |
+| Generate code             | Yes      | But **manual review required**                          |
 | Push changes to Git       | No       | **All changes must go through PRs**                     |
 | Deployments               | No       | **Only manual deployments allowed**                     |
-| Share sensitive data      | No       | **Follow NHM’s data privacy guidelines**                |
+| Share sensitive data      | No       | **Follow data privacy guidelines**                      |
 
 ---
 ## **Agents in Use**
@@ -128,14 +128,14 @@ All outputs to be manually reviewed, tested, committed and deployed by human age
 - Infrastructure Review.
 - Code Reviews.
 - Logic Explanation.
-- Terraform Infrastructure.
-- Read access to AWS S3/DB data.
+- Deployments/Cloud Infrastructure.
+- Read access to DB data.
 - Use British English spelling of words (e.g., visualise ✅, standardise ✅ etc...)
 
 #### **What AI cannot do** ❌
 
 - Commit and push changes to the Git Repository.
-- Deploy resources to AWS: `terraform apply`.
+- Deploy resources.
 - Access sensitive data.
 - Bypass the repo's AI Agent policy.
 - Write or amend DB data.
