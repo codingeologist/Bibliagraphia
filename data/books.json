@@ -1,0 +1,586 @@
+[
+    {
+        "code": "GEN",
+        "testament": "Old Testament",
+        "vulgate": "Genesis",
+        "rheims": "Genesis",
+        "kjv": "Genesis",
+        "note": ""
+    },
+    {
+        "code": "EXO",
+        "testament": "Old Testament",
+        "vulgate": "Exodus",
+        "rheims": "Exodus",
+        "kjv": "Exodus",
+        "note": ""
+    },
+    {
+        "code": "LEV",
+        "testament": "Old Testament",
+        "vulgate": "Leviticus",
+        "rheims": "Leviticus",
+        "kjv": "Leviticus",
+        "note": ""
+    },
+    {
+        "code": "NUM",
+        "testament": "Old Testament",
+        "vulgate": "Numeri",
+        "rheims": "Numbers",
+        "kjv": "Numbers",
+        "note": ""
+    },
+    {
+        "code": "DEU",
+        "testament": "Old Testament",
+        "vulgate": "Deuteronomium",
+        "rheims": "Deuteronomy",
+        "kjv": "Deuteronomy",
+        "note": ""
+    },
+    {
+        "code": "JOS",
+        "testament": "Old Testament",
+        "vulgate": "Josue",
+        "rheims": "Josue",
+        "kjv": "Joshua",
+        "note": ""
+    },
+    {
+        "code": "JDG",
+        "testament": "Old Testament",
+        "vulgate": "Judices",
+        "rheims": "Judges",
+        "kjv": "Judges",
+        "note": ""
+    },
+    {
+        "code": "RUT",
+        "testament": "Old Testament",
+        "vulgate": "Ruth",
+        "rheims": "Ruth",
+        "kjv": "Ruth",
+        "note": ""
+    },
+    {
+        "code": "1SA",
+        "testament": "Old Testament",
+        "vulgate": "1 Samuelis / 1 Regum",
+        "rheims": "1 Kings",
+        "kjv": "1 Samuel",
+        "note": ""
+    },
+    {
+        "code": "2SA",
+        "testament": "Old Testament",
+        "vulgate": "2 Samuelis / 2 Regum",
+        "rheims": "2 Kings",
+        "kjv": "2 Samuel",
+        "note": ""
+    },
+    {
+        "code": "1KI",
+        "testament": "Old Testament",
+        "vulgate": "3 Regum",
+        "rheims": "3 Kings",
+        "kjv": "1 Kings",
+        "note": ""
+    },
+    {
+        "code": "2KI",
+        "testament": "Old Testament",
+        "vulgate": "4 Regum",
+        "rheims": "4 Kings",
+        "kjv": "2 Kings",
+        "note": ""
+    },
+    {
+        "code": "1CH",
+        "testament": "Old Testament",
+        "vulgate": "1 Paralipomenon",
+        "rheims": "1 Paralipomenon",
+        "kjv": "1 Chronicles",
+        "note": ""
+    },
+    {
+        "code": "2CH",
+        "testament": "Old Testament",
+        "vulgate": "2 Paralipomenon",
+        "rheims": "2 Paralipomenon",
+        "kjv": "2 Chronicles",
+        "note": ""
+    },
+    {
+        "code": "EZR",
+        "testament": "Old Testament",
+        "vulgate": "1 Esdræ",
+        "rheims": "1 Esdras",
+        "kjv": "Ezra",
+        "note": ""
+    },
+    {
+        "code": "NEH",
+        "testament": "Old Testament",
+        "vulgate": "Nehemiæ / 2 Esdræ",
+        "rheims": "Nehemias / 2 Esdras",
+        "kjv": "Nehemiah",
+        "note": ""
+    },
+    {
+        "code": "EST",
+        "testament": "Old Testament",
+        "vulgate": "Esther",
+        "rheims": "Esther",
+        "kjv": "Esther",
+        "note": ""
+    },
+    {
+        "code": "JOB",
+        "testament": "Old Testament",
+        "vulgate": "Job",
+        "rheims": "Job",
+        "kjv": "Job",
+        "note": ""
+    },
+    {
+        "code": "PSA",
+        "testament": "Old Testament",
+        "vulgate": "Psalmi",
+        "rheims": "Psalms",
+        "kjv": "Psalms",
+        "note": ""
+    },
+    {
+        "code": "PRO",
+        "testament": "Old Testament",
+        "vulgate": "Proverbia",
+        "rheims": "Proverbs / Sentences",
+        "kjv": "Proverbs",
+        "note": ""
+    },
+    {
+        "code": "ECC",
+        "testament": "Old Testament",
+        "vulgate": "Ecclesiastes",
+        "rheims": "Ecclesiastes",
+        "kjv": "Ecclesiastes",
+        "note": ""
+    },
+    {
+        "code": "SOL",
+        "testament": "Old Testament",
+        "vulgate": "Cantum Canticorum",
+        "rheims": "Canticle of Canticles",
+        "kjv": "Song of Solomon",
+        "note": ""
+    },
+    {
+        "code": "ISA",
+        "testament": "Old Testament",
+        "vulgate": "Isaiæ",
+        "rheims": "Isaias",
+        "kjv": "Isaiah",
+        "note": ""
+    },
+    {
+        "code": "JER",
+        "testament": "Old Testament",
+        "vulgate": "Jeremiæ",
+        "rheims": "Jeremias",
+        "kjv": "Jeremiah",
+        "note": ""
+    },
+    {
+        "code": "LAM",
+        "testament": "Old Testament",
+        "vulgate": "Lamentationes",
+        "rheims": "Lamentations",
+        "kjv": "Lamentations",
+        "note": ""
+    },
+    {
+        "code": "EZE",
+        "testament": "Old Testament",
+        "vulgate": "Ezechielis",
+        "rheims": "Ezechiel",
+        "kjv": "Ezekiel",
+        "note": ""
+    },
+    {
+        "code": "DAN",
+        "testament": "Old Testament",
+        "vulgate": "Danielis",
+        "rheims": "Daniel",
+        "kjv": "Daniel / Song of the Three Children / Story of Susanna / The Idol Bel and the Dragon",
+        "note": ""
+    },
+    {
+        "code": "HOS",
+        "testament": "Old Testament",
+        "vulgate": "Osee",
+        "rheims": "Osee",
+        "kjv": "Hosea",
+        "note": ""
+    },
+    {
+        "code": "JOE",
+        "testament": "Old Testament",
+        "vulgate": "Joel",
+        "rheims": "Joel",
+        "kjv": "Joel",
+        "note": ""
+    },
+    {
+        "code": "AMO",
+        "testament": "Old Testament",
+        "vulgate": "Amos",
+        "rheims": "Amos",
+        "kjv": "Amos",
+        "note": ""
+    },
+    {
+        "code": "OBA",
+        "testament": "Old Testament",
+        "vulgate": "Abdiæ",
+        "rheims": "Abdias",
+        "kjv": "Obadiah",
+        "note": ""
+    },
+    {
+        "code": "JON",
+        "testament": "Old Testament",
+        "vulgate": "Jonæ",
+        "rheims": "Jonas",
+        "kjv": "Jonah",
+        "note": ""
+    },
+    {
+        "code": "MIC",
+        "testament": "Old Testament",
+        "vulgate": "Michææ",
+        "rheims": "Micheas",
+        "kjv": "Micah",
+        "note": ""
+    },
+    {
+        "code": "NAH",
+        "testament": "Old Testament",
+        "vulgate": "Nahum",
+        "rheims": "Nahum",
+        "kjv": "Nahum",
+        "note": ""
+    },
+    {
+        "code": "HAB",
+        "testament": "Old Testament",
+        "vulgate": "Habacuc",
+        "rheims": "Habacuc",
+        "kjv": "Habakkuk",
+        "note": ""
+    },
+    {
+        "code": "ZEP",
+        "testament": "Old Testament",
+        "vulgate": "Sophoniæ",
+        "rheims": "Sophonias",
+        "kjv": "Zephaniah",
+        "note": ""
+    },
+    {
+        "code": "HAG",
+        "testament": "Old Testament",
+        "vulgate": "Aggæi",
+        "rheims": "Aggæus",
+        "kjv": "Haggai",
+        "note": ""
+    },
+    {
+        "code": "ZEC",
+        "testament": "Old Testament",
+        "vulgate": "Zachariæ",
+        "rheims": "Zacharias",
+        "kjv": "Zechariah",
+        "note": ""
+    },
+    {
+        "code": "MAL",
+        "testament": "Old Testament",
+        "vulgate": "Malachiæ",
+        "rheims": "Malachias",
+        "kjv": "Malachi",
+        "note": ""
+    },
+    {
+        "code": "TOB",
+        "testament": "New Testament",
+        "vulgate": "Tobiæ",
+        "rheims": "Tobias",
+        "kjv": "Tobit",
+        "note": "Missing in the Protestant Bibles"
+    },
+    {
+        "code": "JDT",
+        "testament": "Old Testament",
+        "vulgate": "Judith",
+        "rheims": "Judith",
+        "kjv": "Judith",
+        "note": "Missing in the Protestant Bibles"
+    },
+    {
+        "code": "WIS",
+        "testament": "Old Testament",
+        "vulgate": "Sapientiæ",
+        "rheims": "Wisdom",
+        "kjv": "Wisdom",
+        "note": "Missing in the Protestant Bibles"
+    },
+    {
+        "code": "SIR",
+        "testament": "Old Testament",
+        "vulgate": "Ecclesiasticus / Book of Sirach",
+        "rheims": "Ecclesiasticus / Book of Sirach",
+        "kjv": "Ecclesiasticus / Book of Sirach",
+        "note": "Missing in the Protestant Bibles"
+    },
+    {
+        "code": "BAR",
+        "testament": "Old Testament",
+        "vulgate": "Baruch",
+        "rheims": "Baruch",
+        "kjv": "Baruch / The Epistle of Jeremy",
+        "note": "Missing in the Protestant Bibles"
+    },
+    {
+        "code": "1MA",
+        "testament": "Old Testament",
+        "vulgate": "1 Machabæorum",
+        "rheims": "1 Machabees",
+        "kjv": "1 Maccabees",
+        "note": "Missing in the Protestant Bibles"
+    },
+    {
+        "code": "2MA",
+        "testament": "Old Testament",
+        "vulgate": "2 Machabæorum",
+        "rheims": "2 Machabees",
+        "kjv": "2 Maccabees",
+        "note": "Missing in the Protestant Bibles"
+    },
+    {
+        "code": "MAT",
+        "testament": "New Testament",
+        "vulgate": "Evangelium Secundum Matthæum",
+        "rheims": "The Gospel According to Matthew",
+        "kjv": "The Gospel According to Matthew",
+        "note": ""
+    },
+    {
+        "code": "MAR",
+        "testament": "New Testament",
+        "vulgate": "Evangelium Secundum Marcum",
+        "rheims": "The Gospel According to Mark",
+        "kjv": "The Gospel According to Mark",
+        "note": ""
+    },
+    {
+        "code": "LUK",
+        "testament": "New Testament",
+        "vulgate": "Evangelium Secundum Lucam",
+        "rheims": "The Gospel According to Luke",
+        "kjv": "The Gospel According to Luke",
+        "note": ""
+    },
+    {
+        "code": "JOH",
+        "testament": "New Testament",
+        "vulgate": "Evangelium Secundum Ioannem",
+        "rheims": "The Gospel According to John",
+        "kjv": "The Gospel According to John",
+        "note": ""
+    },
+    {
+        "code": "ACT",
+        "testament": "New Testament",
+        "vulgate": "Actus",
+        "rheims": "Acts",
+        "kjv": "Acts",
+        "note": ""
+    },
+    {
+        "code": "ROM",
+        "testament": "New Testament",
+        "vulgate": "ad Romanos",
+        "rheims": "Romans",
+        "kjv": "Romans",
+        "note": ""
+    },
+    {
+        "code": "1CO",
+        "testament": "New Testament",
+        "vulgate": "1 ad Corinthios",
+        "rheims": "1 Corinthians",
+        "kjv": "1 Corinthians",
+        "note": ""
+    },
+    {
+        "code": "2CO",
+        "testament": "New Testament",
+        "vulgate": "2 ad Corinthios",
+        "rheims": "2 Corinthians",
+        "kjv": "2 Corinthians",
+        "note": ""
+    },
+    {
+        "code": "GAL",
+        "testament": "New Testament",
+        "vulgate": "ad Galatas",
+        "rheims": "Galatians",
+        "kjv": "Galatians",
+        "note": ""
+    },
+    {
+        "code": "EPH",
+        "testament": "New Testament",
+        "vulgate": "ad Ephesios",
+        "rheims": "Ephesians",
+        "kjv": "Ephesians",
+        "note": ""
+    },
+    {
+        "code": "PHI",
+        "testament": "New Testament",
+        "vulgate": "ad Philippenses",
+        "rheims": "Philippianss",
+        "kjv": "Philippians",
+        "note": ""
+    },
+    {
+        "code": "COL",
+        "testament": "New Testament",
+        "vulgate": "ad Colossenses",
+        "rheims": "Colossians",
+        "kjv": "Colossians",
+        "note": ""
+    },
+    {
+        "code": "1TH",
+        "testament": "New Testament",
+        "vulgate": "1 ad Thessalonicenses",
+        "rheims": "1 Thessalonians",
+        "kjv": "1 Thessalonians",
+        "note": ""
+    },
+    {
+        "code": "2TH",
+        "testament": "New Testament",
+        "vulgate": "2 ad Thessalonicenses",
+        "rheims": "2 Thessalonians",
+        "kjv": "2 Thessalonians",
+        "note": ""
+    },
+    {
+        "code": "1TI",
+        "testament": "New Testament",
+        "vulgate": "1 ad Timotheum",
+        "rheims": "1 Timothy",
+        "kjv": "1 Timothy",
+        "note": ""
+    },
+    {
+        "code": "2TI",
+        "testament": "New Testament",
+        "vulgate": "2 ad Timotheum",
+        "rheims": "2 Timothy",
+        "kjv": "2 Timothy",
+        "note": ""
+    },
+    {
+        "code": "TIT",
+        "testament": "New Testament",
+        "vulgate": "ad Titum",
+        "rheims": "Titus",
+        "kjv": "Titus",
+        "note": ""
+    },
+    {
+        "code": "PHM",
+        "testament": "New Testament",
+        "vulgate": "ad Philemonem",
+        "rheims": "Philemon",
+        "kjv": "Philemon",
+        "note": ""
+    },
+    {
+        "code": "HEB",
+        "testament": "New Testament",
+        "vulgate": "ad Hebræos",
+        "rheims": "Hebrews",
+        "kjv": "Hebrews",
+        "note": ""
+    },
+    {
+        "code": "JAM",
+        "testament": "New Testament",
+        "vulgate": "Iacobi",
+        "rheims": "James",
+        "kjv": "James",
+        "note": ""
+    },
+    {
+        "code": "1PE",
+        "testament": "New Testament",
+        "vulgate": "1 Petri",
+        "rheims": "1 Peter",
+        "kjv": "1 Peter",
+        "note": ""
+    },
+    {
+        "code": "2PE",
+        "testament": "New Testament",
+        "vulgate": "2 Petri",
+        "rheims": "2 Peter",
+        "kjv": "2 Peter",
+        "note": ""
+    },
+    {
+        "code": "1JO",
+        "testament": "New Testament",
+        "vulgate": "1 Ioannis",
+        "rheims": "1 John",
+        "kjv": "1 John",
+        "note": ""
+    },
+    {
+        "code": "2JO",
+        "testament": "New Testament",
+        "vulgate": "2 Ioannis",
+        "rheims": "2 John",
+        "kjv": "2 John",
+        "note": ""
+    },
+    {
+        "code": "3JO",
+        "testament": "New Testament",
+        "vulgate": "3 Ioannis",
+        "rheims": "3 John",
+        "kjv": "3 John",
+        "note": ""
+    },
+    {
+        "code": "JUD",
+        "testament": "New Testament",
+        "vulgate": "Iudæ",
+        "rheims": "Jude",
+        "kjv": "Jude",
+        "note": ""
+    },
+    {
+        "code": "REV",
+        "testament": "New Testament",
+        "vulgate": "Apocalypsis",
+        "rheims": "Apocalypse",
+        "kjv": "Revelation",
+        "note": ""
+    }
+]

@@ -1,0 +1,182 @@
+[
+    {
+        "name": "Achaia",
+        "keywords": "Athens,Corinth,Sparta,Greece",
+        "description": "The heart of ancient Greece, home to Athens, Corinth, and Sparta, where philosophy, democracy, and early Christianity flourished."
+    },
+    {
+        "name": "Aegyptus",
+        "keywords": "Cairo,Alexandria,Egypt",
+        "description": "Land of the Pharaohs and the Nile, where Alexandria became a center of learning and early Christian thought."
+    },
+    {
+        "name": "Aethiopia",
+        "keywords": "Sheba,Ethiopia",
+        "description": "Ancient kingdom south of Egypt, known in Biblical times as a land of mystery and wealth, often associated with the Queen of Sheba."
+    },
+    {
+        "name": "Arabia Deserta",
+        "keywords": "Riyadh,Jeddah,AlUla,Arabia",
+        "description": "The vast desert interior of Arabia, home to nomadic tribes and ancient trade routes connecting the Near East."
+    },
+    {
+        "name": "Arabia Felix",
+        "keywords": "Yemen",
+        "description": "The fertile 'Happy Arabia,' known for its spices, incense, and the legendary kingdom of Sheba."
+    },
+    {
+        "name": "Arabia Petraea",
+        "keywords": "Petra,Nabataea,Jordan",
+        "description": "Rocky region of Arabia, famous for the Nabatean city of Petra, carved into rose-red cliffs."
+    },
+    {
+        "name": "Asia",
+        "keywords": "Capadoccia,Nicomedia,Pontus,Bythnia,Anatolia",
+        "description": "The Roman province of Asia, encompassing western Anatolia, where early Christian communities thrived."
+    },
+    {
+        "name": "Assyria",
+        "keywords": "Mesopotamia",
+        "description": "Ancient empire in Mesopotamia, known for its military prowess and the Biblical city of Nineveh."
+    },
+    {
+        "name": "Babylonia",
+        "keywords": "Babel,Babylon,Babylonia,Iraq",
+        "description": "Land of the Euphrates, home to Babylon, the Hanging Gardens, and the Biblical Tower of Babel."
+    },
+    {
+        "name": "Baetica",
+        "keywords": "Algarve,Lisbon,Lisboa,Portugal",
+        "description": "Roman province in southern Iberia, known for its olive oil, wine, and later, the Visigothic Kingdom."
+    },
+    {
+        "name": "Bythnia et Pontus",
+        "keywords": "Nicomedia,Pontus,Bythnia",
+        "description": "Northern Anatolia, where the apostle Peter addressed early Christians and Nicomedia became a key Roman city."
+    },
+    {
+        "name": "Caucasus",
+        "keywords": "Armenia,Georgia,Azerbaijan,Caucasus",
+        "description": "Mountainous region between the Black and Caspian Seas, a crossroads of cultures and ancient trade routes."
+    },
+    {
+        "name": "Cilicia",
+        "keywords": "Cilicia",
+        "description": "Southeastern Anatolia, birthplace of St.Paul and a hub for early Christian missionary journeys."
+    },
+    {
+        "name": "Creta",
+        "keywords": "Minoa,Heraklion,Creta,Crete",
+        "description": "Island in the Mediterranean, known in antiquity for its Minoan civilization and mentioned in the New Testament."
+    },
+    {
+        "name": "Cyprus",
+        "keywords": "Paphos,Salamis,Cyprus,Kypros",
+        "description": "Mediterranean island where St.Paul preached, and home to ancient city-kingdoms like Paphos and Salamis."
+    },
+    {
+        "name": "Cyrenaica",
+        "keywords": "Libya,Cyrene,Cyrenaica",
+        "description": "Eastern Libya, known for its Greek colonies and as the birthplace of the philosopher Eratosthenes."
+    },
+    {
+        "name": "Dalmatia",
+        "keywords": "Dalmatia,Illyricum,Yugoslavia,Croatia,Balkan,Balkans,",
+        "description": "Coastal region of the eastern Adriatic, part of the Roman province of Illyricum and later medieval Croatia."
+    },
+    {
+        "name": "Epirus",
+        "keywords": "Epirus",
+        "description": "Northwestern Greece, homeland of Pyrrhus and a region of rugged mountains and ancient oracle sites."
+    },
+    {
+        "name": "Galatia",
+        "keywords": "Ankara,Ancyra,Galatia",
+        "description": "Central Anatolia, where St.Paul wrote his Epistle to the Galatians, addressing early Christian communities."
+    },
+    {
+        "name": "Hispania",
+        "keywords": "Seville,Sevilla,Barcelona,Madrid,Galicia,Spain",
+        "description": "Roman name for the Iberian Peninsula, encompassing modern Spain and Portugal, rich in Roman and medieval history."
+    },
+    {
+        "name": "India",
+        "keywords": "India",
+        "description": "Ancient land of the Indus Valley, known for its spices, philosophy, and early trade with the Roman Empire."
+    },
+    {
+        "name": "Italia",
+        "keywords": "Rome,Roma,Napoli,Naples,Italia,Italy",
+        "description": "Heart of the Roman Empire, home to Rome, the eternal city, and the center of early Christianity."
+    },
+    {
+        "name": "Judaea",
+        "keywords": "Judaea,Jerusalem,Israel,Palestine",
+        "description": "Biblical heartland of the Jewish people, centered around Jerusalem and the Holy Land."
+    },
+    {
+        "name": "Lacus Asphaltites",
+        "keywords": "DeadSea,LacusAsphaltites",
+        "description": "The Dead Sea, a salt lake bordered by Israel and Jordan, known for its mineral-rich waters and Biblical significance."
+    },
+    {
+        "name": "Lycia et Pamphylia",
+        "keywords": "Lycia,Pamphylia",
+        "description": "Coastal regions of southern Anatolia, mentioned in the Acts of the Apostles as part of St.Paul's missionary journeys."
+    },
+    {
+        "name": "Macedonia",
+        "keywords": "Pella,Macedonia",
+        "description": "Northern Greece, homeland of Alexander the Great and a key region in the spread of early Christianity."
+    },
+    {
+        "name": "Mare Adriaticum",
+        "keywords": "AdriaticSea,MareAdriaticum,Adriatic,Adriatic Sea",
+        "description": "The Adriatic Sea, separating Italy from the Balkans, a historic maritime route for trade and exploration."
+    },
+    {
+        "name": "Mare Internum",
+        "keywords": "MediterraneanSea,MareInternum,Mediterranean Sea",
+        "description": "The Mediterranean Sea, the 'middle of the earth,' cradle of ancient civilizations and a crossroads of trade."
+    },
+    {
+        "name": "Mare Rubrum",
+        "keywords": "RedSea,MareRubrum,Red Sea",
+        "description": "The Red Sea, a vital trade route linking the Mediterranean to the Indian Ocean, famous for the Biblical Exodus."
+    },
+    {
+        "name": "Parthia",
+        "keywords": "Iran,Susa,Persepolis,Media,Persia,Parthia",
+        "description": "Ancient empire in Persia, rival to Rome, known for its cavalry and the Silk Road trade routes."
+    },
+    {
+        "name": "Sabaea",
+        "keywords": "Sabaea",
+        "description": "Ancient kingdom in southern Arabia, famed for its wealth and the Queen of Sheba's visit to Solomon."
+    },
+    {
+        "name": "Sarmatia",
+        "keywords": "Sarmatia,Russia",
+        "description": "Vast steppes north of the Black Sea, home to nomadic Sarmatian tribes and later part of the Eurasian trade network."
+    },
+    {
+        "name": "Sicilia",
+        "keywords": "Sicilia,Sicily,Messina,Catania,Syracusa,Syracuse,Palermo",
+        "description": "Largest island in the Mediterranean, a crossroads of Greek, Roman, and Norman cultures, and home to Mount Etna."
+    },
+    {
+        "name": "Syria",
+        "keywords": "Damascus,Syria",
+        "description": "Ancient region of the Fertile Crescent, home to Damascus, one of the world's oldest continuously inhabited cities."
+    },
+    {
+        "name": "Syrtis",
+        "keywords": "Syrtis",
+        "description": "Coastal region of ancient Libya, known to the Greeks and Romans for its dangerous sands and harbours."
+    },
+    {
+        "name": "Thracia",
+        "keywords": "Thracia,Byzantium,Constantinople,Istanbul",
+        "description": "Southeastern Europe, home to the Greek city of Byzantium (later Constantinople under the Romans and then Istanbul after the Ottoman conquest), a bridge between Europe and Asia."
+    }
+]

@@ -1,0 +1,17 @@
+[
+    {
+        "code": "VUL",
+        "name": "vulgate",
+        "full_name": "Biblia Sacra Vulgata"
+    },
+    {
+        "code": "DRB",
+        "name": "rheims",
+        "full_name": "Douay-Rheims Bible"
+    },
+    {
+        "code": "KJV",
+        "name": "kjv",
+        "full_name": "King James Bible"
+    }
+]
