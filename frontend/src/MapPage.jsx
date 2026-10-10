@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { get } from "./api.js";
 import PlaceSearch from "./PlaceSearch.jsx";
+import { createStarMarker } from "./mapMarkers.js";
 
 function MapPage({ initialMap, onMapReady }) {
   const [dark, setDark] = useState(() => {
@@ -88,15 +89,12 @@ function MapPage({ initialMap, onMapReady }) {
     });
     const markers = L.layerGroup().addTo(map);
     if (initialMap) {
-      L.circleMarker([
+      createStarMarker([
         Number(initialMap.place.attrs.latitude),
         Number(initialMap.place.attrs.longitude),
       ], {
-        radius: 9,
-        weight: 1.5,
-        color: "#fff",
         fillColor: getComputedStyle(document.documentElement).getPropertyValue("--accent").trim(),
-        fillOpacity: 0.9,
+        size: 18,
       }).addTo(markers);
     }
     mapRef.current = map;
@@ -135,13 +133,10 @@ function MapPage({ initialMap, onMapReady }) {
         markersRef.current.clearLayers();
         const bounds = [];
         for (const place of result.places) {
-          const marker = L.circleMarker([place.lat, place.lng], {
-            radius: 6,
-            weight: 1.5,
-            color: "#fff",
+          const marker = createStarMarker([place.lat, place.lng], {
             fillColor: getComputedStyle(document.documentElement)
               .getPropertyValue("--node-location").trim(),
-            fillOpacity: 0.9,
+            size: 14,
           });
           marker.bindTooltip(place.name);
           marker.on("click", () => selectPlace(place));
