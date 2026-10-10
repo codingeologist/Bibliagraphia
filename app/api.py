@@ -144,6 +144,7 @@ def _resolve(conn, label: str, name: str) -> Optional[str]:
       2. book_code / version_code match (case-insensitive)
       3. name prefix ("ACT" matches "Acts")
       4. name contains ("John" matches "The Gospel According to John")
+      5. for regions, keywords in attrs (e.g. "Syria" matches keyword "Damascus")
     """
     row = conn.execute(
         """
@@ -151,16 +152,18 @@ def _resolve(conn, label: str, name: str) -> Optional[str]:
         WHERE label = ?
           AND (name = ? OR name ILIKE ? OR name ILIKE ?
                OR UPPER(book_code) = UPPER(?)
-               OR UPPER(version_code) = UPPER(?))
+               OR UPPER(version_code) = UPPER(?)
+               OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?))
         ORDER BY name = ? DESC,
                  UPPER(book_code) = UPPER(?) DESC,
                  UPPER(version_code) = UPPER(?) DESC,
                  name ILIKE ? DESC,
+                 (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?) DESC,
                  length(name), name
         LIMIT 1
         """,
         [label, name, f"{name}%", f"%{name}%", name, name,
-         name, name, name, f"{name}%"],
+         name, name, name, name, f"{name}%", f"%{name}%"],
     ).fetchone()
     return row[0] if row else None
 
@@ -190,29 +193,35 @@ def search(
     conn = duckdb.connect(DB_PATH, read_only=True)
     try:
         like = f"{q}%"
+        contains_like = f"%{q}%"
         if label:
             rows = conn.execute(
                 """
                 SELECT id, label, name, book_code, chapter, verse_number, version_code
                 FROM nodes
                 WHERE label = ?
-                  AND (name ILIKE ? OR UPPER(book_code) ILIKE UPPER(?)
-                       OR UPPER(version_code) ILIKE UPPER(?))
+                  AND (name ILIKE ? OR name ILIKE ?
+                       OR UPPER(book_code) ILIKE UPPER(?)
+                       OR UPPER(version_code) ILIKE UPPER(?)
+                       OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?)
+                       OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?))
                 ORDER BY label IN ('location', 'verse'), label, name LIMIT ?;
                 """,
-                [label, like, like, like, limit],
+                [label, like, contains_like, like, like, like, contains_like, limit],
             ).fetchall()
         else:
             rows = conn.execute(
                 """
                 SELECT id, label, name, book_code, chapter, verse_number, version_code
                 FROM nodes
-                WHERE name ILIKE ?
+                WHERE name ILIKE ? OR name ILIKE ?
                    OR UPPER(book_code) ILIKE UPPER(?)
                    OR UPPER(version_code) ILIKE UPPER(?)
+                   OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?)
+                   OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?)
                 ORDER BY label IN ('location', 'verse'), label, name LIMIT ?;
                 """,
-                [like, like, like, limit],
+                [like, contains_like, like, like, like, contains_like, limit],
             ).fetchall()
         return {"query": q, "results": [
             {"id": r[0], "label": r[1], "name": r[2],
