@@ -182,6 +182,8 @@ export default function LandingPage() {
   });
   const [readingPosition] = useState(loadReaderState);
   const [suggestion] = useState(loadSuggestedBook);
+  const suggestedChapter = suggestion.chapter || 1;
+  const suggestedReference = `${suggestion.name} ${suggestedChapter}${suggestion.verse ? `:${suggestion.verse}` : ""}`;
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -240,10 +242,10 @@ export default function LandingPage() {
             ))}
           </nav>
           <section className="landing-start" aria-labelledby="landing-start-title">
-            <h2 id="landing-start-title">Try it with {suggestion.name}</h2>
+            <h2 id="landing-start-title">Try it with {suggestion.chapter ? suggestedReference : suggestion.name}</h2>
             <p>Read a chapter, discover its people and places, and compare translations.</p>
-            <a href={readerStateHref({ book: suggestion.book, chapter: 1, version: "KJV", comparisons: ["DRB"] })}>
-              Explore {suggestion.name} 1 <span aria-hidden="true">→</span>
+            <a href={readerStateHref({ book: suggestion.book, chapter: suggestedChapter, verse: suggestion.verse, version: "KJV", comparisons: ["DRB"] })}>
+              Explore {suggestedReference} <span aria-hidden="true">→</span>
             </a>
           </section>
           <footer className="landing-footer">

@@ -42,5 +42,6 @@ export function readerStateHref(state) {
     book: state.book, chapter: String(state.chapter), version: state.version,
   });
   state.comparisons.forEach((code) => params.append("compare", code));
+  if (state.verse) params.set("verse", String(state.verse));
   return `/read?${params}`;
 }

@@ -4,9 +4,10 @@ export const suggestedBooks = [
   { book: "RUT", name: "Ruth" },
   { book: "GEN", name: "Genesis" },
   { book: "JON", name: "Jonah" },
-  { book: "MAT", name: "Matthew" },
+  { book: "MAT", name: "Matthew", chapter: 7 },
   { book: "EXO", name: "Exodus" },
   { book: "LUK", name: "Luke" },
+  { book: "JOS", name: "Joshua", chapter: 3, verse: 16 },
 ];
 
 export function nextSuggestedBook(previousBook) {
