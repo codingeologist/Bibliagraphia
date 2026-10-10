@@ -8,6 +8,7 @@ import { mentionSegments } from "./readerMentions.js";
 import ReaderDetailsDrawer from "./ReaderDetailsDrawer.jsx";
 import { readerPassageNode } from "./nodeLinks.js";
 import { saveReaderState } from "./readerState.js";
+import BookPicker from "./BookPicker.jsx";
 
 function PlaceMap({ location, href, onExpand }) {
   const mapElementRef = useRef(null);
@@ -22,7 +23,7 @@ function PlaceMap({ location, href, onExpand }) {
       zoomControl: true,
       scrollWheelZoom: false,
       dragging: true,
-    }).setView([latitude, longitude], 5);
+    }).setView([latitude, longitude], 9);
     mapRef.current = map;
     L.tileLayer(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -387,7 +388,6 @@ function ReaderPage({ onExpandMap }) {
     return `/map?${new URLSearchParams({ location_id: location.id })}`;
   };
 
-  const testamentBooks = (testament) => availableBooks.filter((item) => item.testament === testament);
   const mentionsByBook = useMemo(() => {
     const groups = new Map();
     for (const reference of placeRelations?.mentions || []) {
@@ -420,26 +420,14 @@ function ReaderPage({ onExpandMap }) {
                 </button>
               <div className="reader-controls">
                 <div className="reader-passage-controls" role="group" aria-label="Passage navigation">
-                <label className="reader-control">
-                  Book
-                  <select
-                    aria-label="Book"
+                <BookPicker
+                    books={availableBooks}
                     value={book}
-                    onChange={(event) => {
-                      const nextBook = event.target.value;
+                    onSelect={(nextBook) => {
                       setBook(nextBook);
                       setChapter(String(catalog.chapters[nextBook]?.[0] || ""));
                     }}
-                  >
-                    {["Old Testament", "New Testament"].map((testament) => (
-                      <optgroup key={testament} label={testament}>
-                        {testamentBooks(testament).map((item) => (
-                          <option key={item.code} value={item.code}>{item.name}</option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                </label>
+                />
                 <label className="reader-control">
                   Chapter
                   <select
