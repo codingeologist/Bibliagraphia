@@ -2,7 +2,8 @@
 
 Mirrors sql/init_duckdb.sql + sql/load_data.sql but in a single idempotent Python script.
 
-The graph is heterogeneous (versions, books, verses, regions, locations),
+The graph is heterogeneous (versions, books, verses, regions, locations,
+figures),
 so we store every node in one `nodes` table (synthetic id + label + a few
 pulled-out query columns + a JSON `attrs` blob for the rest) and every
 relation in one `edges` table with a `label`. Edges are only created
@@ -11,7 +12,11 @@ partial views clean.
 
 The JSON files are loaded straight into DuckDB temp tables with
 read_json_auto (no Python row-by-row), then the graph is built with
-INSERT ... SELECT. The whole build is a few seconds for ~120k nodes.
+INSERT ... SELECT. The whole build is a few seconds for ~150k nodes.
+
+Figure -> verse edges come from STEP Bible's TIPNR + TVTMS data (CC BY 4.0),
+which is downloaded and cached on first build - see scripts/stepbible.py.
+If it can't be downloaded the build still succeeds, without those edges.
 
 Usage:
     python scripts/build_db.py
@@ -20,20 +25,25 @@ Usage:
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 import duckdb
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import stepbible  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent  # repo root
 DATA = Path(os.environ.get("BIBLE_DATA_DIR", ROOT / "data"))
 DB_PATH = Path(os.environ.get("BIBLE_DB_PATH", DATA / "bible.db"))
+STEP_DIR = Path(os.environ.get("BIBLE_STEP_DIR", DATA / ".stepbible"))
 
 
 def main() -> None:
     if not DATA.is_dir():
         raise SystemExit(f"data dir not found: {DATA}")
     for name in ("books.json", "versions.json", "verses.json",
-                 "location_regions.json", "regions.json"):
+                 "location_regions.json", "regions.json", "figures.json"):
         if not (DATA / name).exists():
             raise SystemExit(f"missing canonical source: {DATA / name}")
 
@@ -74,13 +84,14 @@ def main() -> None:
     paths = {k: str(DATA / f) for k, f in [
         ("versions", "versions.json"), ("books", "books.json"),
         ("verses", "verses.json"), ("locations", "location_regions.json"),
-        ("regions", "regions.json"),
+        ("regions", "regions.json"), ("figures", "figures.json"),
     ]}
     conn.execute("CREATE TEMP TABLE t_versions  AS SELECT * FROM read_json_auto(?)", [paths["versions"]])
     conn.execute("CREATE TEMP TABLE t_books     AS SELECT * FROM read_json_auto(?)", [paths["books"]])
     conn.execute("CREATE TEMP TABLE t_verses    AS SELECT * FROM read_json_auto(?)", [paths["verses"]])
     conn.execute("CREATE TEMP TABLE t_locations AS SELECT * FROM read_json_auto(?)", [paths["locations"]])
     conn.execute("CREATE TEMP TABLE t_regions   AS SELECT * FROM read_json_auto(?)", [paths["regions"]])
+    conn.execute("CREATE TEMP TABLE t_figures   AS SELECT * FROM read_json_auto(?)", [paths["figures"]])
 
     # ---- Versions -------------------------------------------------------
     conn.execute(
@@ -129,6 +140,20 @@ def main() -> None:
         SELECT 'region:' || name, 'region', name, NULL, NULL, NULL, NULL,
                to_json({'keywords': keywords, 'description': description})
         FROM t_regions;
+        """
+    )
+
+    # ---- Figures --------------------------------------------------------
+    conn.execute(
+        """
+        INSERT INTO nodes
+        SELECT 'figure:' || name, 'figure', name, NULL, NULL, NULL, NULL,
+               to_json({
+                   'testament': testament, 'category': category,
+                   'keywords': keywords, 'description': description,
+                   'tipnr': tipnr
+               })
+        FROM t_figures;
         """
     )
 
@@ -201,6 +226,7 @@ def main() -> None:
          AND v.verse_number = l.verse_number;
         """
     )
+    _figure_edges(conn)
 
     # ---- Indexes (after data — faster to build) -------------------------
     conn.execute("CREATE INDEX idx_nodes_label      ON nodes(label);")
@@ -226,6 +252,52 @@ def main() -> None:
     print(f"Built {DB_PATH}")
     print(f"  nodes: {n_nodes}  ({counts})")
     print(f"  edges: {n_edges}  ({ecounts})")
+
+
+def _figure_edges(conn) -> None:
+    """verse --figure_in_verse--> figure, for every verse a figure appears in.
+
+    Each figure's `tipnr` id gives its verse refs (standard English
+    numbering); `tipnr_books`, when set, limits them to those books (used
+    for Jacob and his sons, whose TIPNR records also cover the tribes).
+    Every ref is converted to each version's own numbering, so a figure
+    links to the matching verse in every version that has it.
+    """
+    step = stepbible.fetch(STEP_DIR)
+    if step is None:
+        return
+    people = stepbible.tipnr_refs(step["tipnr"])
+
+    verses: dict[str, dict[tuple[str, int, int], int]] = {}
+    for code, book, chapter, verse, words in conn.execute(
+        """
+        SELECT version_code, book_code, chapter, verse,
+               len(string_split(trim(text), ' '))
+        FROM t_verses WHERE trim(coalesce(text, '')) <> '';
+        """
+    ).fetchall():
+        verses.setdefault(code, {})[(book, chapter, verse)] = words
+    numbering = stepbible.versification(step["tvtms"], verses)
+
+    from_ids, to_ids = [], []
+    for name, tipnr, books in conn.execute(
+        "SELECT name, tipnr, tipnr_books FROM t_figures WHERE tipnr IS NOT NULL"
+    ).fetchall():
+        refs = [r for r in people.get(tipnr, []) if not books or r[0] in books]
+        for code, vs in verses.items():
+            for ref in refs:
+                for book, chapter, verse in stepbible.convert(ref, numbering[code], vs):
+                    from_ids.append(f"verse:{code}:{book}:{chapter}:{verse}")
+                    to_ids.append(f"figure:{name}")
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO edges (from_id, to_id, label)
+        SELECT r.from_id, r.to_id, 'figure_in_verse'
+        FROM (SELECT unnest(?) AS from_id, unnest(?) AS to_id) r
+        JOIN nodes v ON v.id = r.from_id;
+        """,
+        [from_ids, to_ids],
+    )
 
 
 if __name__ == "__main__":

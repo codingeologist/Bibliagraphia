@@ -144,7 +144,8 @@ def _resolve(conn, label: str, name: str) -> Optional[str]:
       2. book_code / version_code match (case-insensitive)
       3. name prefix ("ACT" matches "Acts")
       4. name contains ("John" matches "The Gospel According to John")
-      5. for regions, keywords in attrs (e.g. "Syria" matches keyword "Damascus")
+      5. for regions and figures, keywords in attrs (e.g. "Syria" matches
+         keyword "Damascus"; "Cephas" matches figure "Peter")
     """
     row = conn.execute(
         """
@@ -153,12 +154,12 @@ def _resolve(conn, label: str, name: str) -> Optional[str]:
           AND (name = ? OR name ILIKE ? OR name ILIKE ?
                OR UPPER(book_code) = UPPER(?)
                OR UPPER(version_code) = UPPER(?)
-               OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?))
+               OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?))
         ORDER BY name = ? DESC,
                  UPPER(book_code) = UPPER(?) DESC,
                  UPPER(version_code) = UPPER(?) DESC,
                  name ILIKE ? DESC,
-                 (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?) DESC,
+                 (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?) DESC,
                  length(name), name
         LIMIT 1
         """,
@@ -166,6 +167,18 @@ def _resolve(conn, label: str, name: str) -> Optional[str]:
          name, name, name, name, f"{name}%", f"%{name}%"],
     ).fetchone()
     return row[0] if row else None
+
+
+def _figure_info(label: str, attrs) -> dict:
+    """Testament/category/description for figure rows (empty for other labels).
+
+    Figures have no edges yet, so the frontend shows these details directly
+    from the search result instead of traversing to them.
+    """
+    if label != "figure" or not attrs:
+        return {}
+    a = json.loads(attrs) if isinstance(attrs, str) else attrs
+    return {k: a.get(k) for k in ("testament", "category", "description")}
 
 
 # --------------------------------------------------------------------------- #
@@ -186,9 +199,11 @@ def search(
 
     Codes are the canonical identifiers, so "JOH" finds John's Gospel even
     though its name ("The Gospel According to John") doesn't start with JOH.
-    Books/versions/regions sort before locations and verses — the latter
+    Books/versions/regions/figures sort before locations and verses — the latter
     are per-mention instances that also carry book_code, and would otherwise
-    flood the results for any code search.
+    flood the results for any code search. Figures matched only by a
+    keyword (e.g. "Jerusalem" in David's keywords) sort last, so they never
+    push out a direct name match.
     """
     conn = duckdb.connect(DB_PATH, read_only=True)
     try:
@@ -197,36 +212,38 @@ def search(
         if label:
             rows = conn.execute(
                 """
-                SELECT id, label, name, book_code, chapter, verse_number, version_code
+                SELECT id, label, name, book_code, chapter, verse_number, version_code, attrs
                 FROM nodes
                 WHERE label = ?
                   AND (name ILIKE ? OR name ILIKE ?
                        OR UPPER(book_code) ILIKE UPPER(?)
                        OR UPPER(version_code) ILIKE UPPER(?)
-                       OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?)
-                       OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?))
-                ORDER BY label IN ('location', 'verse'), label, name LIMIT ?;
+                       OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?)
+                       OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?))
+                ORDER BY (label = 'figure' AND name NOT ILIKE ?),
+                         label IN ('location', 'verse'), label, name LIMIT ?;
                 """,
-                [label, like, contains_like, like, like, like, contains_like, limit],
+                [label, like, contains_like, like, like, like, contains_like, contains_like, limit],
             ).fetchall()
         else:
             rows = conn.execute(
                 """
-                SELECT id, label, name, book_code, chapter, verse_number, version_code
+                SELECT id, label, name, book_code, chapter, verse_number, version_code, attrs
                 FROM nodes
                 WHERE name ILIKE ? OR name ILIKE ?
                    OR UPPER(book_code) ILIKE UPPER(?)
                    OR UPPER(version_code) ILIKE UPPER(?)
-                   OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?)
-                   OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?)
-                ORDER BY label IN ('location', 'verse'), label, name LIMIT ?;
+                   OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?)
+                   OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?)
+                ORDER BY (label = 'figure' AND name NOT ILIKE ?),
+                         label IN ('location', 'verse'), label, name LIMIT ?;
                 """,
-                [like, contains_like, like, like, like, contains_like, limit],
+                [like, contains_like, like, like, like, contains_like, contains_like, limit],
             ).fetchall()
         return {"query": q, "results": [
             {"id": r[0], "label": r[1], "name": r[2],
              "book_code": r[3], "chapter": r[4], "verse_number": r[5],
-             "version_code": r[6]}
+             "version_code": r[6], **_figure_info(r[1], r[7])}
             for r in rows
         ]}
     finally:
@@ -328,7 +345,7 @@ class PathRequest(BaseModel):
 def path(req: PathRequest):
     """Shortest path between two named nodes (BFS), walking edges in either
     direction. DuckDB recursive CTEs can't cheaply maintain a visited set
-    over 235k edges, so we load the adjacency once and do a plain BFS in
+    over ~360k edges, so we load the adjacency once and do a plain BFS in
     Python — the graph is small and the result is a handful of hops.
     """
     conn = duckdb.connect(DB_PATH, read_only=True)
@@ -346,7 +363,7 @@ def path(req: PathRequest):
             return {"found": True, "depth": 0, "source": req.source,
                     "target": req.target, "path": [src_id], "edges": []}
 
-        # Load adjacency (both directions) once. 235k edges -> ~tens of MB, fine.
+        # Load adjacency (both directions) once. ~360k edges -> ~tens of MB, fine.
         rows = conn.execute("SELECT from_id, to_id, label FROM edges").fetchall()
         adj: dict[str, list[tuple[str, str]]] = {}
         for f, t, lbl in rows:
@@ -418,7 +435,7 @@ def graph(
 ):
     """Ego-graph for the force-directed visualisation.
 
-    The whole database (~150k nodes, 235k edges) is far too large to draw,
+    The whole database (~150k nodes, ~360k edges) is far too large to draw,
     so the UI queries the neighborhood of one node instead: BFS out from
     the start node up to `hops` levels, return every node reached (capped
     at `limit`) plus the edges among them. Level-by-level BFS means the cap
@@ -449,8 +466,10 @@ def graph(
             adj.setdefault(t, []).append((f, lbl))
 
         node_info = {}
-        branch_limits = {"verse": 10, "location": 5, "book": 5, "version": 5, "region": 5}
-        type_order = {"verse": 0, "book": 1, "version": 2, "location": 3, "region": 4}
+        branch_limits = {"verse": 10, "location": 5, "book": 5, "version": 5, "region": 5,
+                         "figure": 5}
+        type_order = {"verse": 0, "book": 1, "version": 2, "location": 3, "region": 4,
+                      "figure": 5}
         if balanced:
             if not 1 <= branch_expansion <= 20:
                 return {"error": "Branch expansion must be between 1 and 20."}
