@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { get } from "./api.js";
 import { createCircleMarker } from "./mapMarkers.js";
 import SiteHeader from "./SiteHeader.jsx";
 import PlaceGraphPreview from "./PlaceGraphPreview.jsx";
 import { mentionSegments } from "./readerMentions.js";
-import { relationshipHref } from "./nodeLinks.js";
+import ReaderDetailsDrawer from "./ReaderDetailsDrawer.jsx";
+import { readerPassageNode } from "./nodeLinks.js";
+import { saveReaderState } from "./readerState.js";
 
 function PlaceMap({ location, href, onExpand }) {
   const mapElementRef = useRef(null);
@@ -87,6 +89,8 @@ function ReaderPage({ onExpandMap }) {
   const [chapter, setChapter] = useState(initialParams.get("chapter") || "");
   const [selectedVerse, setSelectedVerse] = useState(initialParams.get("verse") || "");
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedDetail, setSelectedDetail] = useState(null);
+  const closeDetail = useCallback(() => setSelectedDetail(null), []);
   const [placeRelations, setPlaceRelations] = useState(null);
   const [placeRelationsError, setPlaceRelationsError] = useState("");
   const [placeRelationsLoading, setPlaceRelationsLoading] = useState(false);
@@ -139,6 +143,7 @@ function ReaderPage({ onExpandMap }) {
     if (passageRef.current !== passage) setSelectedVerse("");
     passageRef.current = passage;
     setSelectedLocation(null);
+    setSelectedDetail(null);
     const params = new URLSearchParams({
       book_code: book,
       chapter,
@@ -188,6 +193,15 @@ function ReaderPage({ onExpandMap }) {
     }
     return () => { active = false; };
   }, [book, chapter, comparisonVersions]);
+
+  useEffect(() => {
+    if (!chapterData?.verses.length || chapterData.book_code !== book.toUpperCase()
+      || chapterData.chapter !== Number(chapter) || chapterData.version !== version.toUpperCase()) return;
+    saveReaderState({
+      book: chapterData.book_code, bookName: chapterData.book_name,
+      chapter: chapterData.chapter, version: chapterData.version, comparisons: comparisonVersions,
+    });
+  }, [chapterData, book, chapter, version, comparisonVersions]);
 
   useEffect(() => {
     if (!book || !chapter) return;
@@ -516,7 +530,7 @@ function ReaderPage({ onExpandMap }) {
                       <button
                         className="place-drawer-backdrop"
                         type="button"
-                        aria-label="Close place relations"
+                        aria-label="Close place details"
                         onClick={() => setSelectedLocation(null)}
                       />
                       <aside
@@ -528,7 +542,7 @@ function ReaderPage({ onExpandMap }) {
                       >
                         <header className="place-drawer-header">
                           <div>
-                            <p className="eyebrow">Location</p>
+                            <p className="eyebrow">Place</p>
                             <h3 id="place-drawer-title">{selectedLocation.name.replace(/\s+\d+$/, "")}</h3>
                             {selectedLocation.region && <p>{selectedLocation.region}</p>}
                           </div>
@@ -536,7 +550,7 @@ function ReaderPage({ onExpandMap }) {
                             ref={closeDrawerRef}
                             className="place-details-close"
                             type="button"
-                            aria-label="Close place relations"
+                            aria-label="Close place details"
                             onClick={() => setSelectedLocation(null)}
                           >×</button>
                         </header>
@@ -565,7 +579,7 @@ function ReaderPage({ onExpandMap }) {
                             />
                           )}
                           {placeRelationsLoading && (
-                            <p className="reader-loading" role="status">Loading place references…</p>
+                            <p className="reader-loading" role="status">Loading passages about this place…</p>
                           )}
                           {placeRelationsError && <p className="notice error" role="alert">{placeRelationsError}</p>}
                           <PlaceGraphPreview key={`graph-${selectedLocation.id}`} location={selectedLocation} />
@@ -573,7 +587,7 @@ function ReaderPage({ onExpandMap }) {
                             <>
                               <h4>Also mentioned in</h4>
                               {placeRelations.mentions.length === 0 ? (
-                                <p className="empty-result">No other references for this place were found.</p>
+                                <p className="empty-result">No other passages mentioning this place were found.</p>
                               ) : (
                                 <ul className="place-relations">
                                   {mentionsByBook.map((group) => (
@@ -640,6 +654,7 @@ function ReaderPage({ onExpandMap }) {
                       </aside>
                     </>
                   )}
+                  {selectedDetail && <ReaderDetailsDrawer key={selectedDetail.id} item={selectedDetail} onClose={closeDetail} onSelectItem={setSelectedDetail} />}
                   {compared ? (
                     <div className="reader-comparison-scroll max-w-full overflow-x-auto" role="region" aria-label="Side-by-side translations" tabIndex={0}>
                       <table className="reader-comparison-table" style={{ minWidth: `${columns.length * 280}px` }}>
@@ -696,7 +711,16 @@ function ReaderPage({ onExpandMap }) {
                                         selected={selectedVerse === String(number)}
                                         locations={column.data.locations.filter((location) => location.verse_number === number)}
                                         figures={(column.data.figures || []).filter((figure) => figure.verse_number === number)}
-                                        onSelectLocation={(location) => setSelectedLocation({ ...location, version_code: column.code })}
+                                        onSelectLocation={(location) => {
+                                          setSelectedDetail(null);
+                                          setSelectedLocation({ ...location, version_code: column.code });
+                                        }}
+                                        onSelectPerson={(person) => { setSelectedLocation(null); setSelectedDetail(person); }}
+                                        onSelectPassage={() => {
+                                          setSelectedLocation(null);
+                                          setSelectedVerse(String(number));
+                                          setSelectedDetail(readerPassageNode(column.data, verse));
+                                        }}
                                       />
                                     ) : (
                                       <p className={"reader-missing-verse m-0 px-[10px] py-[7px] text-muted [font:12px/1.8_\"DM_Sans\",sans-serif]"}>
@@ -718,7 +742,13 @@ function ReaderPage({ onExpandMap }) {
                       selected={selectedVerse === String(item.number)}
                       locations={chapterData.locations.filter((location) => location.verse_number === item.number)}
                       figures={(chapterData.figures || []).filter((figure) => figure.verse_number === item.number)}
-                      onSelectLocation={setSelectedLocation}
+                      onSelectLocation={(location) => { setSelectedDetail(null); setSelectedLocation(location); }}
+                      onSelectPerson={(person) => { setSelectedLocation(null); setSelectedDetail(person); }}
+                      onSelectPassage={() => {
+                        setSelectedLocation(null);
+                        setSelectedVerse(String(item.number));
+                        setSelectedDetail(readerPassageNode(chapterData, item));
+                      }}
                     />
                   ))}
                 </article>
@@ -731,29 +761,30 @@ function ReaderPage({ onExpandMap }) {
   );
 }
 
-function VerseText({ verse, locations, figures, selected, onSelectLocation, withId = true }) {
+function VerseText({ verse, locations, figures, selected, onSelectLocation, onSelectPerson, onSelectPassage, withId = true }) {
   const segments = mentionSegments(verse.text, locations, figures);
   return (
     <p
       className={`reader-verse${selected ? " selected" : ""}`}
       id={withId ? `reader-verse-${verse.number}` : undefined}
     >
-      <sup>{verse.number}</sup>
+      <sup><button className="passage-number" type="button" aria-label={`See details and connections for verse ${verse.number}`}
+        onClick={onSelectPassage}>{verse.number}</button></sup>
       {segments.map((segment, index) => segment.locations
         ? (
           <button
             className="place-highlight"
             type="button"
             key={`${segment.text}-${index}`}
-            title={`Location: ${segment.locations.map((item) => item.region ? `${item.name}, ${item.region}` : item.name).join("; ")}`}
+            title={`Place: ${segment.locations.map((item) => item.region ? `${item.name}, ${item.region}` : item.name).join("; ")} — see map and passages`}
             onClick={() => onSelectLocation(segment.locations[0])}
           >{segment.text}</button>
         )
         : segment.figures ? (
-          <a className="person-highlight" key={`${segment.text}-${index}`}
-            href={relationshipHref(segment.figures[0])}
-            title={`Person: ${segment.figures[0].name} — explore relationships`}
-          >{segment.text}</a>
+          <button className="person-highlight" type="button" key={`${segment.text}-${index}`}
+            onClick={() => onSelectPerson(segment.figures[0])}
+            title={`Person: ${segment.figures[0].name} — see person details`}
+          >{segment.text}</button>
         ) : <span key={`${segment.text}-${index}`}>{segment.text}</span>)}
     </p>
   );

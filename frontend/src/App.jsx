@@ -66,7 +66,7 @@ function ResultRow({ node, friendly = false, onSelectFigure }) {
   return (
     <li>
       <a className="result-row no-underline" href={relationshipHref(node)}>
-        <span className={`badge badge-${node.label}`}>{friendly ? nodeTypeName(node.label) : node.label}</span>
+        <span className={`badge badge-${node.label}`}>{nodeTypeName(node.label)}</span>
         <span className="result-name overflow-hidden text-ellipsis">{displayName(node)}</span>
         {!friendly && (node.book_code || node.version_code) && (
           <span className="result-meta ml-auto whitespace-nowrap text-[10px] text-muted">
@@ -128,7 +128,7 @@ function ExploreTools({ mode }) {
     event?.preventDefault();
     const query = search.query.trim();
     if (!query) {
-      setSearchError("Enter a name or code to search.");
+      setSearchError("Enter a name or abbreviation to search.");
       return;
     }
     const requestId = ++requestsRef.current.search;
@@ -142,7 +142,7 @@ function ExploreTools({ mode }) {
       if (requestId !== requestsRef.current.search) return;
       setSearchResults(result.results);
       setFigure(null);
-      if (!result.results.length) setSearchMessage("No matching nodes. Try another name or code.");
+      if (!result.results.length) setSearchMessage("No matches found. Try another name or a translation abbreviation, such as KJV.");
     } catch (error) {
       if (requestId !== requestsRef.current.search) return;
       setSearchError(error.message);
@@ -243,42 +243,42 @@ function ExploreTools({ mode }) {
 
       <main className="explore-tools">
         <Notice error={health.status === "offline"}>
-          {health.status === "offline" ? "Could not reach the API"
+          {health.status === "offline" ? "Cannot connect to Bibliagraphia. Try again shortly."
             : health.status === "empty" ? "No Bible data is available." : ""}
         </Notice>
         <header className="explore-dashboard-heading">
-          <a className="text-accent text-[12px]" href="/explore">&larr; Explore dashboard</a>
+          <a className="text-accent text-[12px]" href="/explore">&larr; Back to Explore</a>
           {mode === "search" && (
             <>
               <h2>Search scripture</h2>
-              <p>Search by name or code, then open an exact node in Relationships.</p>
+              <p>Find a passage, person or place, then see what it connects to.</p>
             </>
           )}
         </header>
         <div className={`explore-tools-grid ${mode === "search" ? "search-tools" : ""}`}>
           <div className="primary-column">
             {mode === "search" && (
-            <Panel title="Find a connection" eyebrow="01 — Search" className="search-panel">
-              <p className="panel-copy">Look up a book, verse, translation, place, region or biblical figure by name or code.</p>
+            <Panel title="Find in the Bible" className="search-panel">
+              <p className="panel-copy">Search books, passages, people, places, regions and translations. You can also use abbreviations such as GEN or KJV.</p>
               <form className="form-row search-form" onSubmit={runSearch}>
                 <Field
-                  label="Search the graph"
+                  label="Search the Bible"
                   value={search.query}
                   onChange={(query) => setSearch((current) => ({ ...current, query }))}
-                  placeholder="Try “JOH”, “KJV” or “Jerusalem”…"
+                  placeholder="Try “Ruth”, “KJV” or “Jerusalem”…"
                 />
                 <Select
                   label="Filter search by type"
                   value={search.label}
                   onChange={(label) => setSearch((current) => ({ ...current, label }))}
-                  options={[["", "All types"], ...labels]}
+                  options={[["", "Everything"], ...labels.map((label) => [label, nodeTypeName(label)])]}
                 />
                 <button className="button button-primary" disabled={searchLoading}>
                   {searchLoading ? "Searching…" : "Search"} <span aria-hidden="true">↗</span>
                 </button>
               </form>
               <Notice error={Boolean(searchError)}>{searchError || searchMessage}</Notice>
-              {searchLoading && <Notice>Searching nodes...</Notice>}
+              {searchLoading && <Notice>Finding matches...</Notice>}
               {searchResults.length > 0 && (
                 <ul className="result-list" aria-label="Search results">
                   {searchResults.map((node) => (
@@ -334,7 +334,7 @@ function ExploreTools({ mode }) {
             </Panel>
 
             <Panel title="How are these connected?" eyebrow="Follow a connection">
-              <p className="panel-copy">Choose two books, passages or places and see the links between them.</p>
+              <p className="panel-copy">Choose any two passages, people, places, books, regions or translations to see how they connect.</p>
               <form className="connection-form" onSubmit={runPath}>
                 <GraphNodeSearch
                   label="From"

@@ -8,13 +8,13 @@ import { describeNode, pathNode, relationshipHref } from "./nodeLinks.js";
 const widgets = [
   {
     id: "search", title: "Search scripture", icon: "search", href: "/explore/search",
-    action: "Open search", description: "Find books, passages, translations, places, regions and biblical figures.",
+    action: "Open search", description: "Find books, passages, translations, places, regions and people.",
     load: () => get("/search?q=&label=book&limit=4"),
   },
   {
     id: "read", title: "Read and compare", icon: "book",
     href: "/read?book=GEN&chapter=1&version=KJV&compare=DRB",
-    action: "Open reader", description: "Start at Genesis 1:1 and compare translations side by side.",
+    action: "Read passage", description: "Start at Genesis 1:1 and compare translations side by side.",
     load: () => get("/verse?book_code=GEN&chapter=1&verse_number=1"),
   },
   {
@@ -30,14 +30,14 @@ const widgets = [
   },
   {
     id: "connections", title: "Trace a connection", icon: "relationships", href: "/explore/connections",
-    action: "Open connections", description: "Walk relationships or find a path from Genesis to Syria.",
+    action: "See how they connect", description: "See which passages connect Genesis with Syria, or choose your own starting points.",
     load: () => post("/path", { source: "GEN", source_label: "book", target: "Syria", target_label: "region" }),
   },
 ];
 
 function GraphPreview({ graph }) {
   const centre = graph.nodes.find((node) => node.id === graph.start_id);
-  if (!centre) return <p className="widget-empty">No graph nodes found.</p>;
+  if (!centre) return <p className="widget-empty">No related passages found.</p>;
   const neighbours = graph.nodes.filter((node) => node.id !== graph.start_id).slice(0, 6);
   const points = neighbours.map((node, index) => {
     const angle = index * 2 * Math.PI / neighbours.length - Math.PI / 2;
@@ -56,7 +56,7 @@ function GraphPreview({ graph }) {
         <circle cx="160" cy="95" r="24" className="fill-node-book" />
         <text x="160" y="99" textAnchor="middle" className="fill-panel">GEN</text>
       </svg>
-      <p className="widget-meta">{graph.count} nodes in this preview · {graph.links.length} connections{graph.branch_limited ? " · more available" : ""}</p>
+      <p className="widget-meta">{graph.count} items in this view · {graph.links.length} connections{graph.branch_limited ? " · more available" : ""}</p>
     </>
   );
 }
@@ -78,7 +78,7 @@ function WidgetContent({ id, data }) {
     const places = [...new Map(data.points.map((point) => [point.name, point])).values()].slice(0, 5);
     return (
       <>
-        <p className="widget-stat">{data.count}<span>location mentions{data.truncated ? " shown (limited)" : " in Genesis"}</span></p>
+        <p className="widget-stat">{data.count}<span>times places are mentioned{data.truncated ? " shown (limited)" : " in Genesis"}</span></p>
         <ul className="widget-list">
           {places.map((place) => <li key={place.name}><a href={`/map?${new URLSearchParams({ place: place.name })}`}><NodeIcon type="location" />{place.name}<small>{place.region}</small></a></li>)}
         </ul>
@@ -93,7 +93,7 @@ function WidgetContent({ id, data }) {
         return <li key={entry.id}><a href={relationshipHref(entry)}><NodeIcon type={entry.label} />{describeNode(entry)}</a></li>;
       })}
     </ol>
-  ) : <p className="widget-empty">No path found between Genesis and Syria.</p>;
+  ) : <p className="widget-empty">No recorded connection found between Genesis and Syria.</p>;
 }
 
 function PreviewWidget({ widget }) {
