@@ -11,6 +11,7 @@
 --   books     -> id 'book:<code>',              attrs {testament, vulgate, rheims, kjv, note}
 --   verses    -> id 'verse:<ver>:<bk>:<ch>:<vs>', attrs {book, text}
 --   regions   -> id 'region:<name>',            attrs {keywords, description}
+--   figures   -> id 'figure:<name>',            attrs {testament, category, keywords, description, tipnr}
 --   locations -> id 'location:<name>:<bk>:<ch>:<vs>', attrs {secondary_name, testament,
 --                                                          rheims, vulgate, kjv,
 --                                                          rheims_text, vulgate_text, kjv_text,
@@ -23,6 +24,11 @@
 --   verse         --location_in_verse--> location    (location mentions this verse;
 --                                                      created per-version for each
 --                                                      version whose verse exists)
+--   verse         --figure_in_verse-->  figure      (figure appears in this verse, per
+--                                                      STEP Bible TIPNR refs converted to
+--                                                      each version's verse numbering;
+--                                                      built in Python - see
+--                                                      scripts/stepbible.py)
 
 -- Verify counts after loading (run from Python or the DuckDB CLI):
 SELECT 'versions',  COUNT(*) FROM nodes WHERE label='version';
@@ -30,7 +36,9 @@ SELECT 'books',     COUNT(*) FROM nodes WHERE label='book';
 SELECT 'verses',    COUNT(*) FROM nodes WHERE label='verse';
 SELECT 'regions',   COUNT(*) FROM nodes WHERE label='region';
 SELECT 'locations', COUNT(*) FROM nodes WHERE label='location';
+SELECT 'figures',   COUNT(*) FROM nodes WHERE label='figure';
 SELECT 'verse_in_book',    COUNT(*) FROM edges WHERE label='verse_in_book';
 SELECT 'verse_in_version', COUNT(*) FROM edges WHERE label='verse_in_version';
 SELECT 'location_in_region', COUNT(*) FROM edges WHERE label='location_in_region';
 SELECT 'location_in_verse',  COUNT(*) FROM edges WHERE label='location_in_verse';
+SELECT 'figure_in_verse',    COUNT(*) FROM edges WHERE label='figure_in_verse';

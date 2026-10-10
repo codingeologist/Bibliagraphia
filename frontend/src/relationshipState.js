@@ -1,5 +1,5 @@
 const storageKey = "relationships-state";
-const types = ["book", "verse", "location", "version", "region"];
+const types = ["book", "verse", "location", "version", "region", "figure"];
 
 export const validGraphDepth = (value) => {
   const depth = Number(value);
