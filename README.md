@@ -89,7 +89,11 @@ The graph is heterogeneous, stored in two tables:
 | `location_in_verse`  | verse -> location  | a verse mentions a location  |
 | `location_in_region` | region -> location | a region contains a location |
 | `figure_in_verse`    | verse -> figure    | a verse mentions a figure     |
-| `figure_with_figure` | figure -> figure   | two figures share a verse; `weight` = distinct shared verses (deduplicated across versions) |
+| `figure_relative_of` | figure -> figure   | kinship from TIPNR genealogy: father/mother/parent edges run parent -> child, sibling/partner edges stored once per pair; `attrs.relationship` names the kind |
+
+Figures that merely **share a verse** (e.g. Peter and Moses both in Luke 9:33)
+are *not* given an edge — the link is a path, person → verse → person, queried
+by joining the verse end of `figure_in_verse` (see `sql/queries.sql`).
 
 There are deliberately **no self-referencing foreign keys**: edges are only created between
 nodes actually present (referential integrity), which keeps the graph clean.

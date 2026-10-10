@@ -31,16 +31,18 @@ CREATE TABLE IF NOT EXISTS nodes (
 --   location_in_region  region -> location    (a region contains a location)
 --   figure_in_verse     verse -> figure       (a verse mentions a figure)
 --   figure_in_verse     verse -> figure       (a verse mentions a figure)
---   figure_with_figure  figure -> figure     (two figures share a verse; `weight`
---                                            = distinct shared verses, deduplicated
---                                            across versions; derived at build time)
+--   figure_relative_of  figure -> figure      (kinship from TIPNR genealogy; father /
+--                                              mother / parent edges run parent ->
+--                                              child, sibling / partner edges are
+--                                              stored once per pair in canonical id
+--                                              order; `attrs` holds the relationship)
 -- (direction chosen so that recursive traversals fan out from the
 -- "container" side — book/version/region — toward the leaves.)
 CREATE TABLE IF NOT EXISTS edges (
     from_id   VARCHAR NOT NULL,
     to_id     VARCHAR NOT NULL,
     label     VARCHAR NOT NULL,
-    weight    INTEGER,            -- figure_with_figure only, NULL for the rest
+    attrs     JSON,               -- edge-type-specific attributes, NULL for most
     PRIMARY KEY (from_id, to_id, label)
 );
 

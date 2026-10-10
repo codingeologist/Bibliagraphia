@@ -51,24 +51,56 @@ JOIN nodes l ON l.id = e.to_id
 WHERE r.label = 'region' AND r.name = 'Syria'
 ORDER BY l.book_code, l.chapter, l.verse_number;
 
--- 6. Person-to-person links. Figures that appear in the same verse are
--- connected by figure_with_figure edges (built at load time); `weight` is
--- the number of distinct verses they share (deduplicated across
--- versions). Top co-occurring figure pairs:
-SELECT n1.name AS figure_a, n2.name AS figure_b, e.weight AS shared_verses
-FROM edges e
-JOIN nodes n1 ON n1.id = e.from_id
-JOIN nodes n2 ON n2.id = e.to_id
-WHERE e.label = 'figure_with_figure'
-ORDER BY e.weight DESC
+-- 6. Person-to-person co-occurrence ("person-passage-person"): figures
+-- that appear in the same passage. The link is a *path* through the
+-- shared verses (verse -> both figures), not an edge — join on the VERSE
+-- end (from_id) of figure_in_verse. Joining on the figure end explodes
+-- into tens of millions of pairs and OOMs the build. The verse ids are
+-- stripped of their version prefix so counts are deduplicated across
+-- versions.
+SELECT n1.name AS figure_a, n2.name AS figure_b,
+       COUNT(DISTINCT regexp_replace(e1.from_id, '^verse:[A-Z]+:', '')) AS shared_verses
+FROM edges e1
+JOIN edges e2 ON e1.from_id = e2.from_id AND e1.to_id < e2.to_id
+JOIN nodes n1 ON n1.id = e1.to_id
+JOIN nodes n2 ON n2.id = e2.to_id
+WHERE e1.label = 'figure_in_verse' AND e2.label = 'figure_in_verse'
+GROUP BY 1, 2
+ORDER BY shared_verses DESC
 LIMIT 10;
 
--- 7. Everyone a given figure appears alongside, strongest first.
-SELECT CASE WHEN e.from_id = 'figure:Peter' THEN n2.name ELSE n1.name END AS figure,
-       e.weight AS shared_verses
+-- 7. Person-to-person kinship (figure_relative_of edges from TIPNR
+-- genealogy): relatives of a figure, with the relationship kind.
+-- father/mother/parent edges run parent -> child; sibling/partner edges
+-- are undirected (either end may be the figure). Note: with a JSON-typed
+-- attrs column the `->>'field'` operator can be shadowed by column name
+-- resolution in join scopes - use json_extract_string() instead.
+SELECT CASE WHEN e.from_id = 'figure:David' THEN n2.name ELSE n1.name END AS relative,
+       json_extract_string(e.attrs, 'relationship') AS relationship,
+       CASE WHEN e.from_id = 'figure:David' THEN 'down' ELSE 'up/sideways' END AS direction
 FROM edges e
 JOIN nodes n1 ON n1.id = e.from_id
 JOIN nodes n2 ON n2.id = e.to_id
-WHERE e.label = 'figure_with_figure'
-  AND ('figure:Peter' IN (e.from_id, e.to_id))
-ORDER BY e.weight DESC;
+WHERE e.label = 'figure_relative_of'
+  AND 'figure:David' IN (e.from_id, e.to_id)
+ORDER BY direction, relative;
+
+-- 8. Descendants of a figure: recursive walk down the family tree along
+-- parent -> child edges. (Skip the DISTINCT trick for the general case;
+-- TIPNR's tree has no cycles.)
+WITH RECURSIVE descendants AS (
+    SELECT to_id AS node_id, 1 AS level
+    FROM edges
+    WHERE from_id = 'figure:Abraham' AND label = 'figure_relative_of'
+      AND json_extract_string(attrs, 'relationship') IN ('father', 'mother', 'parent')
+    UNION ALL
+    SELECT e.to_id, d.level + 1
+    FROM edges e
+    JOIN descendants d ON e.from_id = d.node_id
+    WHERE e.label = 'figure_relative_of'
+      AND json_extract_string(e.attrs, 'relationship') IN ('father', 'mother', 'parent')
+)
+SELECT n.name, d.level
+FROM descendants d
+JOIN nodes n ON n.id = d.node_id
+ORDER BY d.level, n.name;

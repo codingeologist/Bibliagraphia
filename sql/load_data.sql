@@ -29,12 +29,14 @@
 --                                                      each version's verse numbering;
 --                                                      built in Python - see
 --                                                      scripts/stepbible.py)
---   figure         --figure_with_figure--> figure  (two figures appear in the same
---                                                      verse; `weight` = number of distinct
---                                                      verses shared, deduplicated across
---                                                      versions; derived from
---                                                      figure_in_verse at build time, see
---                                                      scripts/build_db.py)
+--   figure         --figure_relative_of--> figure  (kinship from TIPNR genealogy columns;
+--                                                      father/mother/parent edges run
+--                                                      parent -> child, sibling/partner
+--                                                      edges stored once per pair in
+--                                                      canonical id order;
+--                                                      attrs: {"relationship": ...};
+--                                                      built in Python - see
+--                                                      scripts/stepbible.py)
 
 -- Verify counts after loading (run from Python or the DuckDB CLI):
 SELECT 'versions',  COUNT(*) FROM nodes WHERE label='version';
@@ -47,10 +49,10 @@ SELECT 'verse_in_book',    COUNT(*) FROM edges WHERE label='verse_in_book';
 SELECT 'verse_in_version', COUNT(*) FROM edges WHERE label='verse_in_version';
 SELECT 'location_in_region', COUNT(*) FROM edges WHERE label='location_in_region';
 SELECT 'location_in_verse',  COUNT(*) FROM edges WHERE label='location_in_verse';
-SELECT 'figure_in_verse',    COUNT(*) FROM edges WHERE label='figure_in_verse';
-SELECT 'figure_with_figure', COUNT(*) FROM edges WHERE label='figure_with_figure';
-SELECT 'heaviest figure pair (shared verses):';
-SELECT e.from_id, e.to_id, e.weight
+SELECT 'figure_in_verse',     COUNT(*) FROM edges WHERE label='figure_in_verse';
+SELECT 'figure_relative_of',  COUNT(*) FROM edges WHERE label='figure_relative_of';
+SELECT 'Aaron relatives:';
+SELECT e.from_id, e.to_id, json_extract_string(e.attrs, 'relationship')
 FROM edges e
-WHERE e.label='figure_with_figure'
-ORDER BY e.weight DESC LIMIT 1;
+WHERE e.label='figure_relative_of'
+  AND (e.from_id='figure:Aaron' OR e.to_id='figure:Aaron');
