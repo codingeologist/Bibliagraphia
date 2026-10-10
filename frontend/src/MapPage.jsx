@@ -214,7 +214,8 @@ function MapPage({ initialMap, onMapReady }) {
         </div>
         <div className="header-actions">
           <nav className="site-nav" aria-label="Main navigation">
-            <a href="/">Explore</a>
+            <a href="/">Home</a>
+            <a href="/explore">Explore</a>
             <a href="/read">Read Bible</a>
             <a href="/map" aria-current="page">Map</a>
           </nav>
