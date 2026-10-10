@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -477,7 +478,7 @@ def graph(
         conn.close()
 
 
-@app.get("/map")
+@app.get("/map/points")
 def map_points(
     region: Optional[str] = None,  # region name, e.g. Syria
     book: Optional[str] = None,   # book code, e.g. JOH
@@ -548,6 +549,95 @@ def map_points(
         }
     except Exception as exc:  # noqa: BLE001
         return {"error": str(exc)}
+    finally:
+        conn.close()
+
+
+@app.get("/map/places")
+def map_places():
+    """Return unique, mappable places with repeated mention coordinates grouped."""
+    conn = duckdb.connect(DB_PATH, read_only=True)
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, name,
+                   json_extract_string(attrs, 'secondary_name'),
+                   json_extract_string(attrs, 'region'),
+                   book_code, chapter, verse_number,
+                   json_extract(attrs, 'latitude')::DOUBLE,
+                   json_extract(attrs, 'longitude')::DOUBLE
+            FROM nodes
+            WHERE label = 'location'
+              AND json_extract_string(attrs, 'latitude') IS NOT NULL
+              AND json_extract_string(attrs, 'longitude') IS NOT NULL
+            ORDER BY name, book_code, chapter, verse_number, id;
+            """
+        ).fetchall()
+
+        def normalise_name(value):
+            return re.sub(r"\s+\d+$", "", value or "").strip().casefold()
+
+        parents = list(range(len(rows)))
+
+        def find(index):
+            while parents[index] != index:
+                parents[index] = parents[parents[index]]
+                index = parents[index]
+            return index
+
+        def union(left, right):
+            left_root, right_root = find(left), find(right)
+            if left_root != right_root:
+                parents[right_root] = left_root
+
+        alias_owner = {}
+        for index, row in enumerate(rows):
+            region_key = (row[3] or "").casefold()
+            aliases = {
+                alias for alias in (
+                    normalise_name(row[1]),
+                    normalise_name(row[2]),
+                ) if alias
+            }
+            for alias in aliases:
+                key = (region_key, alias)
+                if key in alias_owner:
+                    union(index, alias_owner[key])
+                else:
+                    alias_owner[key] = index
+
+        groups = {}
+        for index, row in enumerate(rows):
+            groups.setdefault(find(index), []).append(row)
+
+        places = []
+        for group in groups.values():
+            name_counts = {}
+            aliases = set()
+            references = set()
+            for row in group:
+                name = re.sub(r"\s+\d+$", "", row[1] or "").strip()
+                secondary_name = re.sub(r"\s+\d+$", "", row[2] or "").strip()
+                if name:
+                    name_counts[name] = name_counts.get(name, 0) + 1
+                    aliases.add(name)
+                if secondary_name:
+                    aliases.add(secondary_name)
+                references.add((row[4], row[5], row[6]))
+
+            name = min(name_counts, key=lambda value: (-name_counts[value], value))
+            places.append({
+                "id": group[0][0],
+                "name": name,
+                "aliases": sorted(aliases, key=str.casefold),
+                "region": group[0][3],
+                "lat": sum(row[7] for row in group) / len(group),
+                "lng": sum(row[8] for row in group) / len(group),
+                "mention_count": len(references),
+            })
+
+        places.sort(key=lambda place: (place["name"].casefold(), place["region"] or ""))
+        return {"count": len(places), "places": places}
     finally:
         conn.close()
 
@@ -687,6 +777,107 @@ def read_chapter(
                 }
                 for location in locations
             ],
+        }
+    finally:
+        conn.close()
+
+
+@app.get("/place/relations")
+def place_relations(location_id: str = Query(..., min_length=1)):
+    """Return translations and other Bible references for a location mention."""
+    conn = duckdb.connect(DB_PATH, read_only=True)
+    try:
+        location = conn.execute(
+            """
+            SELECT id, name, book_code, chapter, verse_number,
+                   json_extract_string(attrs, 'secondary_name') AS secondary_name,
+                   json_extract_string(attrs, 'region') AS region,
+                   json_extract(attrs, 'latitude')::DOUBLE AS latitude,
+                   json_extract(attrs, 'longitude')::DOUBLE AS longitude
+            FROM nodes
+            WHERE id = ? AND label = 'location';
+            """,
+            [location_id],
+        ).fetchone()
+        if not location:
+            return {"error": "Location mention not found."}
+
+        def normalise_name(value):
+            return re.sub(r"\s+\d+$", "", value or "").strip().casefold()
+
+        aliases = sorted({
+            alias for alias in (
+                normalise_name(location[1]),
+                normalise_name(location[5]),
+            ) if alias
+        })
+        rows = conn.execute(
+            """
+            SELECT l.id, l.book_code, b.name AS book_name, l.chapter, l.verse_number,
+                   v.version_code, json_extract_string(v.attrs, 'text') AS text
+            FROM nodes l
+            JOIN nodes v
+              ON v.label = 'verse'
+             AND v.book_code = l.book_code
+             AND v.chapter = l.chapter
+             AND v.verse_number = l.verse_number
+            LEFT JOIN nodes b
+              ON b.label = 'book' AND b.book_code = l.book_code
+            WHERE l.label = 'location'
+              AND (
+                  lower(regexp_replace(l.name, '\\s+\\d+$', '')) IN (SELECT unnest(?))
+                  OR lower(regexp_replace(
+                      json_extract_string(l.attrs, 'secondary_name'), '\\s+\\d+$', ''
+                  )) IN (SELECT unnest(?))
+              )
+            ORDER BY l.book_code, l.chapter, l.verse_number, v.version_code;
+            """,
+            [aliases, aliases],
+        ).fetchall()
+
+        references = {}
+        current_key = (location[2], location[3], location[4])
+        for mention_id, book_code, book_name, chapter, verse_number, version_code, text in rows:
+            key = (book_code, chapter, verse_number)
+            reference = references.setdefault(key, {
+                "book_code": book_code,
+                "book_name": book_name or book_code,
+                "chapter": chapter,
+                "verse_number": verse_number,
+                "translations": [],
+                "location_ids": [],
+            })
+            if not any(item["id"] == mention_id for item in reference["location_ids"]):
+                reference["location_ids"].append({"id": mention_id})
+            translation = {"code": version_code, "text": text}
+            if translation not in reference["translations"]:
+                reference["translations"].append(translation)
+
+        current_reference = references.pop(current_key, {
+            "book_code": location[2],
+            "book_name": location[2],
+            "chapter": location[3],
+            "verse_number": location[4],
+            "translations": [],
+            "location_ids": [{"id": location[0]}],
+        })
+        return {
+            "place": {
+                "id": location[0],
+                "name": location[1],
+                "region": location[6],
+                "attrs": {"latitude": location[7], "longitude": location[8]},
+                "aliases": aliases,
+            },
+            "reference": current_reference,
+            "mentions": sorted(
+                references.values(),
+                key=lambda item: (
+                    item["book_code"],
+                    item["chapter"],
+                    item["verse_number"],
+                ),
+            ),
         }
     finally:
         conn.close()

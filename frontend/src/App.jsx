@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { get, post } from "./api.js";
 import GraphExplorer from "./GraphExplorer.jsx";
 import MapExplorer from "./MapExplorer.jsx";
+import MapPage from "./MapPage.jsx";
 import ReaderPage from "./ReaderPage.jsx";
 
 const labels = ["book", "verse", "location", "region", "version"];
@@ -285,6 +287,7 @@ function ExplorePage() {
           <nav className="site-nav" aria-label="Main navigation">
             <a href="/" aria-current="page">Explore</a>
             <a href="/read">Read Bible</a>
+            <a href="/map">Map</a>
           </nav>
           <span className={`connection connection-${health.status}`}>
             <span className="connection-dot" />
@@ -543,7 +546,60 @@ function ExplorePage() {
 }
 
 function App() {
-  return window.location.pathname === "/read" ? <ReaderPage /> : <ExplorePage />;
+  const [route, setRoute] = useState(() => ({ path: window.location.pathname, key: 0 }));
+  const expandingRef = useRef(false);
+  const mapReadyRef = useRef(null);
+
+  useEffect(() => {
+    const restoreRoute = () => {
+      mapReadyRef.current?.();
+      setRoute((current) => ({ path: window.location.pathname, key: current.key + 1 }));
+    };
+    window.addEventListener("popstate", restoreRoute);
+    return () => window.removeEventListener("popstate", restoreRoute);
+  }, []);
+
+  const expandMap = (event, initialMap) => {
+    if (event.defaultPrevented || event.button !== 0
+      || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
+      || !document.startViewTransition
+      || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    event.preventDefault();
+    if (expandingRef.current) return;
+    expandingRef.current = true;
+    const href = event.currentTarget.href;
+    const focusMap = () => {
+      expandingRef.current = false;
+      mapReadyRef.current = null;
+      document.querySelector(".map-page-panel")?.focus({ preventScroll: true });
+    };
+    const transition = document.startViewTransition(async () => {
+      const mapReady = new Promise((resolve) => {
+        mapReadyRef.current = resolve;
+        window.history.replaceState(null, "", initialMap.readerHref);
+        window.history.pushState(null, "", href);
+        flushSync(() => setRoute((current) => ({
+          path: "/map",
+          key: current.key + 1,
+          initialMap,
+          onMapReady: resolve,
+        })));
+        window.scrollTo(0, 0);
+      });
+      await mapReady;
+    });
+    transition.finished.then(focusMap, (error) => {
+      console.error("Map expansion transition failed:", error);
+      focusMap();
+    });
+  };
+
+  if (route.path === "/read") return <ReaderPage key={route.key} onExpandMap={expandMap} />;
+  if (route.path === "/map") {
+    return <MapPage key={route.key} initialMap={route.initialMap} onMapReady={route.onMapReady} />;
+  }
+  return <ExplorePage />;
 }
 
 export default App;

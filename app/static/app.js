@@ -560,7 +560,7 @@ async function doMap() {
   m.map.scrollWheelZoom.disable(); // don't hijack page scroll on hover
   $("map-summary").textContent = "querying…";
   const param = scope === "region" ? `region=${encodeURIComponent(q)}` : `book=${encodeURIComponent(q)}`;
-  const r = await fetch(`/map?${param}`);
+  const r = await fetch(`/map/points?${param}`);
   const j = await r.json();
   if (j.error) { $("map-summary").textContent = ""; return alert(j.error); }
   m.layer.clearLayers();

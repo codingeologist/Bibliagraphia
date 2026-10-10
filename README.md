@@ -123,7 +123,12 @@ used directly in the JSX components under `frontend/src/`.
 Open `/read` in the Vite app to read a Bible book. Choose a book, chapter,
 translation, or jump directly to a verse; previous/next controls move between
 chapters. Underlined place mentions that match graph locations open place
-details with links to the graph and map.
+details with links to the graph and map. Open `/map` to browse all mappable
+places; select a marker to read the passages that mention it.
+The expand control on a place's preview map smoothly grows it into the full
+map, preserving its centre and zoom. Browser Back restores the passage and
+place sidebar. The animation uses the View Transitions API; unsupported
+browsers and reduced-motion preferences retain normal page navigation.
 
 Open the Vite URL shown in the terminal (normally `http://localhost:5173`).
 Vite proxies API requests to `http://127.0.0.1:8000`. For a deployed frontend
@@ -142,9 +147,12 @@ no SQL-injection surface.
 | `POST /traverse`                                              | `{start_node, label, edge}`                    | recursive descendants along `edge` + their edges |
 | `POST /path`                                                  | `{source, source_label, target, target_label}` | shortest path (BFS) between two nodes            |
 | `GET /graph?node=&label=&node_id=`                            | node name and label; optional exact node ID     | nearby nodes and relationship edges              |
+| `GET /map/points?region=&book=&limit=`                        | a region or book code                           | geocoded location mentions for selected scope    |
+| `GET /map/places`                                              | —                                              | unique mappable places with repeated mentions grouped |
 | `GET /verse?book_code=&chapter=&verse_number=`                | verse reference                                | the same verse across all versions               |
 | `GET /reader/catalog?version_code=`                           | optional version code (defaults to `KJV`)      | books, translations, and available chapters      |
 | `GET /chapter?book_code=&chapter=&version_code=`              | passage reference                              | ordered verse text and linked location nodes     |
+| `GET /place/relations?location_id=`                           | location mention node ID                       | translations and other references for the place  |
 | `GET /`                                                       | —                                              | the single-page frontend                         |
 
 Examples:
