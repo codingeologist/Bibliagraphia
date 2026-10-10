@@ -1,0 +1,348 @@
+/* Graph component utility recipes. */
+@layer components {
+  .graph-panel {
+    @apply overflow-hidden;
+  }
+
+  .graph-controls input {
+    @apply [flex-basis:120px];
+  }
+
+  .relationships-page {
+    @apply max-w-none p-0 [height:calc(100dvh_-_76px)];
+  }
+
+  .graph-explorer-full {
+    @apply flex flex-col h-full min-h-0;
+  }
+
+  .relationship-workspace {
+    @apply grid [grid-template-columns:minmax(0,_1fr)] flex-1 min-h-0 gap-[12px] mt-[10px];
+  }
+
+  .relationship-workspace.has-details {
+    @apply [grid-template-columns:minmax(0,_1fr)_320px];
+  }
+
+  .relationship-workspace .graph-wrap {
+    @apply [grid-column:1] [grid-row:1] mt-0 min-h-[180px];
+  }
+
+  .relationship-workspace .relationship-detail {
+    @apply [grid-column:2] [grid-row:1];
+  }
+
+  .graph-explorer-full .graph-canvas {
+    @apply h-full;
+  }
+
+  .graph-explorer-full .graph-controls, .graph-explorer-full .graph-tip {
+    @apply shrink-0;
+  }
+
+  .relationship-node-picker {
+    @apply flex items-center gap-[8px] text-[12px] text-muted;
+  }
+
+  .relationship-node-picker select {
+    @apply [max-width:min(420px,_75vw)] p-[6px] bg-panel text-ink [border:1px_solid_var(--line)] rounded-[5px];
+  }
+
+  .relationship-toolbar {
+    @apply flex items-start gap-[10px] shrink-0;
+  }
+
+  .relationship-toolbar .graph-controls {
+    @apply flex-1 min-w-0;
+  }
+
+  .graph-node-search-trigger {
+    @apply flex items-center gap-[8px] w-full min-h-[40px] [padding:8px_12px] [border:1px_solid_var(--line)] rounded-[5px] bg-panel text-ink text-start;
+  }
+
+  .graph-node-search-trigger span:first-of-type {
+    @apply flex-1 overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+
+  .graph-node-search-panel {
+    @apply absolute [top:calc(100%_+_6px)] [inset-inline-start:0] z-[20] [width:min(420px,_calc(100vw_-_40px))] [max-height:min(480px,_65dvh)] overflow-y-auto p-[10px] [border:1px_solid_var(--line)] rounded-[5px] bg-panel [box-shadow:0_5px_18px_rgb(0_0_0_/_15%)];
+  }
+
+  .graph-node-search-panel input {
+    @apply w-full min-w-0;
+  }
+
+  .graph-node-search-panel p {
+    @apply text-[12px] text-muted;
+  }
+
+  .graph-node-search-panel [role="option"] {
+    @apply flex items-center gap-[8px] [padding:9px_8px] rounded-[4px] text-[12px] cursor-pointer;
+  }
+
+  .graph-node-search-panel [role="option"] svg {
+    @apply shrink-0;
+  }
+
+  .graph-node-search-panel [role="option"]:hover, .graph-node-search-panel [aria-selected="true"] {
+    @apply bg-accent-soft;
+  }
+
+  .graph-node-search-trigger:focus-visible {
+    @apply [outline:2px_solid_var(--accent)] [outline-offset:2px];
+  }
+
+  .relationship-node-menu {
+    @apply relative shrink-0;
+  }
+
+  .relationship-node-menu summary {
+    @apply grid place-items-center w-[40px] h-[40px] list-none cursor-pointer [border:1px_solid_var(--line)] rounded-[5px] bg-panel text-ink;
+  }
+
+  .relationship-node-menu summary::-webkit-details-marker {
+    @apply hidden;
+  }
+
+  .relationship-node-menu summary:focus-visible {
+    @apply [outline:2px_solid_var(--accent)] [outline-offset:2px];
+  }
+
+  .relationship-node-menu-panel {
+    @apply absolute [inset-inline-end:0] [top:calc(100%_+_8px)] z-[10] [width:min(320px,_calc(100vw_-_30px))] p-[14px] [border:1px_solid_var(--line)] rounded-[5px] bg-panel [box-shadow:0_5px_18px_rgb(0_0_0_/_12%)];
+  }
+
+  .relationship-node-menu-panel .relationship-node-picker {
+    @apply grid;
+  }
+
+  .relationship-node-menu-panel select {
+    @apply w-full min-w-0 max-w-full;
+  }
+
+  .relationship-names-toggle {
+    @apply flex items-center gap-[8px] mb-[14px] text-[12px] cursor-pointer;
+  }
+
+  .relationship-names-toggle input {
+    @apply w-auto m-0;
+  }
+
+  .relationship-detail {
+    @apply flex flex-col items-start gap-[12px] min-h-0 overflow-y-auto p-[18px] [border:1px_solid_var(--line)] rounded-[5px] bg-panel text-[12px];
+  }
+
+  .relationship-detail p {
+    @apply m-0 [font:15px/1.6_Georgia,_serif];
+  }
+
+  .relationship-connections {
+    @apply w-full [border-top:1px_solid_var(--line)] pt-[14px];
+  }
+
+  .relationship-connections h3 {
+    @apply [margin:0_0_12px] text-[13px];
+  }
+
+  .relationship-hidden-connections {
+    @apply mb-[14px];
+  }
+
+  .relationship-hidden-connections ul {
+    @apply pl-[18px] list-disc text-muted;
+  }
+
+  .relationship-hidden-connections button {
+    @apply [padding:7px_10px] [border:1px_solid_var(--line)] rounded-[5px] bg-panel text-accent;
+  }
+
+  .relationship-hidden-connections button:disabled {
+    @apply opacity-[.5];
+  }
+
+  .relationship-connections details {
+    @apply [border-top:1px_solid_var(--line)];
+  }
+
+  .relationship-connections summary {
+    @apply flex items-center gap-[8px] [padding:12px_0] cursor-pointer font-semibold;
+  }
+
+  .relationship-connections summary span {
+    @apply [margin-inline-start:auto] text-muted;
+  }
+
+  .relationship-connections ul {
+    @apply list-none [margin:0_0_10px] p-0;
+  }
+
+  .relationship-connections li button {
+    @apply grid gap-[5px] w-full p-[10px] [border:0] rounded-[5px] bg-transparent text-ink text-start;
+  }
+
+  .relationship-connections li button:hover {
+    @apply bg-accent-soft;
+  }
+
+  .relationship-connections li button:disabled {
+    @apply opacity-[.5];
+  }
+
+  .relationship-connections li span {
+    @apply text-muted text-[11px];
+  }
+
+  .relationship-detail .relationship-connections-note {
+    @apply mb-[12px] text-muted [font:11px/1.6_"DM_Sans",_sans-serif];
+  }
+
+  .relationship-detail a, .relationship-link {
+    @apply text-accent text-[12px] font-semibold;
+  }
+
+  .relationship-link {
+    @apply inline-block mb-[16px];
+  }
+
+  @media (max-width: 760px) {
+    .relationship-workspace.has-details {
+      @apply [grid-template-columns:minmax(0,_1fr)] [grid-template-rows:minmax(180px,_1fr)_minmax(0,_auto)];
+    }
+    .relationship-workspace .relationship-detail {
+      @apply [grid-column:1] [grid-row:2] max-h-[200px] p-[12px];
+    }
+  }
+
+  .relationship-refit {
+    @apply absolute top-[10px] left-[48px] [padding:8px_12px] z-[1] [border:1px_solid_var(--line)] rounded-[5px] bg-panel text-ink text-[12px];
+  }
+
+  .graph-explorer-full .graph-fullscreen {
+    @apply left-auto right-[10px];
+  }
+
+  .graph-explorer-full .relationship-refit {
+    @apply left-auto right-[48px];
+  }
+
+  .graph-explorer-full .graph-legend {
+    @apply top-auto bottom-[10px] left-auto right-[10px];
+  }
+
+  .graph-summary-overlay {
+    @apply absolute bottom-[10px] left-[10px] z-[1] [max-width:calc(100%_-_260px)] m-0 [padding:6px_8px] [border:1px_solid_var(--line)] rounded-[5px] bg-panel text-[10px] pointer-events-none;
+  }
+
+  .graph-search-overlay {
+    @apply absolute top-[10px] left-[10px] z-[3] flex gap-[6px] [width:min(460px,_calc(100%_-_170px))];
+  }
+
+  .graph-search-overlay > select {
+    @apply shrink-0 p-[6px] [border:1px_solid_var(--line)] rounded-[5px] bg-panel text-ink text-[12px];
+  }
+
+  .graph-search-overlay .graph-node-search-panel {
+    @apply [width:min(420px,_calc(100vw_-_60px))];
+  }
+
+  .graph-search-overlay .relationship-node-menu {
+    @apply static;
+  }
+
+  .graph-search-overlay .relationship-node-menu-panel {
+    @apply [inset-inline-start:0] [inset-inline-end:auto] [width:min(320px,_100%)];
+  }
+
+  @media (max-width: 620px) {
+    .graph-controls input {
+      @apply basis-full;
+    }
+    .graph-search-overlay {
+      @apply top-[52px] [width:calc(100%_-_20px)];
+    }
+    .graph-explorer-full .graph-legend {
+      @apply bottom-[66px];
+    }
+    .graph-summary-overlay {
+      @apply [max-width:calc(100%_-_20px)];
+    }
+    .relationships-page {
+      @apply [height:calc(100dvh_-_66px)];
+    }
+    .graph-explorer-full .graph-controls {
+      @apply grid [grid-template-columns:1fr_1fr] gap-[6px];
+    }
+    .graph-explorer-full .graph-controls input {
+      @apply min-w-0 w-full;
+    }
+    .graph-explorer-full .graph-controls select {
+      @apply min-w-0 w-full;
+    }
+  }
+
+  .graph-wrap {
+    @apply relative mt-[13px];
+  }
+
+  .graph-wrap:fullscreen {
+    @apply flex flex-col p-[12px] bg-panel;
+  }
+
+  .graph-canvas {
+    @apply w-full h-[315px] block [border:1px_solid_var(--line)] rounded-[6px] bg-canvas cursor-grab touch-none;
+  }
+
+  .graph-wrap:fullscreen .graph-canvas {
+    @apply flex-1 h-auto;
+  }
+
+  .graph-fullscreen {
+    @apply absolute top-[9px] left-[9px] z-[500] w-[29px] h-[29px] [border:1px_solid_var(--line)] rounded-[5px] bg-panel text-muted text-[17px];
+  }
+
+  .graph-fullscreen:hover {
+    @apply text-accent;
+  }
+
+  .graph-legend {
+    @apply absolute top-[9px] right-[9px] flex flex-wrap [justify-content:end] [gap:5px_9px] max-w-[70%] [padding:6px_8px] [border:1px_solid_var(--line)] rounded-[5px] [background:color-mix(in_srgb,_var(--panel)_90%,_transparent)] text-muted text-[9px] pointer-events-none;
+  }
+
+  .graph-legend span {
+    @apply inline-flex items-center gap-[4px];
+  }
+
+  .graph-explorer-full .graph-legend {
+    @apply pointer-events-auto;
+  }
+
+  .graph-type-toggle {
+    @apply inline-flex items-center gap-1 cursor-pointer min-h-[28px];
+  }
+
+  .graph-type-toggle input {
+    @apply accent-accent;
+  }
+
+  .graph-visible-count {
+    @apply basis-full justify-end text-muted;
+  }
+
+  .legend-dot {
+    @apply w-[7px] h-[7px] rounded-[50%] [background:var(--badge-color)];
+  }
+
+  .graph-placeholder {
+    @apply absolute inset-0 grid place-items-center text-muted text-[11px] pointer-events-none;
+  }
+
+  .graph-tip {
+    @apply [margin:8px_0_0] text-muted text-[10px];
+  }
+
+  @media (max-width: 620px) {
+    .graph-canvas {
+      @apply h-[280px];
+    }
+  }
+}

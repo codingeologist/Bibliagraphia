@@ -28,6 +28,7 @@ function MapPage({ initialMap, onMapReady }) {
   const selectedMarkerRef = useRef(null);
   const requestIdRef = useRef(0);
   const initialLocationIdRef = useRef(new URLSearchParams(window.location.search).get("location_id"));
+  const initialPlaceNameRef = useRef(new URLSearchParams(window.location.search).get("place"));
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -180,6 +181,21 @@ function MapPage({ initialMap, onMapReady }) {
               }
             })
             .catch((requestError) => active && setDetailError(requestError.message));
+        } else if (initialPlaceNameRef.current) {
+          const name = initialPlaceNameRef.current;
+          initialPlaceNameRef.current = "";
+          const term = name.toLocaleLowerCase();
+          const place = result.places.find((item) =>
+            item.name.toLocaleLowerCase() === term
+            || item.aliases.some((alias) => alias.toLocaleLowerCase() === term));
+          if (place) {
+            selectPlace(place);
+            mapRef.current.flyTo([place.lat, place.lng], 9, {
+              animate: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+            });
+          } else {
+            setError(`No mapped place named '${name}' was found.`);
+          }
         }
       })
       .catch((requestError) => active && setError(requestError.message))
@@ -204,13 +220,13 @@ function MapPage({ initialMap, onMapReady }) {
     : [];
 
   return (
-    <div className="app-shell">
+    <div className="app-shell min-h-screen">
       <SiteHeader currentPage="/map" dark={dark} onToggleTheme={() => setDark((value) => !value)} />
 
       <main className="map-page-root">
         <section className="panel map-page-panel" aria-label="Map of biblical places" tabIndex={-1}>
           <div className={`map-page-layout${selectedPlace ? " has-selection" : ""}`}>
-            <div className="map-page-map-wrap">
+            <div className="map-page-map-wrap relative h-full min-w-0 overflow-hidden">
               <div className="map-page-heading">
                 <PlaceSearch
                   places={places}

@@ -86,6 +86,64 @@ def test_search_filters_suggestions_by_text_and_type(reader_db):
     assert api.search(q="unmatched", label="book", limit=3)["results"] == []
 
 
+@pytest.mark.parametrize("label", ["region", None])
+def test_suggestions_prioritise_exact_names_before_partial_matches(reader_db, label):
+    conn = duckdb.connect(str(reader_db))
+    conn.executemany(
+        "INSERT INTO nodes VALUES (?, 'region', ?, NULL, NULL, NULL, NULL, '{}')",
+        [(f"region:{name}", name) for name in ["Assyria", "Coelesyria", "Syria"]],
+    )
+    conn.close()
+    result = api.search(q="Syria", label=label, limit=3)
+    assert result["results"][0]["id"] == "region:Syria"
+
+
+def test_connection_resolution_preserves_exact_passage_and_place(reader_db):
+    source = "verse:KJV:GEN:1:1"
+    target = "location:Eden:GEN:1:1:1"
+    result = api.path(api.PathRequest(
+        source=source, source_label="verse", target=target, target_label="location",
+    ))
+    assert result["found"] is True
+    assert [node["id"] for node in result["path"]] == [source, target]
+
+    reverse = api.path(api.PathRequest(
+        source=target, source_label="location", target=source, target_label="verse",
+    ))
+    assert [node["id"] for node in reverse["path"]] == [target, source]
+
+
+def test_connection_ids_are_checked_against_type_and_do_not_fall_back(reader_db):
+    conn = duckdb.connect(str(reader_db), read_only=True)
+    try:
+        assert api._resolve(conn, "verse", "verse:DRB:GEN:1:2") == "verse:DRB:GEN:1:2"
+        assert api._resolve(conn, "verse", "verse:KJV:GEN:99:99") is None
+        assert api._resolve(conn, "book", "verse:KJV:GEN:1:1") is None
+        assert api._resolve(conn, "book", "GEN") == "book:GEN"
+        assert api._resolve(conn, "book", "Genesis") == "book:GEN"
+    finally:
+        conn.close()
+
+
+def test_connected_places_accept_exact_region_id(reader_db):
+    result = api.traverse(api.TraversalRequest(
+        start_node="region:Canaan", label="region", edge="location_in_region",
+    ))
+    assert result["start_id"] == "region:Canaan"
+    assert [node["id"] for node in result["nodes"]] == ["location:Eden:GEN:1:1:1"]
+
+
+def test_connection_to_same_exact_item_retains_zero_hop_contract(reader_db):
+    node_id = "verse:DRB:GEN:1:2"
+    result = api.path(api.PathRequest(
+        source=node_id, source_label="verse", target=node_id, target_label="verse",
+    ))
+    assert result["found"] is True
+    assert result["depth"] == 0
+    assert result["path"] == [node_id]
+    assert result["edges"] == []
+
+
 def test_reader_catalog_lists_available_versions_and_chapters(reader_db):
     result = api.reader_catalog("KJV")
 

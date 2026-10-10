@@ -47,7 +47,7 @@ function PlaceMap({ location, href, onExpand }) {
   }
 
   return (
-    <div className="place-map-preview">
+    <div className="place-map-preview relative mb-[17px]">
       <div
         className="place-map-canvas"
         ref={mapElementRef}
@@ -412,17 +412,16 @@ function ReaderPage({ onExpandMap }) {
   }, [placeRelations]);
 
   return (
-    <div className="app-shell">
+    <div className="app-shell min-h-screen">
       <SiteHeader currentPage="/read" dark={dark} onToggleTheme={() => setDark((value) => !value)} />
 
       <main>
         <section className="panel reader-panel" aria-label="Bible reader">
-          <div className="reader-heading">
+          <div className="reader-heading mb-5 flex items-center justify-between gap-4">
             <div>
-              <h2>Read Bible</h2>
               {compared && <p>Book, chapter and verse stay in sync across translations.</p>}
             </div>
-            <details className="reader-translation-picker" ref={translationPickerRef}>
+            <details className="reader-translation-picker relative shrink-0" ref={translationPickerRef}>
               <summary aria-label="Add translation">+ <span>Add translation</span></summary>
               <div className="reader-translation-options">
                 <label className="reader-control">
@@ -674,14 +673,14 @@ function ReaderPage({ onExpandMap }) {
                     </>
                   )}
                   {compared ? (
-                    <div className="reader-comparison-scroll" role="region" aria-label="Side-by-side translations" tabIndex={0}>
+                    <div className="reader-comparison-scroll max-w-full overflow-x-auto" role="region" aria-label="Side-by-side translations" tabIndex={0}>
                       <table className="reader-comparison-table" style={{ minWidth: `${columns.length * 280}px` }}>
                         <caption>Translations aligned by verse number. Numbering may differ between translations.</caption>
                         <thead>
                           <tr>
                             {columns.map((column) => (
                               <th key={column.code} scope="col">
-                                <div className="reader-column-heading">
+                                <div className="reader-column-heading flex items-start justify-between gap-2">
                                   <span>{translationName(column.code)} <small>{column.code}</small></span>
                                   <button
                                     type="button"
@@ -721,7 +720,7 @@ function ReaderPage({ onExpandMap }) {
                                         onSelectLocation={(location) => setSelectedLocation({ ...location, version_code: column.code })}
                                       />
                                     ) : (
-                                      <p className="reader-missing-verse">
+                                      <p className={"reader-missing-verse m-0 px-[10px] py-[7px] text-muted [font:12px/1.8_\"DM_Sans\",sans-serif]"}>
                                         {!column.loading && !column.error ? `Verse ${number} is not available.` : "—"}
                                       </p>
                                     )}

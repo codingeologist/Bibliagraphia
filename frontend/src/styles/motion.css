@@ -1,0 +1,111 @@
+/* Animation definitions and reduced-motion handling. */
+@layer components {
+  ::view-transition-group(place-map) {
+    animation-duration: 700ms;
+    animation-timing-function: cubic-bezier(.2, .75, .25, 1);
+  }
+
+  ::view-transition-old(place-map), ::view-transition-new(place-map) {
+    height: 100%;
+    object-fit: cover;
+    animation-duration: 700ms;
+    animation-timing-function: cubic-bezier(.2, .75, .25, 1);
+  }
+
+  ::view-transition-old(root), ::view-transition-new(root) {
+    animation: none;
+  }
+
+  .landing-content {
+    animation: landing-arrive 700ms cubic-bezier(.2, .75, .25, 1) both;
+  }
+
+  .landing-card {
+    transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease, background 220ms ease;
+    animation: landing-card-arrive 600ms calc(150ms + var(--card-order) * 90ms) both;
+  }
+
+  .preview-book {
+    transition: transform 350ms cubic-bezier(.2, .75, .25, 1);
+  }
+
+  .landing-card-mapping:hover .map-point, .landing-card-mapping:focus-visible .map-point {
+    animation: map-pulse 1.1s ease-in-out infinite alternate;
+  }
+
+  .landing-card-mapping:hover .point-two, .landing-card-mapping:focus-visible .point-two {
+    animation-delay: 180ms;
+  }
+
+  .landing-card-mapping:hover .point-three, .landing-card-mapping:focus-visible .point-three {
+    animation-delay: 360ms;
+  }
+
+  .landing-card-exploring:hover .graph-node, .landing-card-exploring:focus-visible .graph-node {
+    animation: graph-node-pulse 1.2s ease-in-out infinite alternate;
+  }
+
+  .landing-card-exploring:hover .graph-node-two, .landing-card-exploring:focus-visible .graph-node-two {
+    animation-delay: 150ms;
+  }
+
+  .landing-card-exploring:hover .graph-node-three, .landing-card-exploring:focus-visible .graph-node-three {
+    animation-delay: 300ms;
+  }
+
+  .landing-card-description {
+    transition: max-height 250ms ease, opacity 180ms ease, transform 180ms ease, margin 180ms ease;
+  }
+
+  @keyframes landing-arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  @keyframes landing-card-arrive { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+
+  @keyframes map-pulse { to { transform: scale(1.65); } }
+
+  @keyframes graph-node-pulse { to { transform: scale(1.22); } }
+
+  .map-page-canvas {
+    view-transition-name: place-map;
+  }
+
+  .place-drawer {
+    animation: place-drawer-in .2s ease-out;
+  }
+
+  .place-map-canvas {
+    view-transition-name: place-map;
+  }
+
+  .mention-book-group details > summary::after {
+    transition: transform .15s ease;
+  }
+
+  @keyframes place-drawer-in { from { transform: translateX(18px); opacity: .7; } to { transform: translateX(0); opacity: 1; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .place-drawer {
+      animation: none;
+    }
+    ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+      animation: none !important;
+    }
+    .landing-content {
+      animation: none;
+    }
+    .landing-card {
+      animation: none;
+      transition: none;
+    }
+    .landing-card-description {
+      transition: none;
+    }
+    .preview-book {
+      transition: none;
+    }
+    .landing-card-mapping:hover .map-point, .landing-card-mapping:focus-visible .map-point,
+    .landing-card-exploring:hover .graph-node, .landing-card-exploring:focus-visible .graph-node {
+      animation: none;
+    }
+  }
+}

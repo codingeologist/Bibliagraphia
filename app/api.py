@@ -134,7 +134,7 @@ def _row_to_node(row, columns) -> dict:
 
 
 def _resolve(conn, label: str, name: str) -> Optional[str]:
-    """Resolve a node by name within a label; return its id or None.
+    """Resolve a node by exact ID or name within a label; return its id or None.
 
     Codes are the canonical identifiers — short, unique, and stable
     (books: GEN, JOH, REV; versions: KJV, VUL, DRB) — so they are tried
@@ -146,6 +146,14 @@ def _resolve(conn, label: str, name: str) -> Optional[str]:
       4. name contains ("John" matches "The Gospel According to John")
       5. for regions, keywords in attrs (e.g. "Syria" matches keyword "Damascus")
     """
+    row = conn.execute(
+        "SELECT id FROM nodes WHERE id = ? AND label = ?",
+        [name, label],
+    ).fetchone()
+    if row:
+        return row[0]
+    if name.startswith(f"{label}:"):
+        return None
     row = conn.execute(
         """
         SELECT id FROM nodes
@@ -205,9 +213,14 @@ def search(
                        OR UPPER(version_code) ILIKE UPPER(?)
                        OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?)
                        OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?))
-                ORDER BY label IN ('location', 'verse'), label, name LIMIT ?;
+                ORDER BY label IN ('location', 'verse'), label,
+                         (name ILIKE ? OR UPPER(book_code) = UPPER(?)
+                          OR UPPER(version_code) = UPPER(?)) DESC,
+                         name ILIKE ? DESC, name, chapter, verse_number, version_code, id
+                LIMIT ?;
                 """,
-                [label, like, contains_like, like, like, like, contains_like, limit],
+                [label, like, contains_like, like, like, like, contains_like,
+                 q, q, q, like, limit],
             ).fetchall()
         else:
             rows = conn.execute(
@@ -219,9 +232,14 @@ def search(
                    OR UPPER(version_code) ILIKE UPPER(?)
                    OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?)
                    OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?)
-                ORDER BY label IN ('location', 'verse'), label, name LIMIT ?;
+                ORDER BY label IN ('location', 'verse'), label,
+                         (name ILIKE ? OR UPPER(book_code) = UPPER(?)
+                          OR UPPER(version_code) = UPPER(?)) DESC,
+                         name ILIKE ? DESC, name, chapter, verse_number, version_code, id
+                LIMIT ?;
                 """,
-                [like, contains_like, like, like, like, contains_like, limit],
+                [like, contains_like, like, like, like, contains_like,
+                 q, q, q, like, limit],
             ).fetchall()
         return {"query": q, "results": [
             {"id": r[0], "label": r[1], "name": r[2],
@@ -234,7 +252,7 @@ def search(
 
 
 class TraversalRequest(BaseModel):
-    start_node: str          # node name to resolve
+    start_node: str          # node ID, name or code to resolve
     label: str = "book"      # label of the start node
     edge: str = "verse_in_book"  # edge label to recurse along
 

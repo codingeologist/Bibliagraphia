@@ -12,6 +12,7 @@ import { get } from "./api.js";
 import { NodeIcon, nodeIconPaths } from "./nodeIcons.jsx";
 import GraphNodeSearch from "./GraphNodeSearch.jsx";
 import { saveRelationshipState } from "./relationshipState.js";
+import { relationshipDescription } from "./nodeLinks.js";
 
 const colorVars = {
   book: "--node-book",
@@ -35,13 +36,6 @@ const nodeTypeNames = {
   region: "Regions",
 };
 
-const relationshipNames = {
-  verse_in_book: ["Contains passage", "Belongs to book"],
-  verse_in_version: ["Contains passage", "Available in translation"],
-  location_in_verse: ["Mentions place", "Mentioned in passage"],
-  location_in_region: ["Contains place", "Located in region"],
-};
-
 const nodeDescription = (node) => node.label === "verse"
   ? `${node.name || node.book_code} ${node.chapter}:${node.verse_number} · ${node.version_code}`
   : node.label === "version"
@@ -55,6 +49,9 @@ function GraphExplorer({ seed, fullPage = false }) {
   const [showNames, setShowNames] = useState(seed?.showNames === true);
   const showNamesRef = useRef(showNames);
   showNamesRef.current = showNames;
+  const [hiddenTypes, setHiddenTypes] = useState(() => new Set());
+  const hiddenTypesRef = useRef(hiddenTypes);
+  hiddenTypesRef.current = hiddenTypes;
   const [graph, setGraph] = useState(null);
   const [summary, setSummary] = useState("");
   const [error, setError] = useState("");
@@ -85,6 +82,14 @@ function GraphExplorer({ seed, fullPage = false }) {
     }
     const requestId = ++requestRef.current;
     const previousCentre = exactCentreRef.current;
+    if (nodeId !== previousCentre?.id || start !== previousCentre?.query || nodeLabel !== previousCentre?.label) {
+      setHiddenTypes((current) => {
+        if (!current.has(nodeLabel)) return current;
+        const next = new Set(current);
+        next.delete(nodeLabel);
+        return next;
+      });
+    }
     branchExpansionRef.current = expansion ?? (
       nodeId && nodeId === previousCentre?.id ? branchExpansionRef.current : 1
     );
@@ -178,7 +183,9 @@ function GraphExplorer({ seed, fullPage = false }) {
     context.lineWidth = 1 / view.scale;
     context.beginPath();
     for (const link of links) {
-      if (typeof link.source === "object" && typeof link.target === "object") {
+      if (typeof link.source === "object" && typeof link.target === "object"
+        && !hiddenTypesRef.current.has(link.source.label)
+        && !hiddenTypesRef.current.has(link.target.label)) {
         context.moveTo(link.source.x, link.source.y);
         context.lineTo(link.target.x, link.target.y);
       }
@@ -186,6 +193,7 @@ function GraphExplorer({ seed, fullPage = false }) {
     context.stroke();
 
     for (const node of nodes) {
+      if (hiddenTypesRef.current.has(node.label)) continue;
       const radius = fullPage ? (node.id === startIdRef.current ? 20 : 15)
         : node.id === startIdRef.current ? 9 : node.label === "verse" ? 3 : 5.5;
       context.beginPath();
@@ -248,6 +256,11 @@ function GraphExplorer({ seed, fullPage = false }) {
     }
     context.restore();
   }, [fullPage]);
+
+  useEffect(() => {
+    hoveredRef.current = null;
+    draw();
+  }, [hiddenTypes, draw]);
 
   useEffect(() => {
     draw();
@@ -334,6 +347,7 @@ function GraphExplorer({ seed, fullPage = false }) {
   const nodeAt = (event) => {
     const point = toWorld(event);
     return [...nodesRef.current].reverse().find((node) => {
+      if (hiddenTypesRef.current.has(node.label)) return false;
       const radius = fullPage ? (node.id === startIdRef.current ? 20 : 15)
         : node.id === startIdRef.current ? 9 : node.label === "verse" ? 3 : 5.5;
       const dx = point.x - node.x;
@@ -411,7 +425,7 @@ function GraphExplorer({ seed, fullPage = false }) {
   };
 
   const resetView = () => {
-    const nodes = nodesRef.current;
+    const nodes = nodesRef.current.filter((node) => !hiddenTypesRef.current.has(node.label));
     if (!nodes.length) return;
     const canvas = canvasRef.current;
     const width = canvas.clientWidth;
@@ -469,7 +483,7 @@ function GraphExplorer({ seed, fullPage = false }) {
       const group = connectedGroups.get(node.label) || new Map();
       const entry = group.get(node.id) || { node, relationships: new Set() };
       entry.relationships.add(
-        relationshipNames[link.label]?.[outgoing ? 0 : 1] || link.label.replaceAll("_", " "),
+        relationshipDescription(link.label, outgoing),
       );
       group.set(node.id, entry);
       connectedGroups.set(node.label, group);
@@ -686,8 +700,26 @@ function GraphExplorer({ seed, fullPage = false }) {
           }}
         />
         {legend.length > 0 && (
-          <div className="graph-legend" aria-label="Node types">
-            {legend.map((item) => <span key={item}>{fullPage ? <NodeIcon type={item} /> : <i className={`legend-dot badge-${item}`} />}{item}</span>)}
+          <div className="graph-legend" role={fullPage ? "group" : undefined} aria-label="Node types">
+            {legend.map((item) => fullPage ? (
+              <label key={item} className="graph-type-toggle">
+                <input type="checkbox" checked={!hiddenTypes.has(item)}
+                  aria-label={`Show ${nodeTypeNames[item] || item}`}
+                  onChange={(event) => {
+                    const checked = event.target.checked;
+                    setHiddenTypes((current) => {
+                      const next = new Set(current);
+                      if (checked) next.delete(item);
+                      else next.add(item);
+                      return next;
+                    });
+                  }} />
+                <NodeIcon type={item} />{nodeTypeNames[item] || item}
+              </label>
+            ) : <span key={item}><i className={`legend-dot badge-${item}`} />{item}</span>)}
+            {fullPage && <span className="graph-visible-count" role="status">
+              {graph.nodes.filter((node) => !hiddenTypes.has(node.label)).length} / {graph.nodes.length} visible
+            </span>}
           </div>
         )}
         {!graph && !loading && !error && <div className="graph-placeholder">Your graph will appear here</div>}
