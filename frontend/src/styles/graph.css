@@ -324,6 +324,38 @@
     @apply accent-accent;
   }
 
+  .relationship-physics {
+    @apply grid gap-[6px] m-0 [padding:8px_0_0] [border:0] [border-top:1px_solid_var(--line)] text-[12px];
+  }
+
+  .relationship-physics legend {
+    @apply p-0 mb-[2px] text-muted text-[11px] uppercase tracking-[0.04em];
+  }
+
+  .relationship-physics label {
+    @apply grid [grid-template-columns:1fr_auto] items-center gap-x-[8px];
+  }
+
+  .relationship-physics input[type="range"] {
+    @apply col-span-2 row-start-2 w-full accent-accent;
+  }
+
+  .relationship-physics output {
+    @apply text-muted [font-variant-numeric:tabular-nums];
+  }
+
+  .relationship-physics button {
+    @apply justify-self-start [padding:3px_8px] [border:1px_solid_var(--line)] rounded-[4px] bg-panel text-ink text-[11px] cursor-pointer;
+  }
+
+  .relationship-node-limit {
+    @apply w-[80px] ml-auto [padding:2px_6px] [border:1px_solid_var(--line)] rounded-[4px] bg-panel text-ink text-[12px];
+  }
+
+  .graph-version-toggles {
+    @apply flex flex-wrap [justify-content:end] [gap:0_9px] basis-full pt-[4px] [border-top:1px_solid_var(--line)];
+  }
+
   .legend-dot {
     @apply w-[7px] h-[7px] rounded-[50%] [background:var(--badge-color)];
   }

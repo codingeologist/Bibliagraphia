@@ -38,6 +38,87 @@ const nodeTypeNames = {
   figure: "Figures",
 };
 
+// Force-layout settings. The Relationships page lets the user tune them
+// (not saved); the small home-page panel always uses PANEL_PHYSICS.
+const PAGE_PHYSICS = {
+  repulsion: 180, linkDistance: 100, linkStrength: 0.35, gravity: 0.025, spacing: 23, dragPull: 1,
+};
+const PANEL_PHYSICS = { ...PAGE_PHYSICS, repulsion: 85, linkDistance: 68, spacing: 0 };
+const PHYSICS_CONTROLS = [
+  ["repulsion", "Repulsion (magnetism)", 0, 600, 10, "How strongly nodes push each other apart"],
+  ["linkDistance", "Link length", 20, 300, 5, "Preferred length of each connection"],
+  ["linkStrength", "Link stiffness", 0, 1, 0.05, "How firmly connections hold their length"],
+  ["gravity", "Pull to centre", 0, 0.2, 0.005, "How strongly every node drifts back to the middle"],
+  ["spacing", "Spacing", 0, 60, 1, "Minimum gap kept around each node"],
+  ["dragPull", "Drag pull", 0, 3, 0.1, "How hard a dragged node tows the nodes linked to it"],
+];
+
+const applyPhysics = (simulation, physics) => {
+  simulation.force("link")?.distance(physics.linkDistance).strength(physics.linkStrength);
+  simulation.force("charge")?.strength(-physics.repulsion);
+  simulation.force("collision", physics.spacing > 0 ? forceCollide(physics.spacing) : null);
+  simulation.force("x")?.strength(physics.gravity);
+  simulation.force("y")?.strength(physics.gravity);
+};
+
+// A node is hidden when its type is switched off, or when it belongs to a
+// translation that is switched off (the translation node and its passages).
+const nodeHidden = (node, hiddenTypes, hiddenVersions) => hiddenTypes.has(node.label)
+  || Boolean(node.version_code && hiddenVersions.has(node.version_code));
+
+// Children of each node in a breadth-first tree grown from the graph centre:
+// a node's parent is the neighbour that first reached it, so every node has
+// at most one parent and dragging a node can carry its whole subtree.
+const childTree = (nodes, links, rootId) => {
+  const adjacent = new Map(nodes.map((node) => [node.id, []]));
+  for (const link of links) {
+    const source = link.source.id ?? link.source;
+    const target = link.target.id ?? link.target;
+    adjacent.get(source)?.push(target);
+    adjacent.get(target)?.push(source);
+  }
+  const children = new Map();
+  const seen = new Set([rootId]);
+  const queue = [rootId];
+  while (queue.length) {
+    const id = queue.shift();
+    for (const next of adjacent.get(id) || []) {
+      if (seen.has(next)) continue;
+      seen.add(next);
+      queue.push(next);
+      if (!children.has(id)) children.set(id, []);
+      children.get(id).push(next);
+    }
+  }
+  return children;
+};
+
+// While a node is dragged, pull each node linked to the dragged group back to
+// link length with a strong spring, so the rest of the graph stretches after
+// the drag. d3's own link force splits the pull by node degree, which leaves
+// a well-connected centre almost still.
+const dragPull = (pairs, distance, strength) => (alpha) => {
+  for (const [other, anchor] of pairs) {
+    const dx = anchor.x - other.x;
+    const dy = anchor.y - other.y;
+    const length = Math.hypot(dx, dy) || 1;
+    const k = ((length - distance) / length) * strength * alpha;
+    other.vx += dx * k;
+    other.vy += dy * k;
+  }
+};
+
+const descendants = (children, id) => {
+  const found = [];
+  const stack = [...(children.get(id) || [])];
+  while (stack.length) {
+    const next = stack.pop();
+    found.push(next);
+    stack.push(...(children.get(next) || []));
+  }
+  return found;
+};
+
 const nodeDescription = (node) => node.label === "verse"
   ? `${node.name || node.book_code} ${node.chapter}:${node.verse_number} · ${node.version_code}`
   : node.label === "version"
@@ -49,11 +130,21 @@ function GraphExplorer({ seed, fullPage = false }) {
   const [label, setLabel] = useState("book");
   const [hops, setHops] = useState(fullPage ? seed?.hops || "3" : "1");
   const [showNames, setShowNames] = useState(seed?.showNames === true);
+  const [physics, setPhysics] = useState(fullPage ? PAGE_PHYSICS : PANEL_PHYSICS);
+  const physicsRef = useRef(physics);
+  physicsRef.current = physics;
+  // Relationships page only: max nodes to request (not saved between visits).
+  const DEFAULT_NODE_LIMIT = 200;
+  const nodeLimitRef = useRef(DEFAULT_NODE_LIMIT);
+  const [nodeLimitInput, setNodeLimitInput] = useState(String(DEFAULT_NODE_LIMIT));
   const showNamesRef = useRef(showNames);
   showNamesRef.current = showNames;
   const [hiddenTypes, setHiddenTypes] = useState(() => new Set());
   const hiddenTypesRef = useRef(hiddenTypes);
   hiddenTypesRef.current = hiddenTypes;
+  const [hiddenVersions, setHiddenVersions] = useState(() => new Set());
+  const hiddenVersionsRef = useRef(hiddenVersions);
+  hiddenVersionsRef.current = hiddenVersions;
   const [graph, setGraph] = useState(null);
   const [summary, setSummary] = useState("");
   const [error, setError] = useState("");
@@ -62,6 +153,8 @@ function GraphExplorer({ seed, fullPage = false }) {
   const wrapperRef = useRef(null);
   const nodesRef = useRef([]);
   const linksRef = useRef([]);
+  const childrenRef = useRef(new Map());
+  const simulationRef = useRef(null);
   const viewRef = useRef({ x: 0, y: 0, scale: 1 });
   const startIdRef = useRef("");
   const dragRef = useRef(null);
@@ -105,6 +198,7 @@ function GraphExplorer({ seed, fullPage = false }) {
       if (fullPage) {
         params.set("balanced", "true");
         params.set("branch_expansion", String(branchExpansionRef.current));
+        params.set("limit", String(nodeLimitRef.current));
       }
       if (nodeId) params.set("node_id", nodeId);
       const result = await get(`/graph?${params}`);
@@ -124,7 +218,7 @@ function GraphExplorer({ seed, fullPage = false }) {
       }
       setSummary(result.count
         ? `${result.count} nodes · ${result.links.length} connections · ${result.hops} hop${result.hops === 1 ? "" : "s"}`
-          + (result.truncated ? " · capped at 200" : "")
+          + (result.truncated ? ` · capped at ${fullPage ? nodeLimitRef.current : DEFAULT_NODE_LIMIT}` : "")
           + (result.branch_limited ? " · more connections available" : "")
         : "No connected nodes found.");
     } catch (requestError) {
@@ -186,8 +280,8 @@ function GraphExplorer({ seed, fullPage = false }) {
     context.beginPath();
     for (const link of links) {
       if (typeof link.source === "object" && typeof link.target === "object"
-        && !hiddenTypesRef.current.has(link.source.label)
-        && !hiddenTypesRef.current.has(link.target.label)) {
+        && !nodeHidden(link.source, hiddenTypesRef.current, hiddenVersionsRef.current)
+        && !nodeHidden(link.target, hiddenTypesRef.current, hiddenVersionsRef.current)) {
         context.moveTo(link.source.x, link.source.y);
         context.lineTo(link.target.x, link.target.y);
       }
@@ -195,7 +289,7 @@ function GraphExplorer({ seed, fullPage = false }) {
     context.stroke();
 
     for (const node of nodes) {
-      if (hiddenTypesRef.current.has(node.label)) continue;
+      if (nodeHidden(node, hiddenTypesRef.current, hiddenVersionsRef.current)) continue;
       const radius = fullPage ? (node.id === startIdRef.current ? 20 : 15)
         : node.id === startIdRef.current ? 9 : node.label === "verse" ? 3 : 5.5;
       context.beginPath();
@@ -262,7 +356,27 @@ function GraphExplorer({ seed, fullPage = false }) {
   useEffect(() => {
     hoveredRef.current = null;
     draw();
-  }, [hiddenTypes, draw]);
+  }, [hiddenTypes, hiddenVersions, draw]);
+
+  // Slider changes apply to the running layout and give it a nudge to resettle.
+  useEffect(() => {
+    const simulation = simulationRef.current;
+    if (!simulation) return;
+    applyPhysics(simulation, physics);
+    simulation.alpha(Math.max(simulation.alpha(), 0.3)).restart();
+  }, [physics]);
+
+  // Re-centring on a passage or translation of a hidden translation shows it again.
+  useEffect(() => {
+    const code = graph?.nodes?.find((node) => node.id === graph.start_id)?.version_code;
+    if (!code) return;
+    setHiddenVersions((current) => {
+      if (!current.has(code)) return current;
+      const next = new Set(current);
+      next.delete(code);
+      return next;
+    });
+  }, [graph]);
 
   useEffect(() => {
     draw();
@@ -294,6 +408,7 @@ function GraphExplorer({ seed, fullPage = false }) {
     const links = graph.links.map((link) => ({ ...link }));
     nodesRef.current = nodes;
     linksRef.current = links;
+    childrenRef.current = childTree(nodes, links, graph.start_id || startIdRef.current);
 
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
@@ -313,20 +428,22 @@ function GraphExplorer({ seed, fullPage = false }) {
     };
 
     const simulation = forceSimulation(nodes)
-      .force("link", forceLink(links).id((node) => node.id).distance(fullPage ? 100 : 68).strength(0.35))
-      .force("charge", forceManyBody().strength(fullPage ? -180 : -85))
-      .force("collision", fullPage ? forceCollide(23) : null)
-      .force("x", forceX(0).strength(0.025))
-      .force("y", forceY(0).strength(0.025))
+      .force("link", forceLink(links).id((node) => node.id))
+      .force("charge", forceManyBody())
+      .force("x", forceX(0))
+      .force("y", forceY(0))
       .force("center", forceCenter(0, 0))
       .on("tick", draw);
+    applyPhysics(simulation, physicsRef.current);
+    simulationRef.current = simulation;
     const observer = new ResizeObserver(draw);
     observer.observe(canvas);
     draw();
-    const settleTimer = window.setTimeout(() => simulation.stop(), 8000);
+    // No settle timer: d3 cools and stops by itself (~300 ticks), and a fixed
+    // timer would kill the physics in the middle of a drag.
     return () => {
-      window.clearTimeout(settleTimer);
       simulation.stop();
+      if (simulationRef.current === simulation) simulationRef.current = null;
       observer.disconnect();
     };
   }, [draw, fullPage, graph]);
@@ -349,7 +466,7 @@ function GraphExplorer({ seed, fullPage = false }) {
   const nodeAt = (event) => {
     const point = toWorld(event);
     return [...nodesRef.current].reverse().find((node) => {
-      if (hiddenTypesRef.current.has(node.label)) return false;
+      if (nodeHidden(node, hiddenTypesRef.current, hiddenVersionsRef.current)) return false;
       const radius = fullPage ? (node.id === startIdRef.current ? 20 : 15)
         : node.id === startIdRef.current ? 9 : node.label === "verse" ? 3 : 5.5;
       const dx = point.x - node.x;
@@ -360,10 +477,18 @@ function GraphExplorer({ seed, fullPage = false }) {
 
   const onPointerDown = (event) => {
     const node = nodeAt(event);
+    // Dragging a node carries its subtree; Shift-drag moves the node alone.
+    const byId = new Map(nodesRef.current.map((item) => [item.id, item]));
+    const group = node && !event.shiftKey
+      ? descendants(childrenRef.current, node.id).map((id) => byId.get(id)).filter(Boolean)
+      : [];
     dragRef.current = {
       x: event.clientX,
       y: event.clientY,
+      startX: event.clientX,
+      startY: event.clientY,
       node,
+      group,
       moved: false,
       pointerId: event.pointerId,
     };
@@ -380,13 +505,41 @@ function GraphExplorer({ seed, fullPage = false }) {
     }
     const dx = event.clientX - drag.x;
     const dy = event.clientY - drag.y;
-    if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+    // Distance from where the drag started, not from the last event: pointer
+    // events arrive every pixel or two, so a per-event check never passes.
+    if (Math.abs(event.clientX - drag.startX) + Math.abs(event.clientY - drag.startY) > 3) {
+      drag.moved = true;
+    }
+    if (drag.node && drag.moved && !drag.heated) {
+      // Keep the physics warm only while a node is being dragged, so nearby
+      // nodes make room; on release it cools and stops by itself (~4s).
+      drag.heated = true;
+      const simulation = simulationRef.current;
+      if (simulation) {
+        const moving = new Set([drag.node, ...drag.group]);
+        const pairs = linksRef.current.flatMap(({ source, target }) => (
+          moving.has(source) && !moving.has(target) ? [[target, source]]
+            : moving.has(target) && !moving.has(source) ? [[source, target]] : []
+        ));
+        // forceCenter would shift every free node against the drag to keep the
+        // graph's mean at the origin; turn it off once the user moves things.
+        simulation.force("center")?.strength(0);
+        simulation.force("dragPull", dragPull(pairs, physicsRef.current.linkDistance, physicsRef.current.dragPull));
+        // Start warm: after a previous drag the simulation has cooled to ~0,
+        // and alphaTarget alone would take ~1s to heat it back up.
+        simulation.alpha(Math.max(simulation.alpha(), 0.3)).alphaTarget(0.3).restart();
+      }
+    }
     if (drag.node) {
       const position = toWorld(event);
-      drag.node.fx = position.x;
-      drag.node.fy = position.y;
-      drag.node.x = position.x;
-      drag.node.y = position.y;
+      const shiftX = position.x - drag.node.x;
+      const shiftY = position.y - drag.node.y;
+      for (const item of [drag.node, ...drag.group]) {
+        item.x += shiftX;
+        item.y += shiftY;
+        item.fx = item.x;
+        item.fy = item.y;
+      }
     } else {
       viewRef.current.x += dx;
       viewRef.current.y += dy;
@@ -399,13 +552,21 @@ function GraphExplorer({ seed, fullPage = false }) {
   const onPointerUp = (event) => {
     const drag = dragRef.current;
     if (!drag) return;
-    if (!drag.moved && drag.node) {
+    if (!drag.moved && drag.node?.label === "verse") {
+      // Clicking a passage opens it in the reader (Ctrl/Cmd-click: new tab).
+      const href = readerHref(drag.node);
+      if (event.ctrlKey || event.metaKey) window.open(href, "_blank", "noopener");
+      else window.location.assign(href);
+    } else if (!drag.moved && drag.node) {
       hoveredRef.current = drag.node;
       runRef.current?.(graphNodeQuery(drag.node), drag.node.label, drag.node.id);
     }
     if (drag.node) {
-      drag.node.fx = null;
-      drag.node.fy = null;
+      for (const item of [drag.node, ...drag.group]) {
+        item.fx = null;
+        item.fy = null;
+      }
+      if (drag.heated) simulationRef.current?.force("dragPull", null).alphaTarget(0);
     }
     dragRef.current = null;
     if (event.currentTarget.hasPointerCapture(drag.pointerId)) {
@@ -427,7 +588,9 @@ function GraphExplorer({ seed, fullPage = false }) {
   };
 
   const resetView = () => {
-    const nodes = nodesRef.current.filter((node) => !hiddenTypesRef.current.has(node.label));
+    const nodes = nodesRef.current.filter(
+      (node) => !nodeHidden(node, hiddenTypesRef.current, hiddenVersionsRef.current),
+    );
     if (!nodes.length) return;
     const canvas = canvasRef.current;
     const width = canvas.clientWidth;
@@ -461,6 +624,14 @@ function GraphExplorer({ seed, fullPage = false }) {
   };
 
   const legend = [...new Set(graph?.nodes?.map((node) => node.label) || [])];
+  // Translations present in the graph (from translation nodes or passages),
+  // named from a translation node when one is loaded.
+  const translations = [...new Set(graph?.nodes?.map((node) => node.version_code).filter(Boolean) || [])]
+    .sort()
+    .map((code) => {
+      const versionNode = graph.nodes.find((node) => node.label === "version" && node.version_code === code);
+      return { code, title: versionNode?.attrs?.full_name || code };
+    });
   const centreNode = graph?.nodes?.find((node) => node.id === graph.start_id);
   const hiddenCentreConnections = graph?.hidden_connections?.[graph.start_id] || {};
   const readerHref = (node) => `/read?${new URLSearchParams({
@@ -621,7 +792,7 @@ function GraphExplorer({ seed, fullPage = false }) {
       <div className="graph-wrap" ref={wrapperRef}>
         {fullPage && summary && <p className="result-summary graph-summary-overlay" role="status">
           {summary}
-          {!loading && graph && ` · ${graph.nodes.filter((node) => !hiddenTypes.has(node.label)).length} / ${graph.nodes.length} visible`}
+          {!loading && graph && ` · ${graph.nodes.filter((node) => !nodeHidden(node, hiddenTypes, hiddenVersions)).length} / ${graph.nodes.length} visible`}
         </p>}
         {fullPage && (
           <div className="graph-search-overlay">
@@ -649,6 +820,42 @@ function GraphExplorer({ seed, fullPage = false }) {
                     <input type="checkbox" checked={showNames}
                       onChange={(event) => setShowNames(event.target.checked)} />
                     Show node names
+                  </label>
+                  <fieldset className="relationship-physics">
+                    <legend>Layout physics</legend>
+                    {PHYSICS_CONTROLS.map(([key, text, min, max, step, help]) => (
+                      <label key={key} title={help}>
+                        <span>{text}</span>
+                        <input type="range" min={min} max={max} step={step} value={physics[key]}
+                          onChange={(event) => {
+                            const value = Number(event.target.value);
+                            setPhysics((current) => ({ ...current, [key]: value }));
+                          }} />
+                        <output>{physics[key]}</output>
+                      </label>
+                    ))}
+                    <button type="button" onClick={() => setPhysics(PAGE_PHYSICS)}>Reset physics</button>
+                  </fieldset>
+                  <label className="relationship-names-toggle"
+                    title="Most nodes to load. Large numbers can be slow to load and draw. Press Enter to apply.">
+                    Max nodes
+                    <input type="number" min="1" step="50" inputMode="numeric"
+                      className="relationship-node-limit" value={nodeLimitInput}
+                      onChange={(event) => setNodeLimitInput(event.target.value)}
+                      onBlur={() => setNodeLimitInput(String(nodeLimitRef.current))}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter") return;
+                        event.preventDefault();
+                        const value = Math.floor(Number(nodeLimitInput));
+                        if (!Number.isFinite(value) || value < 1) {
+                          setNodeLimitInput(String(nodeLimitRef.current));
+                          return;
+                        }
+                        setNodeLimitInput(String(value));
+                        if (value === nodeLimitRef.current) return;
+                        nodeLimitRef.current = value;
+                        if (centreNode) runGraph(graphNodeQuery(centreNode), centreNode.label, centreNode.id);
+                      }} />
                   </label>
                   <label className="relationship-node-picker">
                     Explore a node
@@ -690,7 +897,7 @@ function GraphExplorer({ seed, fullPage = false }) {
         <canvas
           ref={canvasRef}
           className="graph-canvas"
-          aria-label="Interactive graph; select a node to centre the graph there"
+          aria-label="Interactive graph; select a node to centre the graph there, or a passage to read it"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -722,12 +929,32 @@ function GraphExplorer({ seed, fullPage = false }) {
                 <NodeIcon type={item} />{nodeTypeNames[item] || item}
               </label>
             ) : <span key={item}><i className={`legend-dot badge-${item}`} />{item}</span>)}
+            {fullPage && translations.length > 1 && (
+              <div className="graph-version-toggles" role="group" aria-label="Translations">
+                {translations.map(({ code, title }) => (
+                  <label key={code} className="graph-type-toggle" title={title}>
+                    <input type="checkbox" checked={!hiddenVersions.has(code)}
+                      aria-label={`Show ${title} and its passages`}
+                      onChange={(event) => {
+                        const checked = event.target.checked;
+                        setHiddenVersions((current) => {
+                          const next = new Set(current);
+                          if (checked) next.delete(code);
+                          else next.add(code);
+                          return next;
+                        });
+                      }} />
+                    {code}
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {!graph && !loading && !error && <div className="graph-placeholder">Your graph will appear here</div>}
       </div>
       </div>
-      {!fullPage && <p className="graph-tip">Click a node to explore its connections · double-click to refit</p>}
+      {!fullPage && <p className="graph-tip">Click a node to explore its connections · click a passage to read it · double-click to refit</p>}
     </div>
   );
 }
