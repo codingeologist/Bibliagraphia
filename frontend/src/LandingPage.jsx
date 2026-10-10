@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import SiteHeader from "./SiteHeader.jsx";
+import { loadReaderState, readerStateHref } from "./readerState.js";
+import { loadSuggestedBook, saveSuggestedBook } from "./landingSuggestion.js";
 
 const destinations = [
   {
     href: "/read",
     title: "Read Bible",
-    description: "Read a passage, compare translations, and follow place mentions as you go.",
+    description: "Read a passage, compare translations, and discover its people and places.",
     kind: "reading",
-    action: "Open reader",
+    action: "Start reading",
   },
   {
     href: "/map",
@@ -19,7 +21,7 @@ const destinations = [
   {
     href: "/relationships",
     title: "Relationships",
-    description: "Follow connections between passages, places, books and translations in a full-screen graph.",
+    description: "See how passages, people and places connect. Select anything to explore its connections.",
     kind: "relationships",
     action: "Explore relationships",
   },
@@ -28,7 +30,7 @@ const destinations = [
     title: "Explore",
     description: "Search people, places, and passages, then trace connections through scripture.",
     kind: "exploring",
-    action: "Open explorer",
+    action: "Start exploring",
   },
 ];
 
@@ -178,11 +180,26 @@ export default function LandingPage() {
     const saved = localStorage.getItem("theme");
     return saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
+  const [readingPosition] = useState(loadReaderState);
+  const [suggestion] = useState(loadSuggestedBook);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
+
+  useEffect(() => {
+    saveSuggestedBook(suggestion.book);
+  }, [suggestion]);
+
+  const experiences = destinations.map((destination) => destination.kind === "reading" && readingPosition
+    ? {
+      ...destination,
+      href: readerStateHref(readingPosition),
+      action: "Continue reading",
+      description: `Return to ${readingPosition.bookName} ${readingPosition.chapter} · ${readingPosition.version}.`,
+    }
+    : destination);
 
   return (
     <div className="app-shell">
@@ -203,7 +220,7 @@ export default function LandingPage() {
           </p>
 
           <nav className="landing-destinations" aria-label="Choose your experience">
-            {destinations.map(({ href, title, description, kind, action }, index) => (
+            {experiences.map(({ href, title, description, kind, action }, index) => (
               <a
                 className={`landing-card landing-card-${kind}`}
                 href={href}
@@ -222,7 +239,20 @@ export default function LandingPage() {
               </a>
             ))}
           </nav>
-          <p className="landing-footnote">Read a passage. Find its place. Follow the connections.</p>
+          <section className="landing-start" aria-labelledby="landing-start-title">
+            <h2 id="landing-start-title">Try it with {suggestion.name}</h2>
+            <p>Read a chapter, discover its people and places, and compare translations.</p>
+            <a href={readerStateHref({ book: suggestion.book, chapter: 1, version: "KJV", comparisons: ["DRB"] })}>
+              Explore {suggestion.name} 1 <span aria-hidden="true">→</span>
+            </a>
+          </section>
+          <footer className="landing-footer">
+            <nav aria-label="About and resources">
+              <a href="/about">About</a>
+              <a href="/connect-mcp">Connect your AI assistant</a>
+              <a href="https://github.com/codingeologist/Bibliagraphia" target="_blank" rel="noreferrer">GitHub</a>
+            </nav>
+          </footer>
         </section>
       </main>
     </div>

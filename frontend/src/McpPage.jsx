@@ -55,10 +55,10 @@ export default function McpPage() {
       <main className="pt-7 pb-8">
         <section className="panel mb-5">
           <h2>Connect your AI assistant</h2>
-          <p className="panel-copy">Use Bibliagraphia from an MCP-compatible assistant to read passages, compare translations and explore connections. MCP (Model Context Protocol) lets your assistant use these tools directly.</p>
-          <p className="panel-copy">Use Bibliagraphia’s public MCP endpoint in your assistant.</p>
+          <p className="panel-copy">Let your AI assistant read Bible passages, compare translations and find connections using Bibliagraphia. MCP (Model Context Protocol) is the connection that gives your assistant access to these tools.</p>
+          <p className="panel-copy">Choose your assistant below and follow its setup instructions. You can also read and explore directly in this app without setting up an AI assistant.</p>
           <CopyExample title="Server URL" text={url} />
-          <p className="panel-copy mt-3">Transport: <strong>Streamable HTTP</strong>. No API key is required by this server.</p>
+          <p className="panel-copy mt-3">If your assistant asks for a connection type, choose <strong>Streamable HTTP</strong>. You do not need an API key (an access credential) to connect.</p>
         </section>
 
         <div className="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))]">
@@ -86,7 +86,7 @@ export default function McpPage() {
             <p className="panel-copy">Client configuration formats differ. Use your client’s instructions rather than pasting the VS Code format into another app.</p>
             <h3 className="text-[13px] font-semibold mt-4">If it does not connect</h3>
             <ul className="pl-5 text-[13px] leading-relaxed space-y-2 mt-2">
-              <li>Opening the endpoint in a browser is not a connection test. MCP requires a client handshake and session.</li>
+              <li>Test the connection in your AI assistant, not by opening the server URL in a browser.</li>
               <li>Use the full server URL, including <code>/mcp</code>, rather than the website homepage.</li>
               <li>After connecting, confirm the client lists Bibliagraphia’s tools.</li>
             </ul>
@@ -98,7 +98,7 @@ export default function McpPage() {
               <li>“Read Genesis chapter 12 and show the places mentioned.”</li>
               <li>“How is Genesis connected to Syria? Show the passages behind the links.”</li>
             </ul>
-            <p className="panel-copy mt-4">Tools cover search, chapter reading, verse comparison, connections and mapped places. Verse explanations depend on the server’s model configuration.</p>
+            <p className="panel-copy mt-4">Your assistant can search, read chapters, compare verses, find connections and look up places. AI explanations are available only when enabled by the people running Bibliagraphia.</p>
             <p className="panel-copy">Review AI-generated interpretations against the passages. Recorded links are not automatically theological conclusions.</p>
           </section>
         </div>

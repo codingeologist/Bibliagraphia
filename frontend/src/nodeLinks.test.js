@@ -1,6 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { describeNode, nodeTypeName, pathNode, pathRelationshipDescription, relationshipDescription, relationshipHref } from "./nodeLinks.js";
+import { describeNode, nodeTypeName, pathNode, pathRelationshipDescription, readerPassageNode, relationshipDescription, relationshipHref } from "./nodeLinks.js";
+
+test("reader passage details retain each comparison column's exact translation", () => {
+  for (const version of ["KJV", "DRB"]) {
+    const node = readerPassageNode({ book_code: "JON", book_name: "Jonah", chapter: 1, version },
+      { number: 2, text: "Passage text" });
+    assert.equal(node.id, `verse:${version}:JON:1:2`);
+    assert.equal(node.text, "Passage text");
+    assert.equal(describeNode(node), `Jonah 1:2 · ${version}`);
+    assert.equal(new URL(relationshipHref(node), "http://localhost").searchParams.get("graph_node_id"), node.id);
+  }
+});
 
 test("links preserve exact verse translation and reference", () => {
   const node = {
@@ -36,7 +47,7 @@ test("node types use reader-friendly names", () => {
   assert.equal(nodeTypeName("verse"), "Passage");
   assert.equal(nodeTypeName("location"), "Place");
   assert.equal(nodeTypeName("version"), "Translation");
-  assert.equal(nodeTypeName("figure"), "Figure");
+  assert.equal(nodeTypeName("figure"), "Person");
 });
 
 test("connection explanations respect both directions of a walk", () => {
@@ -45,7 +56,7 @@ test("connection explanations respect both directions of a walk", () => {
     ["verse_in_version", "version", "verse", "Contains passage", "Available in translation"],
     ["location_in_verse", "verse", "location", "Mentions place", "Mentioned in passage"],
     ["location_in_region", "region", "location", "Contains place", "Located in region"],
-    ["figure_in_verse", "verse", "figure", "Mentions figure", "Mentioned in passage"],
+    ["figure_in_verse", "verse", "figure", "Mentions person", "Mentioned in passage"],
   ];
   for (const [label, sourceType, targetType, forward, reverse] of cases) {
     assert.equal(pathRelationshipDescription(label, sourceType), forward);

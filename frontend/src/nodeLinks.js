@@ -4,6 +4,13 @@ export const describeNode = (node) => node.label === "verse"
     ? `${node.name} · ${node.book_code} ${node.chapter}:${node.verse_number}`
     : node.name || node.id;
 
+export const readerPassageNode = (chapter, verse) => ({
+  id: `verse:${chapter.version}:${chapter.book_code}:${chapter.chapter}:${verse.number}`,
+  label: "verse", name: chapter.book_name, book_code: chapter.book_code,
+  chapter: chapter.chapter, verse_number: verse.number, version_code: chapter.version,
+  text: verse.text,
+});
+
 export const relationshipHref = (node) => `/relationships?${new URLSearchParams({
   graph_node: node.name || node.book_code || node.version_code || node.id,
   graph_label: node.label,
@@ -16,7 +23,7 @@ export const pathNode = (node) => typeof node === "string"
   : node;
 
 export const nodeTypeName = (label) => ({
-  book: "Book", verse: "Passage", location: "Place", region: "Region", version: "Translation", figure: "Figure",
+  book: "Book", verse: "Passage", location: "Place", region: "Region", version: "Translation", figure: "Person",
 })[label] || label;
 
 const relationshipNames = {
@@ -24,7 +31,7 @@ const relationshipNames = {
   verse_in_version: ["Contains passage", "Available in translation"],
   location_in_verse: ["Mentions place", "Mentioned in passage"],
   location_in_region: ["Contains place", "Located in region"],
-  figure_in_verse: ["Mentions figure", "Mentioned in passage"],
+  figure_in_verse: ["Mentions person", "Mentioned in passage"],
   figure_relative_of: ["Relative of", "Relative of"],
 };
 

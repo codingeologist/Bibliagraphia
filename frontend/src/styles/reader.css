@@ -211,11 +211,20 @@
   }
 
   .person-highlight {
+    @apply p-0 border-0 [font:inherit] cursor-pointer;
     @apply rounded-[2px] text-inherit [background:color-mix(in_srgb,_var(--node-figure)_12%,_transparent)] underline decoration-node-figure decoration-solid underline-offset-[3px];
   }
 
   .person-highlight:hover, .person-highlight:focus-visible {
     @apply [background:color-mix(in_srgb,_var(--node-figure)_24%,_transparent)];
+  }
+
+  .passage-number {
+    @apply p-0 border-0 bg-transparent text-inherit [font:inherit] cursor-pointer;
+  }
+
+  .passage-number:hover, .passage-number:focus-visible {
+    @apply underline;
   }
 
   .place-graph-canvas a {
