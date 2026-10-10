@@ -4,6 +4,8 @@ import { get } from "./api.js";
 import { createCircleMarker } from "./mapMarkers.js";
 import SiteHeader from "./SiteHeader.jsx";
 import PlaceGraphPreview from "./PlaceGraphPreview.jsx";
+import { mentionSegments } from "./readerMentions.js";
+import { relationshipHref } from "./nodeLinks.js";
 
 function PlaceMap({ location, href, onExpand }) {
   const mapElementRef = useRef(null);
@@ -66,42 +68,6 @@ function PlaceMap({ location, href, onExpand }) {
       >⛶</a>
     </div>
   );
-}
-
-function placeSegments(text, locations) {
-  const candidates = new Map();
-  for (const location of locations) {
-    const aliases = new Set(location.aliases || [location.name]);
-    for (const alias of aliases) {
-      const phrase = alias.replace(/\s+\d+$/, "").trim();
-      if (!phrase) continue;
-      const key = phrase.toLocaleLowerCase();
-      const matches = candidates.get(key) || { phrase, locations: [] };
-      if (!matches.locations.some((item) => item.id === location.id)) {
-        matches.locations.push(location);
-      }
-      candidates.set(key, matches);
-    }
-  }
-  if (!candidates.size) return [{ text }];
-
-  const phrases = [...candidates.values()].sort((left, right) => right.phrase.length - left.phrase.length);
-  const pattern = phrases.map(({ phrase }) => phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
-  const matcher = new RegExp(`(?<![\\p{L}\\p{N}])(${pattern})(?![\\p{L}\\p{N}])`, "giu");
-  const segments = [];
-  let cursor = 0;
-  for (const match of text.matchAll(matcher)) {
-    if (match.index > cursor) segments.push({ text: text.slice(cursor, match.index) });
-    const place = candidates.get(match[1].toLocaleLowerCase());
-    segments.push({
-      text: match[0],
-      locations: place.locations,
-    });
-    cursor = match.index + match[0].length;
-  }
-  if (!cursor) return [{ text }];
-  if (cursor < text.length) segments.push({ text: text.slice(cursor) });
-  return segments;
 }
 
 function ReaderPage({ onExpandMap }) {
@@ -729,6 +695,7 @@ function ReaderPage({ onExpandMap }) {
                                         withId={false}
                                         selected={selectedVerse === String(number)}
                                         locations={column.data.locations.filter((location) => location.verse_number === number)}
+                                        figures={(column.data.figures || []).filter((figure) => figure.verse_number === number)}
                                         onSelectLocation={(location) => setSelectedLocation({ ...location, version_code: column.code })}
                                       />
                                     ) : (
@@ -750,6 +717,7 @@ function ReaderPage({ onExpandMap }) {
                       verse={item}
                       selected={selectedVerse === String(item.number)}
                       locations={chapterData.locations.filter((location) => location.verse_number === item.number)}
+                      figures={(chapterData.figures || []).filter((figure) => figure.verse_number === item.number)}
                       onSelectLocation={setSelectedLocation}
                     />
                   ))}
@@ -763,8 +731,8 @@ function ReaderPage({ onExpandMap }) {
   );
 }
 
-function VerseText({ verse, locations, selected, onSelectLocation, withId = true }) {
-  const segments = placeSegments(verse.text, locations);
+function VerseText({ verse, locations, figures, selected, onSelectLocation, withId = true }) {
+  const segments = mentionSegments(verse.text, locations, figures);
   return (
     <p
       className={`reader-verse${selected ? " selected" : ""}`}
@@ -781,7 +749,12 @@ function VerseText({ verse, locations, selected, onSelectLocation, withId = true
             onClick={() => onSelectLocation(segment.locations[0])}
           >{segment.text}</button>
         )
-        : <span key={`${segment.text}-${index}`}>{segment.text}</span>)}
+        : segment.figures ? (
+          <a className="person-highlight" key={`${segment.text}-${index}`}
+            href={relationshipHref(segment.figures[0])}
+            title={`Person: ${segment.figures[0].name} — explore relationships`}
+          >{segment.text}</a>
+        ) : <span key={`${segment.text}-${index}`}>{segment.text}</span>)}
     </p>
   );
 }

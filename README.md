@@ -56,7 +56,7 @@ The database is built from the canonical JSON files in `/data`:
 - `verses.json` — Complete verse text (141,788 verses across 5 versions; SRG is New Testament only)
 - `location_regions.json` — Geographical locations with coordinates (7,460 mentions)
 - `regions.json` — Regional descriptions and keywords (36 regions)
-- `figures.json` — Major biblical figures (238), each with a STEP Bible TIPNR id
+- `figures.json` — Biblical figures (243), each with a STEP Bible TIPNR id
 
 Figure → verse links (`figure_in_verse` edges) use two datasets from
 [STEP Bible](https://www.STEPBible.org): TIPNR (every verse each person
@@ -271,6 +271,7 @@ The sidebar groups directly connected nodes into collapsible sections by type.
 Each entry describes its relationship to the selected node and opens that exact
 node when clicked. Counts describe the loaded graph, not the entire database;
 capped graphs show a reminder that additional connections may exist.
+The bottom-left graph summary includes the live visible/loaded node count.
 Map markers are circles across the map, explorer and reader previews.
 Open `/read` in the Vite app to read a Bible book. Choose a book, chapter,
 translation, or jump directly to a verse; previous/next controls move between
@@ -288,6 +289,14 @@ On narrow screens, scroll the comparison horizontally.
 Underlined place mentions in every column open place
 details with links to the graph and map. Open `/map` to browse all mappable
 places; select a marker to read the passages that mention it.
+Every node in the reader's Graph relationships preview links to Relationships
+centred on that exact item, retaining passage translation and place-mention IDs.
+People named in a verse have a pink, solid-underlined link to their exact
+Relationships view; places retain their dotted highlight and drawer.
+People highlights use recorded STEP Bible verse links and canonical names or
+explicit spelling aliases, never general search keywords. Only names present
+in the people dataset are highlighted; pronouns are not. Each comparison
+column uses its own translation's verse links.
 Use the map's search box to find places by name or alternative name. Choose an
 autocomplete suggestion (or use the arrow keys and Enter) to zoom to that place
 and open its passages.
@@ -403,8 +412,11 @@ implementation, two interfaces:
 
 Open **MCP** in the navigation (`/connect-mcp`) for connection URLs, copyable
 VS Code and Claude Code configurations, troubleshooting and example prompts.
-The guide shows the local Docker API on port 8000 only, using the current
-loopback hostname locally or `localhost` when viewed on a hosted site.
+The guide uses `https://bibliagraphia.com/mcp` in every client example, with
+no server selector.
+Both nginx and the local Vite server proxy `/mcp` to the API. nginx disables
+response buffering and keeps streaming sessions open; deploy the updated
+frontend configuration before using the public endpoint.
 `/mcp` remains the protocol endpoint on the API, not a frontend page.
 
 Claude Code (`.mcp.json`):

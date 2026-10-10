@@ -216,6 +216,26 @@ def test_reader_chapter_returns_empty_passage_for_unavailable_text(reader_db):
 
     assert result["book_name"] == "Exodus"
     assert result["verses"] == []
+    assert result["figures"] == []
+
+
+def test_reader_people_follow_exact_translation_and_verse_edges(reader_db):
+    conn = duckdb.connect(str(reader_db))
+    conn.execute(
+        "INSERT INTO nodes VALUES ('figure:Naomi', 'figure', 'Naomi', NULL, NULL, NULL, NULL, ?)",
+        [json.dumps({"aliases": ["Noemi"]})],
+    )
+    conn.executemany("INSERT INTO edges VALUES (?, ?, 'figure_in_verse')", [
+        ("verse:KJV:GEN:1:1", "figure:Naomi"),
+        ("verse:DRB:GEN:1:2", "figure:Naomi"),
+    ])
+    conn.close()
+    for code, verse in [("kjv", 1), ("DRB", 2)]:
+        result = api.read_chapter("gen", 1, code)
+        assert result["figures"] == [{
+            "id": "figure:Naomi", "label": "figure", "name": "Naomi",
+            "verse_number": verse, "aliases": ["Noemi"],
+        }]
 
 
 def test_graph_can_resolve_exact_location_instance_by_id(reader_db):

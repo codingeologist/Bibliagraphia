@@ -15,7 +15,7 @@ const sources = [
   ["verses.json", "Complete verse text across the original three translations.", "102,722 verses"],
   ["location_regions.json", "Geographical location mentions with coordinates.", "7,460 mentions"],
   ["regions.json", "Regional descriptions and keywords.", "36 regions"],
-  ["figures.json", "Biblical figures and their STEP Bible identifiers.", "238 figures"],
+  ["figures.json", "Biblical figures and their STEP Bible identifiers.", "243 figures"],
 ];
 
 function TeamAvatar({ name, icon, github }) {

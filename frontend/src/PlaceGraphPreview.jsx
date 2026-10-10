@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { get } from "./api.js";
 import { nodeIconPaths } from "./nodeIcons.jsx";
-
-const describeNode = (node) => node.label === "verse"
-  ? `${node.name || node.book_code} ${node.chapter}:${node.verse_number} · ${node.version_code}`
-  : node.name || node.id;
+import { describeNode, relationshipHref } from "./nodeLinks.js";
 
 function PlaceGraphPreview({ location }) {
   const [graph, setGraph] = useState(null);
@@ -58,7 +55,7 @@ function PlaceGraphPreview({ location }) {
           <svg
             className="place-graph-canvas"
             viewBox="0 0 320 270"
-            role="img"
+            role="group"
             aria-label={`${name} connected to ${shown.length ? shown.map(describeNode).join("; ") : "no other nodes"}`}
           >
             {nodes.slice(1).map(({ node, x, y }) => (
@@ -69,13 +66,15 @@ function PlaceGraphPreview({ location }) {
                 ? `${node.book_code} ${node.chapter}:${node.verse_number}`
                 : describeNode(node);
               return (
-                <g key={node.id} transform={`translate(${x} ${y})`}>
+                <a key={node.id} href={relationshipHref(node)} aria-label={`Explore relationships for ${describeNode(node)}`}>
+                <g transform={`translate(${x} ${y})`}>
                   <title>{describeNode(node)}</title>
                   <circle r={index === 0 ? 22 : 17} fill="var(--panel)" stroke={`var(--node-${node.label})`} strokeWidth={index === 0 ? 2.5 : 1.5} />
                   <path d={nodeIconPaths[node.label] || nodeIconPaths.verse} transform="translate(-10 -10) scale(.83)" fill="none" stroke={`var(--node-${node.label})`} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                   <text y={index === 0 ? 36 : 30} textAnchor="middle">{text.length > 20 ? `${text.slice(0, 19)}…` : text}</text>
                   {node.label === "verse" && <text y="43" textAnchor="middle" className="place-graph-version">{node.version_code}</text>}
                 </g>
+                </a>
               );
             })}
           </svg>

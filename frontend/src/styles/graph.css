@@ -324,10 +324,6 @@
     @apply accent-accent;
   }
 
-  .graph-visible-count {
-    @apply basis-full justify-end text-muted;
-  }
-
   .legend-dot {
     @apply w-[7px] h-[7px] rounded-[50%] [background:var(--badge-color)];
   }
