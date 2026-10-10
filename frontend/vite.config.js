@@ -2,7 +2,7 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
-const apiPaths = ["/health", "/search", "/traverse", "/path", "/graph", "/map/points", "/map/places", "/verse", "/chapter", "/reader", "/place"];
+const apiPaths = ["/mcp", "/health", "/search", "/traverse", "/path", "/graph", "/map/points", "/map/places", "/verse", "/chapter", "/reader", "/place"];
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");

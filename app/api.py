@@ -883,6 +883,26 @@ def read_chapter(
                 }
                 for location in locations
             ],
+            "figures": [
+                {
+                    "id": figure[0], "label": "figure", "name": figure[1],
+                    "verse_number": figure[2],
+                    "aliases": json.loads(figure[3]) if figure[3] else [],
+                }
+                for figure in conn.execute(
+                    """
+                    SELECT f.id, f.name, v.verse_number,
+                           json_extract(f.attrs, 'aliases')
+                    FROM nodes v
+                    JOIN edges e ON e.from_id = v.id AND e.label = 'figure_in_verse'
+                    JOIN nodes f ON f.id = e.to_id AND f.label = 'figure'
+                    WHERE v.label = 'verse' AND UPPER(v.book_code) = UPPER(?)
+                      AND v.chapter = ? AND UPPER(v.version_code) = UPPER(?)
+                    ORDER BY v.verse_number, f.name, f.id;
+                    """,
+                    [book_code, chapter, version_code],
+                ).fetchall()
+            ],
         }
     finally:
         conn.close()

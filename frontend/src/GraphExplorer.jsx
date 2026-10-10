@@ -619,7 +619,10 @@ function GraphExplorer({ seed, fullPage = false }) {
         </section>
       )}
       <div className="graph-wrap" ref={wrapperRef}>
-        {fullPage && summary && <p className="result-summary graph-summary-overlay" role="status">{summary}</p>}
+        {fullPage && summary && <p className="result-summary graph-summary-overlay" role="status">
+          {summary}
+          {!loading && graph && ` · ${graph.nodes.filter((node) => !hiddenTypes.has(node.label)).length} / ${graph.nodes.length} visible`}
+        </p>}
         {fullPage && (
           <div className="graph-search-overlay">
             <GraphNodeSearch node={centreNode} fallback={query} onSelect={(node) => {
@@ -719,9 +722,6 @@ function GraphExplorer({ seed, fullPage = false }) {
                 <NodeIcon type={item} />{nodeTypeNames[item] || item}
               </label>
             ) : <span key={item}><i className={`legend-dot badge-${item}`} />{item}</span>)}
-            {fullPage && <span className="graph-visible-count" role="status">
-              {graph.nodes.filter((node) => !hiddenTypes.has(node.label)).length} / {graph.nodes.length} visible
-            </span>}
           </div>
         )}
         {!graph && !loading && !error && <div className="graph-placeholder">Your graph will appear here</div>}

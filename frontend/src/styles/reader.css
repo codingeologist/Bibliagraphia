@@ -129,6 +129,22 @@
     @apply [background:color-mix(in_srgb,_var(--node-location)_20%,_transparent)];
   }
 
+  .person-highlight {
+    @apply rounded-[2px] text-inherit [background:color-mix(in_srgb,_var(--node-figure)_12%,_transparent)] underline decoration-node-figure decoration-solid underline-offset-[3px];
+  }
+
+  .person-highlight:hover, .person-highlight:focus-visible {
+    @apply [background:color-mix(in_srgb,_var(--node-figure)_24%,_transparent)];
+  }
+
+  .place-graph-canvas a {
+    @apply cursor-pointer;
+  }
+
+  .place-graph-canvas a:hover circle, .place-graph-canvas a:focus-visible circle {
+    @apply fill-accent-soft [stroke-width:3px];
+  }
+
   .place-drawer-backdrop {
     @apply fixed inset-0 z-[1000] [border:0] [background:rgb(20_22_20_/_38%)] cursor-default;
   }

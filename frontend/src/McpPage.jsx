@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import SiteHeader from "./SiteHeader.jsx";
-import { isLocalHost, localMcpUrl, mcpConfiguration } from "./mcpConnection.js";
+import { mcpUrl, mcpConfiguration } from "./mcpConnection.js";
 
 function CopyExample({ title, text }) {
   const [status, setStatus] = useState("");
@@ -39,8 +39,6 @@ function CopyExample({ title, text }) {
 }
 
 export default function McpPage() {
-  const hostname = window.location.hostname;
-  const local = isLocalHost(hostname);
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     return saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -49,7 +47,7 @@ export default function McpPage() {
     document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
-  const url = localMcpUrl(local ? hostname.replaceAll("[", "").replaceAll("]", "") : "localhost");
+  const url = mcpUrl;
 
   return (
     <div className="app-shell min-h-screen">
@@ -58,10 +56,9 @@ export default function McpPage() {
         <section className="panel mb-5">
           <h2>Connect your AI assistant</h2>
           <p className="panel-copy">Use Bibliagraphia from an MCP-compatible assistant to read passages, compare translations and explore connections. MCP (Model Context Protocol) lets your assistant use these tools directly.</p>
-          <p className="panel-copy">Connect to Bibliagraphia running locally with Docker.</p>
+          <p className="panel-copy">Use Bibliagraphia’s public MCP endpoint in your assistant.</p>
           <CopyExample title="Server URL" text={url} />
           <p className="panel-copy mt-3">Transport: <strong>Streamable HTTP</strong>. No API key is required by this server.</p>
-          <p className="panel-copy">Keep the local API container running. This address works for clients on this computer; cloud-hosted assistants cannot reach your localhost.</p>
         </section>
 
         <div className="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))]">
@@ -90,7 +87,7 @@ export default function McpPage() {
             <h3 className="text-[13px] font-semibold mt-4">If it does not connect</h3>
             <ul className="pl-5 text-[13px] leading-relaxed space-y-2 mt-2">
               <li>Opening the endpoint in a browser is not a connection test. MCP requires a client handshake and session.</li>
-              <li>For Docker, use API port 8000, not frontend port 8080.</li>
+              <li>Use the full server URL, including <code>/mcp</code>, rather than the website homepage.</li>
               <li>After connecting, confirm the client lists Bibliagraphia’s tools.</li>
             </ul>
           </section>

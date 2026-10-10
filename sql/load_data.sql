@@ -11,7 +11,7 @@
 --   books     -> id 'book:<code>',              attrs {testament, vulgate, rheims, kjv, note}
 --   verses    -> id 'verse:<ver>:<bk>:<ch>:<vs>', attrs {book, text}
 --   regions   -> id 'region:<name>',            attrs {keywords, description}
---   figures   -> id 'figure:<name>',            attrs {testament, category, keywords, description, tipnr}
+--   figures   -> id 'figure:<name>',            attrs {testament, category, keywords, aliases, description, tipnr}
 --   locations -> id 'location:<name>:<bk>:<ch>:<vs>', attrs {secondary_name, testament,
 --                                                          rheims, vulgate, kjv,
 --                                                          rheims_text, vulgate_text, kjv_text,

@@ -152,6 +152,7 @@ def main() -> None:
                to_json({
                    'testament': testament, 'category': category,
                    'keywords': keywords, 'description': description,
+                   'aliases': aliases,
                    'tipnr': tipnr
                })
         FROM t_figures;
