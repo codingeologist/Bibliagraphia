@@ -935,6 +935,53 @@ def read_chapter(
         conn.close()
 
 
+@app.get("/reader/person-relations")
+def person_relations(person_id: str = Query(..., min_length=1)):
+    """All directly recorded kinship connections for one exact person."""
+    conn = duckdb.connect(DB_PATH, read_only=True)
+    try:
+        person = conn.execute(
+            """
+            SELECT id, label, name, version_code, book_code, chapter, verse_number, attrs
+            FROM nodes WHERE id = ? AND label = 'figure';
+            """,
+            [person_id],
+        ).fetchone()
+        cols = [column[0] for column in conn.description]
+        if not person:
+            return {"error": "Person not found."}
+        rows = conn.execute(
+            """
+            SELECT n.id, n.label, n.name, n.version_code, n.book_code,
+                   n.chapter, n.verse_number, n.attrs,
+                   e.from_id, e.to_id, e.attrs
+            FROM edges e
+            JOIN nodes n
+              ON n.id = CASE WHEN e.from_id = ? THEN e.to_id ELSE e.from_id END
+            WHERE e.label = 'figure_relative_of'
+              AND (e.from_id = ? OR e.to_id = ?)
+              AND n.label = 'figure'
+            ORDER BY n.name, n.id, e.from_id, e.to_id;
+            """,
+            [person_id, person_id, person_id],
+        ).fetchall()
+        return {
+            "person": _row_to_node(person, cols),
+            "relationships": [
+                {
+                    "person": _row_to_node(row[:8], cols),
+                    "source": row[8],
+                    "target": row[9],
+                    "label": "figure_relative_of",
+                    "attrs": _parse_attrs(row[10]),
+                }
+                for row in rows
+            ],
+        }
+    finally:
+        conn.close()
+
+
 @app.get("/place/relations")
 def place_relations(location_id: str = Query(..., min_length=1)):
     """Return translations and other Bible references for a location mention."""

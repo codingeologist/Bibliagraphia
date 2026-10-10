@@ -149,8 +149,28 @@
     @apply mt-auto pt-[9px] [color:var(--card-accent)] text-[10px] font-bold tracking-[.04em];
   }
 
-  .landing-footnote {
-    @apply [margin:25px_0_0] text-muted text-[10px] tracking-[.04em];
+  .landing-start {
+    @apply mt-7 mb-6;
+  }
+
+  .landing-start h2 {
+    @apply m-0 font-display text-[20px] font-semibold;
+  }
+
+  .landing-start p {
+    @apply mt-2 mb-3 text-[13px] leading-relaxed text-muted;
+  }
+
+  .landing-start a {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md border border-line bg-panel px-5 py-2 text-[13px] font-semibold text-ink no-underline;
+  }
+
+  .landing-footer nav {
+    @apply mt-7 flex flex-wrap justify-center gap-x-5 gap-y-1;
+  }
+
+  .landing-footer a {
+    @apply inline-flex min-h-[44px] items-center text-[12px] text-muted;
   }
 
   @media (max-width: 620px) {
@@ -186,9 +206,6 @@
     }
     .landing-card-action {
       @apply [grid-column:3] [grid-row:1] self-end p-0 whitespace-nowrap;
-    }
-    .landing-footnote {
-      @apply max-w-[260px] [margin:19px_auto_0] leading-[1.6];
     }
   }
 }

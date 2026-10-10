@@ -86,8 +86,8 @@ function MapExplorer({ seed }) {
         marker.addTo(markersRef.current);
         bounds.push([point.lat, point.lng]);
       }
-      setSummary(`${result.count} location mention${result.count === 1 ? "" : "s"} in ${result.region || result.book}`
-        + (result.truncated ? " · capped at 1,000 points" : ""));
+      setSummary(`${result.count} place mention${result.count === 1 ? "" : "s"} in ${result.region || result.book}`
+        + (result.truncated ? " · showing up to 1,000 markers" : ""));
       if (bounds.length) mapRef.current.fitBounds(bounds, { padding: [28, 28], maxZoom: 9 });
       else mapRef.current.setView([33, 40], 5);
     } catch (requestError) {
@@ -116,18 +116,18 @@ function MapExplorer({ seed }) {
   return (
     <div className="map-explorer">
       <form className="form-row map-controls" onSubmit={(event) => { event.preventDefault(); plot(); }}>
-        <select aria-label="Map scope" value={scope} onChange={(event) => setScope(event.target.value)}>
+        <select aria-label="Find places by region or Bible book" value={scope} onChange={(event) => setScope(event.target.value)}>
           <option value="region">Region</option>
-          <option value="book">Book</option>
+          <option value="book">Bible book</option>
         </select>
         <input
-          aria-label="Map place or book code"
+          aria-label="Region name or Bible book abbreviation"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Syria or JOH"
+          placeholder="Try Syria or GEN (Genesis)"
         />
         <button className="button button-secondary" disabled={loading}>
-          {loading ? "Plotting…" : "Plot places"}
+          {loading ? "Loading…" : "Show places"}
         </button>
       </form>
       {summary && <p className="result-summary" role="status">{summary}</p>}

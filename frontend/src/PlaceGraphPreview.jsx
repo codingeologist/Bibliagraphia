@@ -3,16 +3,17 @@ import { get } from "./api.js";
 import { nodeIconPaths } from "./nodeIcons.jsx";
 import { describeNode, relationshipHref } from "./nodeLinks.js";
 
-function PlaceGraphPreview({ location }) {
+function PlaceGraphPreview({ location, suppliedGraph, heading = "Related passages and places" }) {
   const [graph, setGraph] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (suppliedGraph) return undefined;
     let cancelled = false;
     setGraph(null);
     setError("");
     const params = new URLSearchParams({
-      node: location.name, label: "location", node_id: location.id, hops: "1",
+      node: location.name, label: location.label || "location", node_id: location.id, hops: "1",
     });
     get(`/graph?${params}`).then((result) => {
       if (!cancelled) setGraph(result);
@@ -20,17 +21,18 @@ function PlaceGraphPreview({ location }) {
       if (!cancelled) setError(requestError.message);
     });
     return () => { cancelled = true; };
-  }, [location.id, location.name]);
+  }, [location.id, location.name, location.label, suppliedGraph]);
 
-  const centre = graph?.nodes.find((node) => node.id === graph.start_id);
-  const neighbourIds = new Set(graph?.links.flatMap((link) =>
-    link.source === graph.start_id ? [link.target]
-      : link.target === graph.start_id ? [link.source] : []) || []);
-  const neighbours = graph?.nodes.filter((node) => neighbourIds.has(node.id)) || [];
+  const data = suppliedGraph || graph;
+  const centre = data?.nodes.find((node) => node.id === data.start_id);
+  const neighbourIds = new Set(data?.links.flatMap((link) =>
+    link.source === data.start_id ? [link.target]
+      : link.target === data.start_id ? [link.source] : []) || []);
+  const neighbours = data?.nodes.filter((node) => neighbourIds.has(node.id)) || [];
   const shown = neighbours.slice(0, 6);
   const name = location.name.replace(/\s+\d+$/, "");
   const href = `/relationships?${new URLSearchParams({
-    graph_node: location.name, graph_label: "location", graph_node_id: location.id,
+    graph_node: location.name, graph_label: location.label || "location", graph_node_id: location.id,
   })}`;
   const nodes = centre ? [
     { node: centre, x: 160, y: 130 },
@@ -43,20 +45,20 @@ function PlaceGraphPreview({ location }) {
   return (
     <section className="place-graph-section mb-5">
       <div className="place-graph-heading">
-        <h4>Graph relationships</h4>
-        <a href={href} aria-label={`Expand relationships for ${name}`} title="Open full relationships graph">
-          <span aria-hidden="true">⛶</span> Expand
+        <h4>{heading}</h4>
+        <a href={href} aria-label={`Explore more connections for ${name}`} title="Open in Relationships">
+          <span aria-hidden="true">⛶</span> See more
         </a>
       </div>
-      {!graph && !error && <p className="reader-loading" role="status">Loading relationships…</p>}
+      {!data && !error && <p className="reader-loading" role="status">Loading connections…</p>}
       {error && <p className="notice error" role="alert">{error}</p>}
-      {graph && centre && (
+      {data && centre && (
         <>
           <svg
             className="place-graph-canvas"
             viewBox="0 0 320 270"
             role="group"
-            aria-label={`${name} connected to ${shown.length ? shown.map(describeNode).join("; ") : "no other nodes"}`}
+            aria-label={`${name} connected to ${shown.length ? shown.map(describeNode).join("; ") : "no other items"}`}
           >
             {nodes.slice(1).map(({ node, x, y }) => (
               <line key={node.id} x1="160" y1="130" x2={x} y2={y} stroke="var(--edge)" />
@@ -78,9 +80,9 @@ function PlaceGraphPreview({ location }) {
               );
             })}
           </svg>
-          {!neighbours.length && <p className="empty-result">No connected nodes found.</p>}
-          {(neighbours.length > shown.length || graph.truncated) && (
-            <p className="place-graph-caption mt-[7px] mb-0 text-[11px] text-muted">Showing {shown.length} connections. Expand to explore more.</p>
+          {!neighbours.length && <p className="empty-result">No related passages or places found.</p>}
+          {(neighbours.length > shown.length || data.truncated) && (
+            <p className="place-graph-caption mt-[7px] mb-0 text-[11px] text-muted">Showing {shown.length} connections. Select an item to explore it, or choose See more.</p>
           )}
         </>
       )}

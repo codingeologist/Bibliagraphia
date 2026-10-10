@@ -4,7 +4,7 @@ import { NodeIcon } from "./nodeIcons.jsx";
 
 const groups = [
   ["book", "Books"], ["verse", "Passages"], ["location", "Places"],
-  ["version", "Translations"], ["region", "Regions"], ["figure", "Figures"],
+  ["version", "Translations"], ["region", "Regions"], ["figure", "People"],
 ];
 
 const describe = (node) => node.label === "verse"
@@ -15,7 +15,7 @@ const describe = (node) => node.label === "verse"
 
 function GraphNodeSearch({
   node, fallback, onSelect, allowedTypes,
-  label = "Choose graph centre", searchLabel = "Search graph nodes",
+  label = "Choose what to explore", searchLabel = "Find a passage, person or place",
   placeholder = "Search books, passages, places…", visibleLabel = false,
 }) {
   const id = useId();
@@ -71,7 +71,7 @@ function GraphNodeSearch({
         aria-label={label} aria-describedby={`${id}-selection`} aria-expanded={open} aria-controls={`${id}-panel`}
         onClick={() => { setQuery(""); setOpen((value) => !value); }}>
         {node && <NodeIcon type={node.label} />}
-        <span id={`${id}-selection`}>{node ? describe(node) : fallback || "Choose a node"}</span>
+        <span id={`${id}-selection`}>{node ? describe(node) : fallback || "Choose what to explore"}</span>
         <span aria-hidden="true">⌄</span>
       </button>
       {open && (

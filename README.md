@@ -205,6 +205,13 @@ The header logo links to the home page. Open the settings menu (three-line
 icon) to switch between light and dark mode; the choice is saved across pages.
 Main navigation is ordered **Home, Read, Map, Relationships, Explore, MCP, About**, with
 decorative icons alongside each label. It scrolls horizontally on small screens.
+Home offers a **Try it with…** suggestion rotating through Ruth, Genesis, Jonah,
+Matthew, Exodus and Luke on each homepage visit. The previous suggestion is saved
+in browser storage to avoid consecutive repeats. Each link opens chapter 1 in KJV and DRB side by side,
+plus links to About, AI assistant setup and GitHub. After a chapter with text
+loads successfully, its book, chapter, translation and comparison choices are
+saved locally in the browser. The home Read card then offers **Continue reading**;
+first-time visitors see **Start reading**. No account is needed.
 Open `/about` for the team (Ally, Jonah, Elle, Sidd and Jonathon), playful
 team icons, canonical data sources and project/map/software acknowledgements.
 Dataset counts are explicitly labelled as the README baseline, not live totals.
@@ -232,11 +239,12 @@ Genesis by default. The centre selector and depth control sit together at the
 graph's top left. Click the selector to search across books, passages,
 places, translations and regions, with up to three suggestions per type.
 Choosing a suggestion automatically sets its type and exact node ID.
-The three-dot menu includes **Show node names** to display all graph labels.
+The three-dot menu includes **Show names** to display all graph labels.
 This preference is saved in the browser; hover and zoom labels still work when
 the toggle is off. Graph labels use rounded, theme-aware backgrounds, with a
 node-coloured border for the centre and hovered node.
-Depth offers 1–20 hops and defaults to 3. The selected node, type and depth are
+The **How far to explore** selector offers 1–20 connection steps and defaults to 3.
+Each step follows one recorded connection. The selected node, type and depth are
 saved in browser storage and restored when returning to Relationships.
 The URL includes depth as well as node identity for refreshes and sharing;
 explicit URL values take priority over saved selections. The 200-node cap still
@@ -251,8 +259,8 @@ Verse translations and repeated place mentions remain separate exact-ID nodes.
 The node-type key at the bottom right includes checkboxes to hide or show each
 type and its incident edges. Filtering only affects the view: loaded data,
 layout positions and sidebar connections remain intact, and hidden nodes cannot
-be clicked on the canvas. **Fit graph** fits visible nodes. Selecting a new
-centre reveals its type if hidden. The key reports visible versus loaded nodes.
+be clicked on the canvas. **Show whole view** fits visible nodes. Selecting a new
+centre reveals its type if hidden. The bottom-left summary reports visible versus loaded items.
 
 Choose a centre and depth to explore another neighbourhood. Selecting a node
 redraws immediately; depth changes redraw after a short pause. No Draw graph
@@ -260,14 +268,15 @@ button is needed on this page. Node
 symbols identify books, verses, translations, places and regions. Drag to pan,
 scroll to zoom, click a node to explore its neighbours, or use the node picker
 inside the three-dot options control beside the depth selector
-for keyboard navigation. **Fit graph** and fullscreen controls sit at the top
-right; the node-type key sits at the bottom right. **Fit graph** restores the view.
+for keyboard navigation. **Show whole view** and fullscreen controls sit at the top
+right; the node-type key sits at the bottom right. **Show whole view** restores the view.
 Node/connection counts and truncation status sit at the bottom left.
-Figures appear as graph nodes. Kinship edges between figures are drawn dashed
-in the figure colour (keyed **Kinship** in the node-type key), and the sidebar
+The graph includes people, labelled **People** in filters and **Person** in details.
+Kinship edges between figures are drawn dashed
+in the figure colour (keyed **Family relationships** in the node-type key), and the sidebar
 names the recorded kind — Father of, Mother of, Child of, Sibling of, Partner of.
-Underlined places in the reader open details with a **Graph relationships**
-preview showing the place and up to six directly connected nodes. Its **Expand**
+Underlined places in the reader open details with a **Related passages and places**
+preview showing the place and up to six directly connected nodes. Its **See more**
 control opens the full graph centred on that exact place mention. Selecting a graph node preserves its
 identity, including passages sharing a book name. Verse details show passage
 text, a **Read passage** link, and links to directly connected places and their
@@ -297,10 +306,19 @@ On narrow screens, scroll the comparison horizontally.
 Underlined place mentions in every column open place
 details with links to the graph and map. Open `/map` to browse all mappable
 places; select a marker to read the passages that mention it.
-Every node in the reader's Graph relationships preview links to Relationships
+Every item in the reader's Related passages and places preview links to Relationships
 centred on that exact item, retaining passage translation and place-mention IDs.
-People named in a verse have a pink, solid-underlined link to their exact
-Relationships view; places retain their dotted highlight and drawer.
+People named in a verse have a pink, solid-underlined button opening person
+details beside the passage. The drawer shows the recorded description, a related
+items preview and **Family relationships** (kinship) when available. A separate
+`/reader/person-relations` lookup returns all direct relatives, independently of
+the graph preview's node cap, with stored relationship kinds and directions.
+Select a relative to open their details in the same drawer. An explicit
+empty state appears when no family relationships are recorded; no
+relationships are invented. Places retain their dotted highlight and drawer.
+Selecting a verse number opens passage text and related items in the same
+details drawer, retaining the exact translation of that comparison column.
+Preview items and **Explore all connections** link to Relationships.
 People highlights use recorded STEP Bible verse links and canonical names or
 explicit spelling aliases, never general search keywords. Only names present
 in the people dataset are highlighted; pronouns are not. Each comparison

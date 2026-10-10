@@ -49,8 +49,8 @@ export default function AboutPage() {
       <main className="pt-7 pb-8 space-y-5">
         <section className="panel">
           <h2>About Bibliagraphia</h2>
-          <p className="panel-copy">A living map of scripture. Bibliagraphia connects Bible passages, translations, places and regions so you can read, compare and discover how they fit together.</p>
-          <p className="panel-copy">Originally built with TypeDB, the project now uses a single-file DuckDB graph, a FastAPI backend and a React frontend.</p>
+          <p className="panel-copy">A living map of scripture. Bibliagraphia connects Bible passages, people, translations, places and regions so you can read, compare and discover how they fit together.</p>
+          <p className="panel-copy">Read a chapter, select a highlighted person or place, or explore the connections behind a passage.</p>
           <a className="text-accent text-[13px]" href="https://github.com/codingeologist/Bibliagraphia" target="_blank" rel="noreferrer">Explore the project on GitHub</a>
         </section>
 
@@ -83,7 +83,7 @@ export default function AboutPage() {
         </section>
         <section className="panel" aria-labelledby="about-sources">
           <h2 id="about-sources">Data sources</h2>
-          <p className="panel-copy">The graph is built from the canonical JSON datasets in the project’s data directory. These descriptions and baseline counts come from the project README; the running database may include additional translations.</p>
+          <p className="panel-copy">These project files provide the Bible text, people and places used by Bibliagraphia. Descriptions and counts come from the project documentation and may differ from what is currently available in the app.</p>
           <dl className="grid gap-4 mt-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))]">
             {sources.map(([file, description, count]) => (
               <div key={file} className="rounded-md border border-line p-4 min-w-0">

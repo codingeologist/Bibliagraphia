@@ -12,7 +12,7 @@ import { get } from "./api.js";
 import { NodeIcon, nodeIconPaths } from "./nodeIcons.jsx";
 import GraphNodeSearch from "./GraphNodeSearch.jsx";
 import { saveRelationshipState } from "./relationshipState.js";
-import { relationshipDescription } from "./nodeLinks.js";
+import { nodeTypeName, relationshipDescription } from "./nodeLinks.js";
 
 const colorVars = {
   book: "--node-book",
@@ -35,7 +35,7 @@ const nodeTypeNames = {
   version: "Translations",
   location: "Places",
   region: "Regions",
-  figure: "Figures",
+  figure: "People",
 };
 
 const nodeDescription = (node) => node.label === "verse"
@@ -77,7 +77,7 @@ function GraphExplorer({ seed, fullPage = false }) {
   const runGraph = useCallback(async (node = query, nodeLabel = label, nodeId = "", expansion) => {
     const start = node.trim();
     if (!start) {
-      setError("Enter a graph centre.");
+      setError("Choose a passage, person or place to explore.");
       setLoading(false);
       setSummary("");
       return;
@@ -99,7 +99,7 @@ function GraphExplorer({ seed, fullPage = false }) {
     exactCentreRef.current = { query: start, label: nodeLabel, id: nodeId };
     setLoading(true);
     setError("");
-    setSummary("Loading graph…");
+    setSummary("Loading connections…");
     try {
       const params = new URLSearchParams({ node: start, label: nodeLabel, hops });
       // Balanced mode in both views: passages are capped per branch so
@@ -123,10 +123,10 @@ function GraphExplorer({ seed, fullPage = false }) {
         saveRelationshipState({ node: start, label: nodeLabel, id: result.start_id, hops, showNames: showNamesRef.current });
       }
       setSummary(result.count
-        ? `${result.count} nodes · ${result.links.length} connections · ${result.hops} hop${result.hops === 1 ? "" : "s"}`
-          + (result.truncated ? " · capped at 200" : "")
+        ? `${result.count} items · ${result.links.length} connections · ${result.hops} connection step${result.hops === 1 ? "" : "s"}`
+          + (result.truncated ? " · showing up to 200 items" : "")
           + (result.branch_limited ? " · more connections available" : "")
-        : "No connected nodes found.");
+        : "No recorded connections found.");
     } catch (requestError) {
       if (requestId !== requestRef.current) return;
       setGraph(null);
@@ -513,12 +513,12 @@ function GraphExplorer({ seed, fullPage = false }) {
   }
 
   const depthControl = (
-    <select aria-label="Graph depth" value={hops} onChange={(event) => {
+    <select aria-label="How far to explore" title="Each step follows one connection. More steps show a wider view." value={hops} onChange={(event) => {
       setHops(event.target.value);
       setControlRevision((value) => value + 1);
     }}>
       {Array.from({ length: fullPage ? 20 : 3 }, (_, index) => [
-        String(index + 1), `${index + 1} hop${index ? "s" : ""}`,
+        String(index + 1), `${index + 1} connection step${index ? "s" : ""}`,
       ]).map(([value, text]) => (
         <option key={value} value={value}>{text}</option>
       ))}
@@ -534,25 +534,25 @@ function GraphExplorer({ seed, fullPage = false }) {
         runGraph(query, label, fullPage && centre?.query === query.trim() && centre?.label === label ? centre.id : "");
       }}>
         {!fullPage && <input
-          aria-label="Graph centre"
+          aria-label="Starting point"
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
             setControlRevision((value) => value + 1);
           }}
-          placeholder="Centre — e.g. JOH"
+          placeholder="Start with a name, such as Ruth"
         />}
-        {!fullPage && <select aria-label="Graph node type" value={label} onChange={(event) => {
+        {!fullPage && <select aria-label="Kind of starting point" value={label} onChange={(event) => {
           setLabel(event.target.value);
           setControlRevision((value) => value + 1);
         }}>
           {["book", "version", "region", "location", "verse", "figure"].map((item) => (
-            <option key={item}>{item}</option>
+            <option key={item} value={item}>{nodeTypeName(item)}</option>
           ))}
         </select>}
         {!fullPage && depthControl}
         {!fullPage && <button className="button button-secondary" disabled={loading}>
-          {loading ? "Drawing…" : "Draw graph"}
+          {loading ? "Loading…" : "Show connections"}
         </button>}
       </form>
       </div>
@@ -560,8 +560,8 @@ function GraphExplorer({ seed, fullPage = false }) {
       {error && <p className="notice error" role="alert">{error}</p>}
       <div className={fullPage ? `relationship-workspace${centreNode ? " has-details" : ""}` : "graph-workspace"}>
       {fullPage && centreNode && (
-        <section className="relationship-detail" aria-label="Selected node details">
-          <strong>{centreNode.label}: {nodeName(centreNode)}</strong>
+        <section className="relationship-detail" aria-label="Details of your selection">
+          <strong>{nodeTypeName(centreNode.label)}: {nodeName(centreNode)}</strong>
           {centreNode.label === "verse" && (
             <>
               <span>{centreNode.book_code} {centreNode.chapter}:{centreNode.verse_number} · {centreNode.version_code}</span>
@@ -596,9 +596,9 @@ function GraphExplorer({ seed, fullPage = false }) {
             </>
           )}
           <div className="relationship-connections">
-            <h3>Connected nodes</h3>
+            <h3>Related passages, people and places</h3>
             {graph.truncated && (
-              <p className="relationship-connections-note">Showing connections included in this graph. More may exist beyond its node limit.</p>
+              <p className="relationship-connections-note">This view shows up to 200 items. Select an item to explore more of its connections.</p>
             )}
             {Object.keys(hiddenCentreConnections).length > 0 && (
               <div className="relationship-hidden-connections">
@@ -611,13 +611,13 @@ function GraphExplorer({ seed, fullPage = false }) {
                   onClick={() => runGraph(graphNodeQuery(centreNode), centreNode.label, centreNode.id, graph.branch_expansion + 1)}>
                   Show more connections
                 </button>
-                {graph.truncated && <p className="relationship-connections-note">Node budget reached. Select a connected node to explore its branch.</p>}
+                {graph.truncated && <p className="relationship-connections-note">This view is full. Select a related passage, person or place to explore further.</p>}
               </div>
             )}
             {graph.branch_limited && !Object.keys(hiddenCentreConnections).length && (
-              <p className="relationship-connections-note">Other branches have more connections. Select a connected node to see its hidden counts and expand it.</p>
+              <p className="relationship-connections-note">More connections are available around other items. Select one to explore further.</p>
             )}
-            {connectedGroups.size === 0 && <p>No direct connections in this graph.</p>}
+            {connectedGroups.size === 0 && <p>No directly related items in this view.</p>}
             {[...connectedGroups].sort(([left], [right]) =>
               (nodeTypeNames[left] || left).localeCompare(nodeTypeNames[right] || right))
               .map(([type, entries]) => (
@@ -650,7 +650,7 @@ function GraphExplorer({ seed, fullPage = false }) {
       <div className="graph-wrap" ref={wrapperRef}>
         {fullPage && summary && <p className="result-summary graph-summary-overlay" role="status">
           {summary}
-          {!loading && graph && ` · ${graph.nodes.filter((node) => !hiddenTypes.has(node.label)).length} / ${graph.nodes.length} visible`}
+          {!loading && graph && ` · showing ${graph.nodes.filter((node) => !hiddenTypes.has(node.label)).length} of ${graph.nodes.length} items`}
         </p>}
         {fullPage && (
           <div className="graph-search-overlay">
@@ -666,7 +666,7 @@ function GraphExplorer({ seed, fullPage = false }) {
                     nodeMenuRef.current.querySelector("summary").focus();
                   }
                 }}>
-                <summary aria-label="More graph options">
+                <summary aria-label="More connection view options">
                   <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
                     <circle cx="5" cy="12" r="2" fill="currentColor" />
                     <circle cx="12" cy="12" r="2" fill="currentColor" />
@@ -677,12 +677,12 @@ function GraphExplorer({ seed, fullPage = false }) {
                   <label className="relationship-names-toggle">
                     <input type="checkbox" checked={showNames}
                       onChange={(event) => setShowNames(event.target.checked)} />
-                    Show node names
+                    Show names
                   </label>
                   <label className="relationship-node-picker">
-                    Explore a node
+                    Explore a related item
                     <select
-                      aria-label="Explore a relationship node"
+                      aria-label="Choose a related item"
                       value=""
                       onChange={(event) => {
                         const node = graph.nodes.find((item) => item.id === event.target.value);
@@ -693,10 +693,10 @@ function GraphExplorer({ seed, fullPage = false }) {
                         }
                       }}
                     >
-                      <option value="">Choose a node</option>
+                      <option value="">Choose an item</option>
                       {graph.nodes.map((node) => (
                         <option key={node.id} value={node.id}>
-                          {node.label}: {nodeName(node)}{node.chapter ? ` ${node.chapter}:${node.verse_number} (${node.version_code})` : ""}
+                          {nodeTypeName(node.label)}: {nodeName(node)}{node.chapter ? ` ${node.chapter}:${node.verse_number} (${node.version_code})` : ""}
                         </option>
                       ))}
                     </select>
@@ -709,17 +709,17 @@ function GraphExplorer({ seed, fullPage = false }) {
         <button
           type="button"
           className="graph-fullscreen"
-          title="Toggle graph fullscreen"
-          aria-label="Toggle graph fullscreen"
+          title="Toggle full-screen view"
+          aria-label="Toggle full-screen connections view"
           onClick={toggleFullscreen}
         >⛶</button>
         {fullPage && (
-          <button className="relationship-refit" type="button" onClick={resetView}>Fit graph</button>
+          <button className="relationship-refit" type="button" onClick={resetView}>Show whole view</button>
         )}
         <canvas
           ref={canvasRef}
           className="graph-canvas"
-          aria-label="Interactive graph; select a node to centre the graph there"
+          aria-label="Connections view. Select an item to explore its connections, drag to move around, or scroll to zoom."
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -734,7 +734,7 @@ function GraphExplorer({ seed, fullPage = false }) {
           }}
         />
         {legend.length > 0 && (
-          <div className="graph-legend" role={fullPage ? "group" : undefined} aria-label="Node types">
+          <div className="graph-legend" role={fullPage ? "group" : undefined} aria-label="Show or hide kinds of items">
             {legend.map((item) => fullPage ? (
               <label key={item} className="graph-type-toggle">
                 <input type="checkbox" checked={!hiddenTypes.has(item)}
@@ -750,14 +750,14 @@ function GraphExplorer({ seed, fullPage = false }) {
                   }} />
                 <NodeIcon type={item} />{nodeTypeNames[item] || item}
               </label>
-            ) : <span key={item}><i className={`legend-dot badge-${item}`} />{item}</span>)}
-            {hasKinship && <span><i className="legend-dash" />Kinship</span>}
+            ) : <span key={item}><i className={`legend-dot badge-${item}`} />{nodeTypeNames[item] || item}</span>)}
+            {hasKinship && <span><i className="legend-dash" />Family relationships</span>}
           </div>
         )}
-        {!graph && !loading && !error && <div className="graph-placeholder">Your graph will appear here</div>}
+        {!graph && !loading && !error && <div className="graph-placeholder">Choose a starting point to see its connections</div>}
       </div>
       </div>
-      {!fullPage && <p className="graph-tip">Click a node to explore its connections · double-click to refit</p>}
+      {!fullPage && <p className="graph-tip">Select an item to explore its connections · double-click to show the whole view</p>}
     </div>
   );
 }
