@@ -6,13 +6,14 @@
 #   - local:    docker compose build               (context = ./frontend)
 #   - Railway:  service Root Directory = frontend  (context = frontend/)
 #
-# The backend upstream is set at RUNTIME via the BACKEND_URL env var
-# (host:port, no scheme). nginx resolves it lazily per request through the
-# container's DNS resolver, so a briefly unavailable backend (or a private
-# DNS entry that has not propagated yet) yields 502s that self-heal instead
-# of a fatal startup crash:
+# The backend upstream is set at RUNTIME via the BACKEND_URL env var.
+# nginx resolves it lazily per request through the container's DNS resolver,
+# so a briefly unavailable backend yields 502s that self-heal instead of a
+# fatal startup crash. Accepts host:port (private network) or a full URL
+# (public domain, https):
 #   - local:    BACKEND_URL=api:8000   (compose service name, the default)
 #   - Railway:  BACKEND_URL=api.railway.internal:8000 (private networking)
+#               or https://<api-public-domain>       (public API)
 #
 #   docker compose up --build
 #   open http://localhost:8080
@@ -35,9 +36,14 @@ RUN npm run build
 # ---- Stage 2: serve with nginx ----------------------------------------------
 FROM nginx:alpine
 
-# Backend upstream (host:port, NO scheme), substituted into the nginx
-# template at container start. Override per environment; this default matches
-# the compose service name so local runs need no configuration.
+# Backend upstream, substituted into the nginx template at container start.
+# Two supported forms (start.sh normalises bare host:port to http://…):
+#   - host:port            → private networking/compose, e.g. api:8000 or
+#                            api.railway.internal:8000
+#   - full URL with scheme → public domain, e.g.
+#                            https://api-production-xxxx.up.railway.app
+# This default matches the compose service name so local runs need no
+# configuration.
 ENV BACKEND_URL=api:8000
 
 # nginx config template. The official image's entrypoint runs

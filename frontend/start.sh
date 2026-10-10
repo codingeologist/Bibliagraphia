@@ -24,4 +24,13 @@ case "$DNS_RESOLVER" in
 esac
 export DNS_RESOLVER
 
+# Normalise the backend upstream scheme: BACKEND_URL may be given as
+# host:port (private networking / compose, gets http://) or as a full URL
+# with scheme (public Railway domain, keep https://).
+case "${BACKEND_URL:-}" in
+  http://*|https://*) ;;
+  "") export BACKEND_URL="http://api:8000" ;;
+  *) export BACKEND_URL="http://${BACKEND_URL}" ;;
+esac
+
 exec /docker-entrypoint.sh "$@"
