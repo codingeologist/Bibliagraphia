@@ -24,9 +24,18 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+# MCP server (FastMCP) — built before the app so its lifespan can be wired
+# into the FastAPI constructor; mounted at /mcp at the bottom of this file.
+from app.mcp import mcp
+
+_mcp_app = mcp.http_app(path="/mcp")
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-app = FastAPI(title="Bibliagraphia DuckDB Graph API")
+app = FastAPI(
+    title="Bibliagraphia DuckDB Graph API",
+    lifespan=_mcp_app.lifespan,
+)
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
@@ -692,3 +701,9 @@ def read_chapter(
         }
     finally:
         conn.close()
+
+
+# MCP over streamable HTTP — same process, same port as the JSON API.
+# Mounted at root so the endpoint is exactly /mcp (no trailing-slash redirect);
+# API routes are registered first, so they always win over this catch-all.
+app.mount("/", _mcp_app)

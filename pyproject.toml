@@ -30,6 +30,7 @@ classifiers = [
 dependencies = [
     "duckdb>=1.1",
     "fastapi>=0.110",
+    "fastmcp>=2.3.1",
     "uvicorn[standard]>=0.29",
 ]
 
