@@ -185,3 +185,38 @@ def map_locations(
     from app.api import map_points
 
     return map_points(region=region, book=book, limit=limit)
+
+
+@mcp.tool
+def explain_verse(
+    book_code: str,
+    chapter: int,
+    verse_number: int,
+    version_code: str = "KJV",
+) -> dict:
+    """Explain a Bible verse: gather the graph context — the verse across
+    all translations, the verses immediately above and below for reading
+    context, the places the graph links to the verse, and those places'
+    region descriptions — then ask the FaithTech-hosted DeepSeek model to
+    write a chat reply explaining what the passage is and the significance
+    of the place and the persons involved.
+
+    Requires the FAITHTECH_API_KEY environment variable on the server
+    (plus optional FAITHTECH_API_BASE, FAITHTECH_MODEL, FAITHTECH_TIMEOUT).
+
+    Args:
+        book_code: Book code (e.g. GEN, JOH — use search_nodes to find
+            codes).
+        chapter: Chapter number (1-based).
+        verse_number: Verse number (1-based).
+        version_code: Translation used for the selected verse and its
+            context verses: KJV | VUL | DRB (default KJV).
+    """
+    from app.api import explain
+
+    return explain(
+        book_code=book_code,
+        chapter=chapter,
+        verse_number=verse_number,
+        version_code=version_code,
+    )

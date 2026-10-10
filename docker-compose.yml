@@ -26,6 +26,12 @@ services:
     environment:
       - BIBLE_DB_PATH=/app/data/bible.db
       - BIBLE_DATA_DIR=/app/data
+      # Verse-explanation feature (GET /explain, explain_verse MCP tool):
+      # forwarded from the host; unset values fall back to app defaults.
+      - FAITHTECH_API_KEY=${FAITHTECH_API_KEY:-}
+      - FAITHTECH_API_BASE=${FAITHTECH_API_BASE:-}
+      - FAITHTECH_MODEL=${FAITHTECH_MODEL:-}
+      - FAITHTECH_TIMEOUT=${FAITHTECH_TIMEOUT:-}
     restart: unless-stopped
 
   frontend:

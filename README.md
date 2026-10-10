@@ -249,6 +249,7 @@ no SQL-injection surface.
 | `GET /reader/catalog?version_code=`                           | optional version code (defaults to `KJV`)      | books, translations, and available chapters      |
 | `GET /chapter?book_code=&chapter=&version_code=`              | passage reference                              | ordered verse text and linked location nodes     |
 | `GET /place/relations?location_id=`                           | location mention node ID                       | translations and other references for the place  |
+| `GET /explain?book_code=&chapter=&verse_number=&version_code=` | verse reference                                | graph context for the verse + a DeepSeek chat explanation (needs `FAITHTECH_API_KEY`) |
 
 Examples:
 
@@ -262,7 +263,49 @@ curl "localhost:8000/verse?book_code=JOH&chapter=3&verse_number=16"
 
 # autocomplete
 curl "localhost:8000/search?q=Jer&label=location"
+
+# explain a verse (set FAITHTECH_API_KEY on the server first)
+curl "localhost:8000/explain?book_code=JOH&chapter=3&verse_number=16"
 ```
+
+### Verse explanations (AI)
+
+`GET /explain` gathers the graph's own facts for a verse — the verse in
+every available translation, the verses immediately above and below for
+reading context, the places the graph links to it, and those places'
+region descriptions — then asks the FaithTech-hosted DeepSeek model
+(BreezeSeekVision, OpenAI-compatible) for a chat reply explaining the
+passage, the place, and the persons involved. The model only ever sees
+facts the backend gathered; it is instructed never to invent places the
+graph does not link. BreezeSeekVision is a reasoning model that plans
+before it writes; the backend strips its planning block, so the reply
+shown to the reader is the explanation itself.
+
+The reply carries the evidence with it:
+
+```json
+{
+  "reference": {"book_code": "JOH", "book_name": "...", "chapter": 3, "verse_number": 16, "version": "KJV"},
+  "verse":     {"text": "...", "versions": [{"code": "KJV", "text": "..."}, {"code": "DRB", "text": "..."}]},
+  "context":   {"previous": {"chapter": 3, "verse_number": 15, "text": "..."}, "next": {"...": "..."}},
+  "locations": [{"name": "Damascus", "region": "Syria", "latitude": 33.52, "longitude": 36.31}],
+  "regions":   [{"name": "Syria", "keywords": "...", "description": "..."}],
+  "explanation": "the model's chat reply"
+}
+```
+
+Configuration (environment variables on the API server):
+
+| variable             | default                            | purpose                         |
+|----------------------|------------------------------------|---------------------------------|
+| `FAITHTECH_API_KEY`  | — (required)                       | bearer token for the API         |
+| `FAITHTECH_API_BASE` | `https://mq2yi3izzu14g5-8000.proxy.runpod.net/v1` | OpenAI-compatible base URL       |
+| `FAITHTECH_MODEL`    | `BreezeSeekVision`                  | model name                       |
+| `FAITHTECH_TIMEOUT`  | `60`                               | request timeout (seconds)        |
+| `FAITHTECH_MAX_TOKENS`| `6000`                             | token budget per model reply      |
+
+Without a key the endpoint still gathers the graph context but returns
+`{"error": "FAITHTECH_API_KEY is not set ..."}`.
 
 ## MCP server
 
@@ -284,6 +327,7 @@ implementation, two interfaces:
 | `find_path`           | `POST /path`          | shortest path between two nodes                    |
 | `graph_neighborhood`  | `GET /graph`          | ego-graph around a node                            |
 | `map_locations`       | `GET /map`            | geocoded mentions (lat/lng + verse text)           |
+| `explain_verse`       | `GET /explain`        | verse explanation from the graph context via the FaithTech DeepSeek model |
 
 ### Connect an MCP client
 
