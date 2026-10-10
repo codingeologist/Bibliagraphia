@@ -127,6 +127,9 @@ translation, or jump directly to a verse; previous/next controls move between
 chapters. Underlined place mentions that match graph locations open place
 details with links to the graph and map. Open `/map` to browse all mappable
 places; select a marker to read the passages that mention it.
+Use the map's search box to find places by name or alternative name. Choose an
+autocomplete suggestion (or use the arrow keys and Enter) to zoom to that place
+and open its passages.
 The expand control on a place's preview map smoothly grows it into the full
 map, preserving its centre and zoom. Browser Back restores the passage and
 place sidebar. The animation uses the View Transitions API; unsupported

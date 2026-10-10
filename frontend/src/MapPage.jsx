@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { get } from "./api.js";
+import PlaceSearch from "./PlaceSearch.jsx";
+import { createStarMarker } from "./mapMarkers.js";
 
 function MapPage({ initialMap, onMapReady }) {
   const [dark, setDark] = useState(() => {
@@ -18,7 +20,6 @@ function MapPage({ initialMap, onMapReady }) {
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
   const [detailError, setDetailError] = useState("");
-  const [overlayWarning, setOverlayWarning] = useState("");
   const mapElementRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef(null);
@@ -68,7 +69,9 @@ function MapPage({ initialMap, onMapReady }) {
     const map = L.map(mapElementRef.current, {
       maxZoom: 13,
       scrollWheelZoom: false,
+      zoomControl: false,
     }).setView(initialMap?.center || [33, 40], initialMap?.zoom ?? 4);
+    L.control.zoom({ position: "bottomleft" }).addTo(map);
     const basemap = L.tileLayer(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       {
@@ -81,21 +84,17 @@ function MapPage({ initialMap, onMapReady }) {
       maxZoom: 11,
       opacity: 0.85,
     }).addTo(map);
-    romanOverlay.on("tileerror", () => {
-      setOverlayWarning("Roman-era map overlay unavailable; satellite basemap remains active.");
+    romanOverlay.once("tileerror", () => {
+      console.warn("Could not load the Roman-era map overlay.");
     });
-    romanOverlay.on("tileload", () => setOverlayWarning(""));
     const markers = L.layerGroup().addTo(map);
     if (initialMap) {
-      L.circleMarker([
+      createStarMarker([
         Number(initialMap.place.attrs.latitude),
         Number(initialMap.place.attrs.longitude),
       ], {
-        radius: 9,
-        weight: 1.5,
-        color: "#fff",
         fillColor: getComputedStyle(document.documentElement).getPropertyValue("--accent").trim(),
-        fillOpacity: 0.9,
+        size: 18,
       }).addTo(markers);
     }
     mapRef.current = map;
@@ -134,13 +133,10 @@ function MapPage({ initialMap, onMapReady }) {
         markersRef.current.clearLayers();
         const bounds = [];
         for (const place of result.places) {
-          const marker = L.circleMarker([place.lat, place.lng], {
-            radius: 6,
-            weight: 1.5,
-            color: "#fff",
+          const marker = createStarMarker([place.lat, place.lng], {
             fillColor: getComputedStyle(document.documentElement)
               .getPropertyValue("--node-location").trim(),
-            fillOpacity: 0.9,
+            size: 14,
           });
           marker.bindTooltip(place.name);
           marker.on("click", () => selectPlace(place));
@@ -232,14 +228,23 @@ function MapPage({ initialMap, onMapReady }) {
         <section className="panel map-page-panel" aria-label="Map of biblical places" tabIndex={-1}>
           <div className={`map-page-layout${selectedPlace ? " has-selection" : ""}`}>
             <div className="map-page-map-wrap">
-              <div className="map-page-heading" aria-live="polite">
-                <p>{loading ? "Loading places…" : `${places.length} places · Select a marker to see passages`}</p>
+              <div className="map-page-heading">
+                <PlaceSearch
+                  places={places}
+                  disabled={loading || Boolean(error)}
+                  onSelect={(place) => {
+                    selectPlace(place);
+                    mapRef.current?.flyTo([place.lat, place.lng], 9, {
+                      duration: 0.8,
+                      animate: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+                    });
+                  }}
+                />
+                <p role="status">{loading ? "Loading places…" : `${places.length} places · Select a marker to see passages`}</p>
+                {error && <p className="notice error" role="alert">{error}</p>}
               </div>
-              {error && <p className="notice error map-page-notice" role="alert">{error}</p>}
-              {overlayWarning && <p className="notice map-page-notice" role="status">{overlayWarning}</p>}
               <div className="map-page-canvas" ref={mapElementRef} aria-label="Map of biblical places" />
               {loading && <div className="map-page-placeholder">Loading map locations…</div>}
-              <p className="map-tip map-page-tip">Basemap and Roman-era overlay require an internet connection.</p>
             </div>
 
             {selectedPlace && (

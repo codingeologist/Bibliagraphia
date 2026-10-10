@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { get } from "./api.js";
+import { createStarMarker } from "./mapMarkers.js";
 
 function PlaceMap({ location, href, onExpand }) {
   const mapElementRef = useRef(null);
@@ -24,13 +25,10 @@ function PlaceMap({ location, href, onExpand }) {
         maxZoom: 19,
       },
     ).addTo(map);
-    L.circleMarker([latitude, longitude], {
-      radius: 8,
-      weight: 2,
-      color: "#fff",
+    createStarMarker([latitude, longitude], {
       fillColor: getComputedStyle(document.documentElement)
         .getPropertyValue("--node-location").trim(),
-      fillOpacity: 1,
+      size: 16,
     }).addTo(map);
     const frame = window.requestAnimationFrame(() => map.invalidateSize());
 
