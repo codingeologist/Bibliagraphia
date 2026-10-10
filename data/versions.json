@@ -13,5 +13,10 @@
         "code": "KJV",
         "name": "kjv",
         "full_name": "King James Bible"
+    },
+    {
+        "code": "SRG",
+        "name": "statresgnt",
+        "full_name": "Statistical Restoration Greek New Testament"
     }
 ]
