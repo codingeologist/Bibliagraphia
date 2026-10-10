@@ -9,11 +9,19 @@
 # replaces the image ENTRYPOINT instead of doing the export inside CMD.
 #
 # The container's nameserver differs per platform (Docker: 127.0.0.11,
-# Railway: its own resolver), so it is read from /etc/resolv.conf; the
-# fallback matches Docker's embedded DNS.
+# Railway: an IPv6 address such as fd12::10), so it is read from
+# /etc/resolv.conf. nginx requires IPv6 resolver addresses in square
+# brackets (resolver [fd12::10] valid=5s;), so colons trigger bracketing;
+# the fallback matches Docker's embedded DNS.
 set -e
 
 DNS_RESOLVER="$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf)"
-export DNS_RESOLVER="${DNS_RESOLVER:-127.0.0.11}"
+DNS_RESOLVER="${DNS_RESOLVER:-127.0.0.11}"
+
+# Bracket IPv6 addresses (contain ":") for nginx's resolver directive.
+case "$DNS_RESOLVER" in
+  *:*) DNS_RESOLVER="[$DNS_RESOLVER]" ;;
+esac
+export DNS_RESOLVER
 
 exec /docker-entrypoint.sh "$@"
