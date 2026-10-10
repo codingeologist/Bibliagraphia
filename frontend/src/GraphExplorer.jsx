@@ -102,10 +102,10 @@ function GraphExplorer({ seed, fullPage = false }) {
     setSummary("Loading graph…");
     try {
       const params = new URLSearchParams({ node: start, label: nodeLabel, hops });
-      if (fullPage) {
-        params.set("balanced", "true");
-        params.set("branch_expansion", String(branchExpansionRef.current));
-      }
+      // Balanced mode in both views: passages are capped per branch so
+      // figures and their kinship edges stay visible in the node budget.
+      params.set("balanced", "true");
+      params.set("branch_expansion", String(branchExpansionRef.current));
       if (nodeId) params.set("node_id", nodeId);
       const result = await get(`/graph?${params}`);
       if (requestId !== requestRef.current) return;
@@ -181,18 +181,37 @@ function GraphExplorer({ seed, fullPage = false }) {
     context.translate(view.x, view.y);
     context.scale(view.scale, view.scale);
 
+    const visibleLink = (link) => typeof link.source === "object"
+      && typeof link.target === "object"
+      && !hiddenTypesRef.current.has(link.source.label)
+      && !hiddenTypesRef.current.has(link.target.label);
+
     context.strokeStyle = rootStyles.getPropertyValue("--edge").trim();
     context.lineWidth = 1 / view.scale;
     context.beginPath();
     for (const link of links) {
-      if (typeof link.source === "object" && typeof link.target === "object"
-        && !hiddenTypesRef.current.has(link.source.label)
-        && !hiddenTypesRef.current.has(link.target.label)) {
+      if (visibleLink(link) && link.label !== "figure_relative_of") {
         context.moveTo(link.source.x, link.source.y);
         context.lineTo(link.target.x, link.target.y);
       }
     }
     context.stroke();
+
+    // Kinship edges between figures: dashed, in the figure colour.
+    const kinship = links.filter((link) => visibleLink(link)
+      && link.label === "figure_relative_of");
+    if (kinship.length) {
+      context.save();
+      context.strokeStyle = rootStyles.getPropertyValue("--node-figure").trim();
+      context.setLineDash([5 / view.scale, 4 / view.scale]);
+      context.beginPath();
+      for (const link of kinship) {
+        context.moveTo(link.source.x, link.source.y);
+        context.lineTo(link.target.x, link.target.y);
+      }
+      context.stroke();
+      context.restore();
+    }
 
     for (const node of nodes) {
       if (hiddenTypesRef.current.has(node.label)) continue;
@@ -461,6 +480,7 @@ function GraphExplorer({ seed, fullPage = false }) {
   };
 
   const legend = [...new Set(graph?.nodes?.map((node) => node.label) || [])];
+  const hasKinship = (graph?.links || []).some((link) => link.label === "figure_relative_of");
   const centreNode = graph?.nodes?.find((node) => node.id === graph.start_id);
   const hiddenCentreConnections = graph?.hidden_connections?.[graph.start_id] || {};
   const readerHref = (node) => `/read?${new URLSearchParams({
@@ -485,7 +505,7 @@ function GraphExplorer({ seed, fullPage = false }) {
       const group = connectedGroups.get(node.label) || new Map();
       const entry = group.get(node.id) || { node, relationships: new Set() };
       entry.relationships.add(
-        relationshipDescription(link.label, outgoing),
+        relationshipDescription(link.label, outgoing, link.attrs),
       );
       group.set(node.id, entry);
       connectedGroups.set(node.label, group);
@@ -564,6 +584,15 @@ function GraphExplorer({ seed, fullPage = false }) {
               {centreNode.book_code && centreNode.chapter && centreNode.verse_number && (
                 <a href={`${readerHref(centreNode)}&${new URLSearchParams({ place_id: centreNode.id })}`}>Read passage →</a>
               )}
+            </>
+          )}
+          {centreNode.label === "figure" && (
+            <>
+              {(centreNode.attrs?.testament || centreNode.attrs?.category) && (
+                <span>{[centreNode.attrs?.testament, centreNode.attrs?.category]
+                  .filter(Boolean).join(" · ")}</span>
+              )}
+              {centreNode.attrs?.description && <p>{centreNode.attrs.description}</p>}
             </>
           )}
           <div className="relationship-connections">
@@ -722,6 +751,7 @@ function GraphExplorer({ seed, fullPage = false }) {
                 <NodeIcon type={item} />{nodeTypeNames[item] || item}
               </label>
             ) : <span key={item}><i className={`legend-dot badge-${item}`} />{item}</span>)}
+            {hasKinship && <span><i className="legend-dash" />Kinship</span>}
           </div>
         )}
         {!graph && !loading && !error && <div className="graph-placeholder">Your graph will appear here</div>}

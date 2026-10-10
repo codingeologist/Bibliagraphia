@@ -328,6 +328,10 @@
     @apply w-[7px] h-[7px] rounded-[50%] [background:var(--badge-color)];
   }
 
+  .legend-dash {
+    @apply w-[14px] h-[2px] [border-top:2px_dashed_var(--node-figure)];
+  }
+
   .graph-placeholder {
     @apply absolute inset-0 grid place-items-center text-muted text-[11px] pointer-events-none;
   }

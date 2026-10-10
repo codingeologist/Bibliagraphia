@@ -21,16 +21,16 @@ mcp = FastMCP("Bibliagraphia")
 @mcp.tool
 def search_nodes(q: str, label: Optional[str] = None, limit: int = 20) -> dict:
     """Autocomplete search over graph nodes (books, versions, verses,
-    regions, locations) by name or code prefix.
+    regions, locations, figures) by name or code prefix.
 
     Use this first to resolve a human name (e.g. "John", "Syria",
-    "Antioch") to a node before calling graph tools.
+    "Antioch", "David") to a node before calling graph tools.
 
     Args:
         q: Prefix to match on node name or book/version code (e.g. "Jer",
             "JOH", "KJV").
         label: Optional node label filter: book | version | verse |
-            region | location.
+            region | location | figure.
         limit: Max results (default 20, max 100).
     """
     from app.api import search
@@ -94,13 +94,17 @@ def traverse_graph(
     and return all descendants plus the edges between them.
 
     Examples: all verses of a book (label="book", edge="verse_in_book"),
-    all locations in a region (label="region", edge="location_in_region").
+    all locations in a region (label="region", edge="location_in_region"),
+    a figure's family tree (label="figure", edge="figure_relative_of" —
+    each returned edge carries its kinship kind in attrs.relationship:
+    father | mother | parent | sibling | partner).
 
     Args:
-        start_node: Node name or code (e.g. "GEN", "Syria").
-        label: Label of the start node: book | version | region.
+        start_node: Node name or code (e.g. "GEN", "Syria", "David").
+        label: Label of the start node: book | version | region | figure.
         edge: Edge label to recurse along: verse_in_book |
-            verse_in_version | location_in_verse | location_in_region.
+            verse_in_version | location_in_verse | location_in_region |
+            figure_in_verse | figure_relative_of.
     """
     from app.api import TraversalRequest, traverse
 
@@ -117,10 +121,13 @@ def find_path(
     target_label: str = "region",
 ) -> dict:
     """Find the shortest path (breadth-first) between two nodes, walking
-    edges in either direction. Returns the node chain and edge labels.
+    edges in either direction. Returns the node chain and the edges walked,
+    each carrying its label and attrs (kinship edges name their kind:
+    father | mother | parent | sibling | partner).
 
     Example: how a verse connects to a region via the locations it
-    mentions (source_label="verse", target_label="region").
+    mentions (source_label="verse", target_label="region"), or how two
+    figures relate (source_label="figure", target_label="figure").
 
     Args:
         source: Source node name or code.
@@ -154,9 +161,9 @@ def graph_neighborhood(
     connects to its surroundings.
 
     Args:
-        node: Start node name or code (e.g. "JOH", "Syria").
+        node: Start node name or code (e.g. "JOH", "Syria", "David").
         label: Label of the start node: book | version | verse | region |
-            location.
+            location | figure.
         hops: Neighborhood radius 1-3 (default 1).
         limit: Max nodes returned (default 200).
     """
