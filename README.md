@@ -159,6 +159,29 @@ The frontend uses Vite, React, and Tailwind CSS. Tailwind utility classes can be
 used directly in the JSX components under `frontend/src/`.
 The header logo links to the home page. Open the settings menu (three-line
 icon) to switch between light and dark mode; the choice is saved across pages.
+Open `/relationships` for a full-viewport relationship graph. It starts at
+Genesis; choose a centre and depth to explore another neighbourhood. Changes
+redraw automatically after a short pause; no Draw graph button is needed on this
+page. Node
+symbols identify books, verses, translations, places and regions. Drag to pan,
+scroll to zoom, click a node to explore its neighbours, or use the node picker
+inside the graph toolbar's three-dot options control
+for keyboard navigation. **Fit graph** restores the view. The existing graph
+does not include people nodes.
+Underlined places in the reader open details with a **Graph relationships**
+preview showing the place and up to six directly connected nodes. Its **Expand**
+control opens the full graph centred on that exact place mention. Selecting a graph node preserves its
+identity, including passages sharing a book name. Verse details show passage
+text, a **Read passage** link, and links to directly connected places and their
+maps. Place details link back to the reader and map. Graph centres are saved in
+the Relationships URL for reloads and sharing.
+Selected node details appear beside the graph in a right-hand sidebar, stacking
+below the graph on narrow screens.
+The sidebar groups directly connected nodes into collapsible sections by type.
+Each entry describes its relationship to the selected node and opens that exact
+node when clicked. Counts describe the loaded graph, not the entire database;
+capped graphs show a reminder that additional connections may exist.
+Map markers are circles across the map, explorer and reader previews.
 Open `/read` in the Vite app to read a Bible book. Choose a book, chapter,
 translation, or jump directly to a verse; previous/next controls move between
 chapters.

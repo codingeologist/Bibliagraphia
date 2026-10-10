@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { get } from "./api.js";
-import { createStarMarker } from "./mapMarkers.js";
+import { createCircleMarker } from "./mapMarkers.js";
 
 function popupContent(point) {
   const popup = L.DomUtil.create("div", "map-popup");
@@ -78,7 +78,7 @@ function MapExplorer({ seed }) {
       markersRef.current.clearLayers();
       const bounds = [];
       for (const point of result.points) {
-        const marker = createStarMarker([point.lat, point.lng], {
+        const marker = createCircleMarker([point.lat, point.lng], {
           fillColor: getComputedStyle(document.documentElement)
             .getPropertyValue("--node-location").trim(),
           size: 12,

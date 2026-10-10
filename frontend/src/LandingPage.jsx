@@ -14,6 +14,13 @@ const destinations = [
     action: "Explore places",
   },
   {
+    href: "/relationships",
+    title: "Relationships",
+    description: "Follow connections between passages, places, books and translations in a full-screen graph.",
+    kind: "relationships",
+    action: "Explore relationships",
+  },
+  {
     href: "/explore",
     title: "Explore",
     description: "Search people, places, and passages, then trace connections through scripture.",

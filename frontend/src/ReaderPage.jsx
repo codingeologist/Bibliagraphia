@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { get } from "./api.js";
-import { createStarMarker } from "./mapMarkers.js";
+import { createCircleMarker } from "./mapMarkers.js";
 import SiteHeader from "./SiteHeader.jsx";
+import PlaceGraphPreview from "./PlaceGraphPreview.jsx";
 
 function PlaceMap({ location, href, onExpand }) {
   const mapElementRef = useRef(null);
@@ -26,7 +27,7 @@ function PlaceMap({ location, href, onExpand }) {
         maxZoom: 19,
       },
     ).addTo(map);
-    createStarMarker([latitude, longitude], {
+    createCircleMarker([latitude, longitude], {
       fillColor: getComputedStyle(document.documentElement)
         .getPropertyValue("--node-location").trim(),
       size: 16,
@@ -600,6 +601,7 @@ function ReaderPage({ onExpandMap }) {
                             <p className="reader-loading" role="status">Loading place references…</p>
                           )}
                           {placeRelationsError && <p className="notice error" role="alert">{placeRelationsError}</p>}
+                          <PlaceGraphPreview key={`graph-${selectedLocation.id}`} location={selectedLocation} />
                           {!placeRelationsLoading && !placeRelationsError && placeRelations && (
                             <>
                               <h4>Also mentioned in</h4>

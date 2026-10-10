@@ -37,7 +37,7 @@ function SiteHeader({ currentPage, dark, onToggleTheme }) {
       </a>
       <div className="header-actions">
         <nav className="site-nav" aria-label="Main navigation">
-          {[["/", "Home"], ["/explore", "Explore"], ["/read", "Read Bible"], ["/map", "Map"]].map(([href, label]) => (
+          {[["/", "Home"], ["/explore", "Explore"], ["/read", "Read Bible"], ["/map", "Map"], ["/relationships", "Relationships"]].map(([href, label]) => (
             <a key={href} href={href} aria-current={currentPage === href ? "page" : undefined}>{label}</a>
           ))}
         </nav>
