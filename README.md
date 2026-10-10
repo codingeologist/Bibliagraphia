@@ -162,6 +162,87 @@ curl "localhost:8000/verse?book_code=JOH&chapter=3&verse_number=16"
 curl "localhost:8000/search?q=Jer&label=location"
 ```
 
+## MCP server
+
+The API also speaks the [Model Context Protocol](https://modelcontextprotocol.io)
+(streamable HTTP) at **`/mcp`** — same process, same port, no extra
+infrastructure ([FastMCP](https://gofastmcp.com) mounted into the FastAPI
+app). Any MCP-capable LLM client can walk the Bible graph directly.
+
+The tools wrap the same route handlers as the REST API — one
+implementation, two interfaces:
+
+| tool                  | wraps                 | purpose                                            |
+|-----------------------|-----------------------|----------------------------------------------------|
+| `search_nodes`        | `GET /search`         | autocomplete / resolve names to codes              |
+| `get_verse`           | `GET /verse`          | one verse across all versions                      |
+| `read_chapter`        | `GET /chapter`        | ordered chapter text with location links           |
+| `reader_catalog`      | `GET /reader/catalog` | books, versions, available chapters                |
+| `traverse_graph`      | `POST /traverse`      | recursive walk along one edge type                 |
+| `find_path`           | `POST /path`          | shortest path between two nodes                    |
+| `graph_neighborhood`  | `GET /graph`          | ego-graph around a node                            |
+| `map_locations`       | `GET /map`            | geocoded mentions (lat/lng + verse text)           |
+
+### Connect an MCP client
+
+Claude Desktop / Claude Code (`claude_desktop_config.json` or
+`.mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "bibliagraphia": {
+      "url": "https://api.bibliographia.com/mcp"
+    }
+  }
+}
+```
+
+Cursor, or any streamable-HTTP client, uses the same URL. Locally:
+`http://localhost:8000/mcp`.
+
+### Raw handshake (curl)
+
+Streamable HTTP is session-based: `initialize` returns an `mcp-session-id`
+response header that later requests echo back.
+
+```bash
+API=https://api.bibliographia.com/mcp
+
+# 1. initialize → capture the session id from the mcp-session-id header
+SESSION=$(curl -s -D - -o /dev/null -X POST $API \
+  -H 'content-type: application/json' \
+  -H 'accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"curl","version":"1"}}}' \
+  | awk 'tolower($1)=="mcp-session-id:" {gsub("\r","",$2); print $2}')
+
+# 2. required notification
+curl -s -X POST $API -H 'content-type: application/json' \
+  -H 'accept: application/json, text/event-stream' \
+  -H "mcp-session-id: $SESSION" \
+  -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+
+# 3. list tools
+curl -s -X POST $API -H 'content-type: application/json' \
+  -H 'accept: application/json, text/event-stream' \
+  -H "mcp-session-id: $SESSION" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+
+# 4. call one: cross-version John 3:16
+curl -s -X POST $API -H 'content-type: application/json' \
+  -H 'accept: application/json, text/event-stream' \
+  -H "mcp-session-id: $SESSION" \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"get_verse","arguments":{"book_code":"JOH","chapter":3,"verse_number":16}}}'
+```
+
+### Notes
+
+- Visiting `/mcp` in a browser returns
+  `Bad Request: Missing session ID` — that is the transport enforcing the
+  handshake, not an error. Use an MCP client.
+- If the API sits behind the Cloudflare proxy, grey-cloud (DNS only) the
+  record: Cloudflare buffers SSE streams, which stalls MCP responses.
+
 ## Project structure
 
 ```
@@ -177,7 +258,8 @@ Bibliagraphia/
 │   ├── load_data.sql                          # load steps (reference)
 │   └── queries.sql                            # recursive CTEs (reference)
 ├── app/
-│   └── api.py                                 # FastAPI /search /traverse /path /verse /reader /chapter /health
+│   ├── api.py                                 # FastAPI /search /traverse /path /verse /reader /chapter /health
+│   └── mcp.py                                 # FastMCP server mounted at /mcp (see “MCP server”)
 ├── frontend/                                  # Vite + React frontend (the UI; built + served by frontend/Dockerfile)
 ├── tests/
 │   └── test_graph.py                          # build + counts + traverse + path + verse
