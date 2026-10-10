@@ -263,7 +263,7 @@ function ReaderPage() {
     <div className="app-shell">
       <header className="topbar">
         <div className="brand">
-          <div className="brand-mark" aria-hidden="true">B</div>
+          <img className="brand-mark" src="/favicon.svg" alt="" aria-hidden="true" />
           <div>
             <h1>Bibliagraphia</h1>
             <p>A living map of scripture</p>
