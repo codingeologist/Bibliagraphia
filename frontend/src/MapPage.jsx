@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { get } from "./api.js";
 import PlaceSearch from "./PlaceSearch.jsx";
-import { createStarMarker } from "./mapMarkers.js";
+import { createCircleMarker } from "./mapMarkers.js";
 import SiteHeader from "./SiteHeader.jsx";
 
 function MapPage({ initialMap, onMapReady }) {
@@ -90,7 +90,7 @@ function MapPage({ initialMap, onMapReady }) {
     });
     const markers = L.layerGroup().addTo(map);
     if (initialMap) {
-      createStarMarker([
+      createCircleMarker([
         Number(initialMap.place.attrs.latitude),
         Number(initialMap.place.attrs.longitude),
       ], {
@@ -134,7 +134,7 @@ function MapPage({ initialMap, onMapReady }) {
         markersRef.current.clearLayers();
         const bounds = [];
         for (const place of result.places) {
-          const marker = createStarMarker([place.lat, place.lng], {
+          const marker = createCircleMarker([place.lat, place.lng], {
             fillColor: getComputedStyle(document.documentElement)
               .getPropertyValue("--node-location").trim(),
             size: 14,

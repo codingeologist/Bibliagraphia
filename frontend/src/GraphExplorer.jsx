@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   forceCenter,
+  forceCollide,
   forceLink,
   forceManyBody,
   forceSimulation,
@@ -8,6 +9,7 @@ import {
   forceY,
 } from "d3-force";
 import { get } from "./api.js";
+import { NodeIcon, nodeIconPaths } from "./nodeIcons.jsx";
 
 const colorVars = {
   book: "--node-book",
@@ -23,10 +25,31 @@ const graphNodeQuery = (node) =>
     : node.label === "version" ? node.version_code || node.name
       : node.name || node.book_code;
 
-function GraphExplorer({ seed }) {
+const nodeTypeNames = {
+  book: "Books",
+  verse: "Passages",
+  version: "Translations",
+  location: "Places",
+  region: "Regions",
+};
+
+const relationshipNames = {
+  verse_in_book: ["Contains passage", "Belongs to book"],
+  verse_in_version: ["Contains passage", "Available in translation"],
+  location_in_verse: ["Mentions place", "Mentioned in passage"],
+  location_in_region: ["Contains place", "Located in region"],
+};
+
+const nodeDescription = (node) => node.label === "verse"
+  ? `${node.name || node.book_code} ${node.chapter}:${node.verse_number} · ${node.version_code}`
+  : node.label === "version"
+    ? node.attrs?.full_name || node.version_code || nodeName(node)
+    : nodeName(node);
+
+function GraphExplorer({ seed, fullPage = false }) {
   const [query, setQuery] = useState("");
   const [label, setLabel] = useState("book");
-  const [hops, setHops] = useState("1");
+  const [hops, setHops] = useState(fullPage ? "2" : "1");
   const [graph, setGraph] = useState(null);
   const [summary, setSummary] = useState("");
   const [error, setError] = useState("");
@@ -40,32 +63,55 @@ function GraphExplorer({ seed }) {
   const dragRef = useRef(null);
   const hoveredRef = useRef(null);
   const runRef = useRef(null);
+  const requestRef = useRef(0);
+  const nodeMenuRef = useRef(null);
+  const lastRequestRef = useRef("");
+  const exactCentreRef = useRef(null);
+  const [controlRevision, setControlRevision] = useState(0);
 
-  const runGraph = useCallback(async (node = query, nodeLabel = label) => {
+  const runGraph = useCallback(async (node = query, nodeLabel = label, nodeId = "") => {
     const start = node.trim();
-    if (!start) return;
+    if (!start) {
+      setError("Enter a graph centre.");
+      setLoading(false);
+      setSummary("");
+      return;
+    }
+    const requestId = ++requestRef.current;
+    lastRequestRef.current = JSON.stringify([start, nodeLabel, hops]);
+    exactCentreRef.current = { query: start, label: nodeLabel, id: nodeId };
     setLoading(true);
     setError("");
     setSummary("Loading graph…");
     try {
       const params = new URLSearchParams({ node: start, label: nodeLabel, hops });
+      if (nodeId) params.set("node_id", nodeId);
       const result = await get(`/graph?${params}`);
+      if (requestId !== requestRef.current) return;
       setQuery(start);
       setLabel(nodeLabel);
       startIdRef.current = result.start_id;
+      exactCentreRef.current = { query: start, label: nodeLabel, id: result.start_id };
       setGraph(result);
+      if (fullPage) {
+        const urlParams = new URLSearchParams({
+          graph_node: start, graph_label: nodeLabel, graph_node_id: result.start_id,
+        });
+        window.history.replaceState(null, "", `/relationships?${urlParams}`);
+      }
       setSummary(result.count
         ? `${result.count} nodes · ${result.links.length} connections · ${result.hops} hop${result.hops === 1 ? "" : "s"}`
           + (result.truncated ? " · outer ring capped at 200" : "")
         : "No connected nodes found.");
     } catch (requestError) {
+      if (requestId !== requestRef.current) return;
       setGraph(null);
       setSummary("");
       setError(requestError.message);
     } finally {
-      setLoading(false);
+      if (requestId === requestRef.current) setLoading(false);
     }
-  }, [hops, label, query]);
+  }, [fullPage, hops, label, query]);
 
   runRef.current = runGraph;
 
@@ -73,8 +119,21 @@ function GraphExplorer({ seed }) {
     if (!seed) return;
     setQuery(seed.node);
     setLabel(seed.label);
-    runRef.current?.(seed.node, seed.label);
+    runRef.current?.(seed.node, seed.label, seed.id);
   }, [seed]);
+
+  useEffect(() => {
+    if (!fullPage || !controlRevision) return undefined;
+    const start = query.trim();
+    if (lastRequestRef.current === JSON.stringify([start, label, hops])) return undefined;
+    ++requestRef.current;
+    const timer = window.setTimeout(() => {
+      const centre = exactCentreRef.current;
+      const id = centre?.query === start && centre?.label === label ? centre.id : "";
+      runRef.current?.(start, label, id);
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [fullPage, controlRevision, query, label, hops]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -110,11 +169,23 @@ function GraphExplorer({ seed }) {
     context.stroke();
 
     for (const node of nodes) {
-      const radius = node.id === startIdRef.current ? 9 : node.label === "verse" ? 3 : 5.5;
+      const radius = fullPage ? (node.id === startIdRef.current ? 20 : 15)
+        : node.id === startIdRef.current ? 9 : node.label === "verse" ? 3 : 5.5;
       context.beginPath();
       context.arc(node.x || 0, node.y || 0, radius / (node === hoveredRef.current ? 0.78 : 1), 0, Math.PI * 2);
       context.fillStyle = rootStyles.getPropertyValue(colorVars[node.label]).trim() || "#888";
       context.fill();
+      if (fullPage) {
+        context.save();
+        context.translate((node.x || 0) - 9, (node.y || 0) - 9);
+        context.scale(0.75, 0.75);
+        context.strokeStyle = rootStyles.getPropertyValue("--panel").trim();
+        context.lineWidth = 1.8;
+        context.lineCap = "round";
+        context.lineJoin = "round";
+        context.stroke(new Path2D(nodeIconPaths[node.label] || nodeIconPaths.verse));
+        context.restore();
+      }
       if (node === hoveredRef.current || node.id === startIdRef.current || view.scale > 1.5) {
         context.fillStyle = rootStyles.getPropertyValue("--graph-text").trim();
         context.font = `${10 / view.scale}px sans-serif`;
@@ -130,7 +201,7 @@ function GraphExplorer({ seed }) {
       }
     }
     context.restore();
-  }, []);
+  }, [fullPage]);
 
   useEffect(() => {
     if (!graph?.nodes?.length) {
@@ -173,8 +244,9 @@ function GraphExplorer({ seed }) {
     };
 
     const simulation = forceSimulation(nodes)
-      .force("link", forceLink(links).id((node) => node.id).distance(68).strength(0.35))
-      .force("charge", forceManyBody().strength(-85))
+      .force("link", forceLink(links).id((node) => node.id).distance(fullPage ? 100 : 68).strength(0.35))
+      .force("charge", forceManyBody().strength(fullPage ? -180 : -85))
+      .force("collision", fullPage ? forceCollide(23) : null)
       .force("x", forceX(0).strength(0.025))
       .force("y", forceY(0).strength(0.025))
       .force("center", forceCenter(0, 0))
@@ -188,7 +260,7 @@ function GraphExplorer({ seed }) {
       simulation.stop();
       observer.disconnect();
     };
-  }, [draw, graph]);
+  }, [draw, fullPage, graph]);
 
   useEffect(() => {
     const observer = new MutationObserver(draw);
@@ -208,7 +280,8 @@ function GraphExplorer({ seed }) {
   const nodeAt = (event) => {
     const point = toWorld(event);
     return [...nodesRef.current].reverse().find((node) => {
-      const radius = node.id === startIdRef.current ? 9 : node.label === "verse" ? 3 : 5.5;
+      const radius = fullPage ? (node.id === startIdRef.current ? 20 : 15)
+        : node.id === startIdRef.current ? 9 : node.label === "verse" ? 3 : 5.5;
       const dx = point.x - node.x;
       const dy = point.y - node.y;
       return dx * dx + dy * dy < (radius + 5 / viewRef.current.scale) ** 2;
@@ -258,7 +331,7 @@ function GraphExplorer({ seed }) {
     if (!drag) return;
     if (!drag.moved && drag.node) {
       hoveredRef.current = drag.node;
-      runRef.current?.(graphNodeQuery(drag.node), drag.node.label);
+      runRef.current?.(graphNodeQuery(drag.node), drag.node.label, drag.node.id);
     }
     if (drag.node) {
       drag.node.fx = null;
@@ -318,32 +391,180 @@ function GraphExplorer({ seed }) {
   };
 
   const legend = [...new Set(graph?.nodes?.map((node) => node.label) || [])];
+  const centreNode = graph?.nodes?.find((node) => node.id === graph.start_id);
+  const readerHref = (node) => `/read?${new URLSearchParams({
+    book: node.book_code,
+    chapter: String(node.chapter),
+    verse: String(node.verse_number),
+    version: node.version_code || "KJV",
+  })}`;
+  const connectedPlaces = centreNode?.label === "verse"
+    ? graph.nodes.filter((node) => node.label === "location" && graph.links.some((link) =>
+      (link.source === centreNode.id && link.target === node.id)
+      || (link.target === centreNode.id && link.source === node.id)))
+    : [];
+  const connectedGroups = new Map();
+  if (centreNode) {
+    const nodesById = new Map(graph.nodes.map((node) => [node.id, node]));
+    for (const link of graph.links) {
+      const outgoing = link.source === centreNode.id;
+      if (!outgoing && link.target !== centreNode.id) continue;
+      const node = nodesById.get(outgoing ? link.target : link.source);
+      if (!node) continue;
+      const group = connectedGroups.get(node.label) || new Map();
+      const entry = group.get(node.id) || { node, relationships: new Set() };
+      entry.relationships.add(
+        relationshipNames[link.label]?.[outgoing ? 0 : 1] || link.label.replaceAll("_", " "),
+      );
+      group.set(node.id, entry);
+      connectedGroups.set(node.label, group);
+    }
+  }
 
   return (
-    <div className="graph-explorer">
-      <form className="form-row graph-controls" onSubmit={(event) => { event.preventDefault(); runGraph(); }}>
+    <div className={`graph-explorer${fullPage ? " graph-explorer-full" : ""}`}>
+      <div className="relationship-toolbar">
+      <form className="form-row graph-controls" onSubmit={(event) => {
+        event.preventDefault();
+        const centre = exactCentreRef.current;
+        runGraph(query, label, fullPage && centre?.query === query.trim() && centre?.label === label ? centre.id : "");
+      }}>
         <input
           aria-label="Graph centre"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setControlRevision((value) => value + 1);
+          }}
           placeholder="Centre — e.g. JOH"
         />
-        <select aria-label="Graph node type" value={label} onChange={(event) => setLabel(event.target.value)}>
+        <select aria-label="Graph node type" value={label} onChange={(event) => {
+          setLabel(event.target.value);
+          setControlRevision((value) => value + 1);
+        }}>
           {["book", "version", "region", "location", "verse"].map((item) => (
             <option key={item}>{item}</option>
           ))}
         </select>
-        <select aria-label="Graph depth" value={hops} onChange={(event) => setHops(event.target.value)}>
+        <select aria-label="Graph depth" value={hops} onChange={(event) => {
+          setHops(event.target.value);
+          setControlRevision((value) => value + 1);
+        }}>
           {[["1", "1 hop"], ["2", "2 hops"], ["3", "3 hops"]].map(([value, text]) => (
             <option key={value} value={value}>{text}</option>
           ))}
         </select>
-        <button className="button button-secondary" disabled={loading}>
+        {!fullPage && <button className="button button-secondary" disabled={loading}>
           {loading ? "Drawing…" : "Draw graph"}
-        </button>
+        </button>}
       </form>
+      {fullPage && graph?.nodes?.length > 0 && (
+        <details className="relationship-node-menu" ref={nodeMenuRef}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              nodeMenuRef.current.open = false;
+              nodeMenuRef.current.querySelector("summary").focus();
+            }
+          }}>
+          <summary aria-label="More graph options">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="5" cy="12" r="2" fill="currentColor" />
+              <circle cx="12" cy="12" r="2" fill="currentColor" />
+              <circle cx="19" cy="12" r="2" fill="currentColor" />
+            </svg>
+          </summary>
+          <div className="relationship-node-menu-panel">
+        <label className="relationship-node-picker">
+          Explore a node
+          <select
+            aria-label="Explore a relationship node"
+            value=""
+            onChange={(event) => {
+              const node = graph.nodes.find((item) => item.id === event.target.value);
+              if (node) {
+                runGraph(graphNodeQuery(node), node.label, node.id);
+                nodeMenuRef.current.open = false;
+                nodeMenuRef.current.querySelector("summary").focus();
+              }
+            }}
+          >
+            <option value="">Choose a node</option>
+            {graph.nodes.map((node) => (
+              <option key={node.id} value={node.id}>
+                {node.label}: {nodeName(node)}{node.chapter ? ` ${node.chapter}:${node.verse_number} (${node.version_code})` : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+          </div>
+        </details>
+      )}
+      </div>
       {summary && <p className="result-summary" role="status">{summary}</p>}
       {error && <p className="notice error" role="alert">{error}</p>}
+      <div className={fullPage ? `relationship-workspace${centreNode ? " has-details" : ""}` : "graph-workspace"}>
+      {fullPage && centreNode && (
+        <section className="relationship-detail" aria-label="Selected node details">
+          <strong>{centreNode.label}: {nodeName(centreNode)}</strong>
+          {centreNode.label === "verse" && (
+            <>
+              <span>{centreNode.book_code} {centreNode.chapter}:{centreNode.verse_number} · {centreNode.version_code}</span>
+              <p>{centreNode.attrs?.text || "Passage text is not available."}</p>
+              <a href={readerHref(centreNode)}>Read passage →</a>
+              {connectedPlaces.map((place) => (
+                <span className="relationship-place-links" key={place.id}>
+                  <button type="button" onClick={() => runGraph(graphNodeQuery(place), place.label, place.id)}>
+                    Explore {place.name} relationships
+                  </button>
+                  <a href={`/map?${new URLSearchParams({ location_id: place.id })}`}>Open {place.name} on map →</a>
+                </span>
+              ))}
+            </>
+          )}
+          {centreNode.label === "location" && (
+            <>
+              {centreNode.attrs?.region && <span>{centreNode.attrs.region}</span>}
+              <a href={`/map?${new URLSearchParams({ location_id: centreNode.id })}`}>Open map →</a>
+              {centreNode.book_code && centreNode.chapter && centreNode.verse_number && (
+                <a href={`${readerHref(centreNode)}&${new URLSearchParams({ place_id: centreNode.id })}`}>Read passage →</a>
+              )}
+            </>
+          )}
+          <div className="relationship-connections">
+            <h3>Connected nodes</h3>
+            {graph.truncated && (
+              <p className="relationship-connections-note">Showing connections included in this graph. More may exist beyond its node limit.</p>
+            )}
+            {connectedGroups.size === 0 && <p>No direct connections in this graph.</p>}
+            {[...connectedGroups].sort(([left], [right]) =>
+              (nodeTypeNames[left] || left).localeCompare(nodeTypeNames[right] || right))
+              .map(([type, entries]) => (
+                <details key={`${centreNode.id}-${type}`} open>
+                  <summary>
+                    <NodeIcon type={type} />
+                    {nodeTypeNames[type] || type} <span>{entries.size}</span>
+                  </summary>
+                  <ul>
+                    {[...entries.values()].sort((left, right) =>
+                      nodeDescription(left.node).localeCompare(nodeDescription(right.node), undefined, { numeric: true }))
+                      .map(({ node, relationships }) => (
+                        <li key={node.id}>
+                          <button
+                            type="button"
+                            disabled={loading}
+                            onClick={() => runGraph(graphNodeQuery(node), node.label, node.id)}
+                          >
+                            <strong>{nodeDescription(node)}</strong>
+                            <span>{[...relationships].join(" · ")}</span>
+                          </button>
+                        </li>
+                      ))}
+                  </ul>
+                </details>
+              ))}
+          </div>
+        </section>
+      )}
       <div className="graph-wrap" ref={wrapperRef}>
         <button
           type="button"
@@ -352,6 +573,9 @@ function GraphExplorer({ seed }) {
           aria-label="Toggle graph fullscreen"
           onClick={toggleFullscreen}
         >⛶</button>
+        {fullPage && (
+          <button className="relationship-refit" type="button" onClick={resetView}>Fit graph</button>
+        )}
         <canvas
           ref={canvasRef}
           className="graph-canvas"
@@ -371,10 +595,11 @@ function GraphExplorer({ seed }) {
         />
         {legend.length > 0 && (
           <div className="graph-legend" aria-label="Node types">
-            {legend.map((item) => <span key={item}><i className={`legend-dot badge-${item}`} />{item}</span>)}
+            {legend.map((item) => <span key={item}>{fullPage ? <NodeIcon type={item} /> : <i className={`legend-dot badge-${item}`} />}{item}</span>)}
           </div>
         )}
         {!graph && !loading && !error && <div className="graph-placeholder">Your graph will appear here</div>}
+      </div>
       </div>
       <p className="graph-tip">Click a node to explore its connections · double-click to refit</p>
     </div>

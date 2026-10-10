@@ -7,6 +7,7 @@ import MapExplorer from "./MapExplorer.jsx";
 import MapPage from "./MapPage.jsx";
 import ReaderPage from "./ReaderPage.jsx";
 import SiteHeader from "./SiteHeader.jsx";
+import RelationshipsPage from "./RelationshipsPage.jsx";
 
 const labels = ["book", "verse", "location", "region", "version"];
 const initialTraversal = { node: "", label: "book", edge: "verse_in_book" };
@@ -569,6 +570,7 @@ function App() {
     });
   };
 
+  if (route.path === "/relationships") return <RelationshipsPage key={route.key} />;
   if (route.path === "/read") return <ReaderPage key={route.key} onExpandMap={expandMap} />;
   if (route.path === "/map") {
     return <MapPage key={route.key} initialMap={route.initialMap} onMapReady={route.onMapReady} />;
