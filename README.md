@@ -25,7 +25,7 @@ The original TypeDB loader (`bible_loader.py`) and schema
 ## What and Why?
 
 The Bible exists in many translations, and most tools treat it as a flat book: search by keyword, look up by reference.
-Bibliagraphia instead stores open-licensed translations (KJV, Latin Vulgate, Douay–Rheims, Lexham English Bible, Statistical Restoration Greek New Testament and hopefully more...) in a single queryable graph: 
+Bibliagraphia instead stores open-licensed translations (KJV, Latin Vulgate, Douay–Rheims and hopefully more...) in a single queryable graph: 
 - verses connect to their books and versions
 - every place mentioned connects to a geocoded location and its region.
 The result is a non-linear way to explore the scriptures: walk the graph around a verse, compare one verse side by side across translations,
@@ -52,19 +52,10 @@ The graph database maps Bible verses with:
 The database is built from the canonical JSON files in `/data`:
 
 - `books.json` — Bible books with translation names (73 books)
-- `versions.json` — Bible version information (VUL, DRB, KJV, LEB, SRG)
-- `verses.json` — Complete verse text (141,788 verses across 5 versions; SRG is New Testament only)
+- `versions.json` — Bible version information (VUL, DRB, KJV)
+- `verses.json` — Complete verse text (102,722 verses across 3 versions)
 - `location_regions.json` — Geographical locations with coordinates (7,460 mentions)
 - `regions.json` — Regional descriptions and keywords (36 regions)
-- `figures.json` — Major biblical figures (238), each with a STEP Bible TIPNR id
-
-Figure → verse links (`figure_in_verse` edges) use two datasets from
-[STEP Bible](https://www.STEPBible.org): TIPNR (every verse each person
-appears in) and TVTMS (verse-numbering differences between Bible traditions).
-STEP Bible asks that their data isn't redistributed, so it isn't stored in
-this repo: `scripts/build_db.py` downloads it from their GitHub on the first
-build and caches it in `data/.stepbible/` (gitignored). Without internet
-access the build still works, just without figure edges.
 
 ## Schema design
 
@@ -356,8 +347,31 @@ Claude Desktop / Claude Code (`claude_desktop_config.json` or
 Cursor, or any streamable-HTTP client, uses the same URL. Locally:
 `http://localhost:8000/mcp`.
 
+### Scripted client (no handshake juggling)
+
+FastMCP ships a client that performs the whole streamable-HTTP dance
+automatically — `initialize`, session-id capture, `notifications/initialized`,
+session echo. `scripts/mcp_client.py` wraps it:
+
+```bash
+# list the tools the server exposes
+python scripts/mcp_client.py tools
+
+# call one tool (args as JSON)
+python scripts/mcp_client.py call get_verse \
+    --args '{"book_code": "JOH", "chapter": 3, "verse_number": 16}'
+
+# ad-hoc REPL: one tool call per line, q to quit
+python scripts/mcp_client.py interactive
+```
+
+Endpoint defaults to `http://localhost:8000/mcp`; override with `--url` or the
+`BIBLIAGRAPHIA_MCP_URL` environment variable (e.g.
+`https://api.bibliographia.com/mcp`).
+
 ### Raw handshake (curl)
 
+For debugging the transport itself, the manual version:
 Streamable HTTP is session-based: `initialize` returns an `mcp-session-id`
 response header that later requests echo back.
 
@@ -404,12 +418,11 @@ curl -s -X POST $API -H 'content-type: application/json' \
 Bibliagraphia/
 ├── data/                                      # canonical JSON sources (+ generated bible.db)
 │   ├── books.json versions.json verses.json
-│   ├── location_regions.json  regions.json  figures.json
-│   ├── .stepbible/                            # STEP Bible download cache (gitignored)
+│   ├── location_regions.json  regions.json
 │   └── bible.db                               # generated — do not edit
 ├── scripts/
 │   ├── build_db.py                            # JSON -> data/bible.db (idempotent, bulk-loaded)
-│   └── stepbible.py                           # STEP Bible TIPNR/TVTMS: figure refs + verse numbering
+│   └── mcp_client.py                          # MCP client — handshake handled for you (see “MCP server”)
 ├── sql/
 │   ├── init_duckdb.sql                        # schema (reference)
 │   ├── load_data.sql                          # load steps (reference)
@@ -481,14 +494,6 @@ python -m unittest discover -s tests -p test_api_startup.py
 ## License
 
 [GNU General Public License v3.0](LICENSE)
-
-Figure verse references and verse-numbering mappings come from
-[STEP Bible](https://www.STEPBible.org) (TIPNR and TVTMS datasets, Tyndale
-House Cambridge), used under
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Changes: matched
-to Bibliagraphia figures (some limited to Genesis, where TIPNR's record also
-covers a tribe) and converted to each version's verse numbering. The data
-itself is not redistributed here; it is downloaded at build time.
 
 __Ave Christus Rex__
 
