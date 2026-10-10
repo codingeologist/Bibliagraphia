@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { get } from "./api.js";
 import { createCircleMarker } from "./mapMarkers.js";
 

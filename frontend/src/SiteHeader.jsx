@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { NavigationIcon, navigationItems } from "./navigation.jsx";
 
 function SiteHeader({ currentPage, dark, onToggleTheme }) {
   const [open, setOpen] = useState(false);
@@ -37,11 +38,14 @@ function SiteHeader({ currentPage, dark, onToggleTheme }) {
       </a>
       <div className="header-actions">
         <nav className="site-nav" aria-label="Main navigation">
-          {[["/", "Home"], ["/explore", "Explore"], ["/read", "Read"], ["/map", "Map"], ["/relationships", "Relationships"]].map(([href, label]) => (
-            <a key={href} href={href} aria-current={currentPage === href ? "page" : undefined}>{label}</a>
+          {navigationItems.map(({ href, label, icon }) => (
+            <a key={href} href={href} aria-current={currentPage === href ? "page" : undefined}>
+              <NavigationIcon type={icon} />
+              <span>{label}</span>
+            </a>
           ))}
         </nav>
-        <div className="site-menu" ref={menuRef}>
+        <div className="site-menu relative" ref={menuRef}>
           <button
             ref={triggerRef}
             className="menu-toggle"

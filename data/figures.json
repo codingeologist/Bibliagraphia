@@ -1,5 +1,50 @@
 [
     {
+        "name": "Naomi",
+        "testament": "Old Testament",
+        "category": "People of Ruth",
+        "keywords": "Mara,Noemi,Ruth",
+        "aliases": ["Noemi", "Noëmi", "Mara"],
+        "description": "Ruth's mother-in-law, who returned to Bethlehem after losing her husband and sons.",
+        "tipnr": "Naomi@Rut.1.2-"
+    },
+    {
+        "name": "Orpah",
+        "testament": "Old Testament",
+        "category": "People of Ruth",
+        "keywords": "Orpha,Naomi,Chilion",
+        "aliases": ["Orpha"],
+        "description": "Naomi's daughter-in-law who returned to her people in Moab.",
+        "tipnr": "Orpah@Rut.1.4-"
+    },
+    {
+        "name": "Elimelech",
+        "testament": "Old Testament",
+        "category": "People of Ruth",
+        "keywords": "Naomi,Mahlon,Chilion",
+        "aliases": [],
+        "description": "Naomi's husband, who moved with his family from Bethlehem to Moab.",
+        "tipnr": "Elimelech@Rut.1.2-"
+    },
+    {
+        "name": "Mahlon",
+        "testament": "Old Testament",
+        "category": "People of Ruth",
+        "keywords": "Mahalon,Ruth,Naomi",
+        "aliases": ["Mahalon"],
+        "description": "A son of Naomi and Elimelech, and Ruth's first husband.",
+        "tipnr": "Mahlon@Rut.1.2-"
+    },
+    {
+        "name": "Chilion",
+        "testament": "Old Testament",
+        "category": "People of Ruth",
+        "keywords": "Chelion,Orpah,Naomi",
+        "aliases": ["Chelion"],
+        "description": "A son of Naomi and Elimelech, and Orpah's husband.",
+        "tipnr": "Chilion@Rut.1.2-"
+    },
+    {
         "name": "Aaron",
         "testament": "Old Testament",
         "category": "Priests",

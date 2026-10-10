@@ -1,0 +1,142 @@
+@layer components {
+  .explore-dashboard, .explore-tools {
+    @apply pt-[28px];
+  }
+
+  .explore-dashboard-heading {
+    @apply mb-6;
+  }
+
+  .explore-dashboard-heading h2 {
+    @apply font-display text-[32px] font-semibold mt-2;
+  }
+
+  .explore-dashboard-heading > p:last-child {
+    @apply text-muted text-[13px] mt-2;
+  }
+
+  .explore-widget-grid {
+    @apply grid gap-5 [grid-template-columns:repeat(3,minmax(0,1fr))];
+  }
+
+  .explore-widget {
+    @apply flex flex-col;
+  }
+
+  .widget-heading {
+    @apply flex items-center gap-2 text-accent;
+  }
+
+  .widget-heading svg {
+    @apply shrink-0;
+  }
+
+  .widget-heading h2 {
+    @apply text-ink;
+  }
+
+  .widget-content {
+    @apply flex-1 min-h-[190px];
+  }
+
+  .widget-empty, .widget-meta {
+    @apply text-muted text-[11px] leading-relaxed my-3;
+  }
+
+  .widget-list, .widget-path {
+    @apply list-none m-0 p-0;
+  }
+
+  .widget-list a, .widget-path a {
+    @apply flex items-center gap-2 text-ink no-underline text-[12px] py-3 border-b border-line;
+  }
+
+  .widget-list a:hover, .widget-path a:hover {
+    @apply text-accent bg-accent-soft;
+  }
+
+  .widget-list svg, .widget-path svg {
+    @apply shrink-0 text-accent;
+  }
+
+  .widget-list small {
+    @apply ml-auto text-muted text-[10px] text-right;
+  }
+
+  .widget-path li + li::before {
+    content: "↓";
+    @apply block text-accent text-center pt-1;
+  }
+
+  .widget-verses blockquote {
+    @apply rounded-md bg-accent-soft p-3 mb-3;
+  }
+
+  .widget-verses cite {
+    @apply text-[10px] font-semibold text-accent not-italic;
+  }
+
+  .widget-verses blockquote p {
+    @apply font-display text-[14px] leading-relaxed mt-2;
+  }
+
+  .widget-stat {
+    @apply text-[32px] font-semibold text-accent mb-2;
+  }
+
+  .widget-stat span {
+    @apply block text-[11px] text-muted font-normal;
+  }
+
+  .widget-graph {
+    @apply w-full h-[190px] bg-canvas rounded-md;
+  }
+
+  .widget-graph text {
+    @apply text-[10px] fill-ink;
+  }
+
+  .widget-graph text.fill-panel {
+    @apply fill-panel;
+  }
+
+  .widget-launch {
+    @apply flex items-center justify-between gap-2 mt-5 pt-3 border-t border-line text-accent text-[12px] font-semibold no-underline;
+  }
+
+  .widget-launch:hover {
+    @apply underline;
+  }
+
+  .explore-tools-grid > .primary-column {
+    @apply [grid-template-columns:repeat(2,minmax(0,1fr))] [align-items:start];
+  }
+
+  .explore-tools-grid.search-tools > .primary-column {
+    @apply [grid-template-columns:1fr] max-w-[800px];
+  }
+
+  .connection-form {
+    @apply grid gap-4 mt-4;
+  }
+
+  .connection-form > button {
+    @apply justify-self-start;
+  }
+
+  .connection-form .graph-node-search-panel {
+    @apply w-full max-w-[420px];
+  }
+
+  @media (max-width: 1000px) {
+    .explore-widget-grid {
+      @apply [grid-template-columns:repeat(2,minmax(0,1fr))];
+    }
+  }
+
+  @media (max-width: 620px) {
+    .explore-widget-grid, .explore-tools-grid > .primary-column {
+      @apply [grid-template-columns:1fr];
+    }
+  }
+}

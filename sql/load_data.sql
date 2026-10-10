@@ -11,7 +11,7 @@
 --   books     -> id 'book:<code>',              attrs {testament, vulgate, rheims, kjv, note}
 --   verses    -> id 'verse:<ver>:<bk>:<ch>:<vs>', attrs {book, text}
 --   regions   -> id 'region:<name>',            attrs {keywords, description}
---   figures   -> id 'figure:<name>',            attrs {testament, category, keywords, description, tipnr}
+--   figures   -> id 'figure:<name>',            attrs {testament, category, keywords, aliases, description, tipnr}
 --   locations -> id 'location:<name>:<bk>:<ch>:<vs>', attrs {secondary_name, testament,
 --                                                          rheims, vulgate, kjv,
 --                                                          rheims_text, vulgate_text, kjv_text,
@@ -29,6 +29,12 @@
 --                                                      each version's verse numbering;
 --                                                      built in Python - see
 --                                                      scripts/stepbible.py)
+--   figure         --figure_with_figure--> figure  (two figures appear in the same
+--                                                      verse; `weight` = number of distinct
+--                                                      verses shared, deduplicated across
+--                                                      versions; derived from
+--                                                      figure_in_verse at build time, see
+--                                                      scripts/build_db.py)
 
 -- Verify counts after loading (run from Python or the DuckDB CLI):
 SELECT 'versions',  COUNT(*) FROM nodes WHERE label='version';
@@ -42,3 +48,9 @@ SELECT 'verse_in_version', COUNT(*) FROM edges WHERE label='verse_in_version';
 SELECT 'location_in_region', COUNT(*) FROM edges WHERE label='location_in_region';
 SELECT 'location_in_verse',  COUNT(*) FROM edges WHERE label='location_in_verse';
 SELECT 'figure_in_verse',    COUNT(*) FROM edges WHERE label='figure_in_verse';
+SELECT 'figure_with_figure', COUNT(*) FROM edges WHERE label='figure_with_figure';
+SELECT 'heaviest figure pair (shared verses):';
+SELECT e.from_id, e.to_id, e.weight
+FROM edges e
+WHERE e.label='figure_with_figure'
+ORDER BY e.weight DESC LIMIT 1;

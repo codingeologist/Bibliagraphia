@@ -43,7 +43,7 @@ def test_builds_and_counts(db_path):
         assert n["verse"] == 141788
         assert n["region"] == 36
         assert n["location"] == 7460
-        assert n["figure"] == 238
+        assert n["figure"] == 243
         e = dict(conn.execute("SELECT label, COUNT(*) FROM edges GROUP BY label").fetchall())
         assert e["verse_in_book"] == 141788
         assert e["verse_in_version"] == 141788

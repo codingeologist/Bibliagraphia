@@ -50,3 +50,25 @@ JOIN edges e ON e.from_id = r.id AND e.label = 'location_in_region'
 JOIN nodes l ON l.id = e.to_id
 WHERE r.label = 'region' AND r.name = 'Syria'
 ORDER BY l.book_code, l.chapter, l.verse_number;
+
+-- 6. Person-to-person links. Figures that appear in the same verse are
+-- connected by figure_with_figure edges (built at load time); `weight` is
+-- the number of distinct verses they share (deduplicated across
+-- versions). Top co-occurring figure pairs:
+SELECT n1.name AS figure_a, n2.name AS figure_b, e.weight AS shared_verses
+FROM edges e
+JOIN nodes n1 ON n1.id = e.from_id
+JOIN nodes n2 ON n2.id = e.to_id
+WHERE e.label = 'figure_with_figure'
+ORDER BY e.weight DESC
+LIMIT 10;
+
+-- 7. Everyone a given figure appears alongside, strongest first.
+SELECT CASE WHEN e.from_id = 'figure:Peter' THEN n2.name ELSE n1.name END AS figure,
+       e.weight AS shared_verses
+FROM edges e
+JOIN nodes n1 ON n1.id = e.from_id
+JOIN nodes n2 ON n2.id = e.to_id
+WHERE e.label = 'figure_with_figure'
+  AND ('figure:Peter' IN (e.from_id, e.to_id))
+ORDER BY e.weight DESC;

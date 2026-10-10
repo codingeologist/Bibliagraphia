@@ -1,0 +1,30 @@
+/* Leaflet-owned markup and map popups. */
+.leaflet-container:is(.map-canvas, .map-page-canvas, .place-map-canvas) {
+  background: var(--bg);
+}
+
+.map-popup-title {
+  display: block;
+  color: #292a27;
+}
+
+.map-popup-reference {
+  margin: 3px 0;
+  color: #754d2b;
+  font-size: 11px;
+}
+
+.map-popup-text {
+  margin: 5px 0 0;
+  color: #292a27;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.leaflet-container {
+  font: 12px "DM Sans", sans-serif;
+}
+
+.leaflet-control-attribution, .place-map-canvas .leaflet-control-attribution {
+  font-size: 8px !important;
+}

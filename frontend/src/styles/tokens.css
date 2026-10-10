@@ -1,0 +1,63 @@
+@theme inline {
+  --color-canvas: var(--bg);
+  --color-panel: var(--panel);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-dark);
+  --color-accent-soft: var(--accent-bg);
+  --color-edge: var(--edge);
+  --color-graph-text: var(--graph-text);
+  --color-node-book: var(--node-book);
+  --color-node-verse: var(--node-verse);
+  --color-node-version: var(--node-version);
+  --color-node-location: var(--node-location);
+  --color-node-region: var(--node-region);
+  --color-node-figure: var(--node-figure);
+  --color-danger: #b2483d;
+  --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Playfair Display", Georgia, serif;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer theme {
+  :root {
+    --bg: #f7f6f2;
+    --panel: #fff;
+    --ink: #292a27;
+    --muted: #777870;
+    --line: #e7e5dd;
+    --accent: #754d2b;
+    --accent-dark: #5a3920;
+    --accent-bg: #f3eee7;
+    --edge: #cbc8be;
+    --graph-text: #292a27;
+    --node-book: #86552c;
+    --node-version: #765d99;
+    --node-region: #3e8277;
+    --node-location: #74894b;
+    --node-verse: #8c8d87;
+    --node-figure: #a3486b;
+  }
+
+  :root.dark {
+    --bg: #1d201e;
+    --panel: #262a27;
+    --ink: #e9e8e1;
+    --muted: #a4a69c;
+    --line: #3b403b;
+    --accent: #d0a274;
+    --accent-dark: #e2b78c;
+    --accent-bg: #383128;
+    --edge: #565c55;
+    --graph-text: #e9e8e1;
+    --node-book: #d19a67;
+    --node-version: #b2a0d4;
+    --node-region: #70b6a9;
+    --node-location: #abc47c;
+    --node-verse: #888d85;
+    --node-figure: #d98aa6;
+  }
+}

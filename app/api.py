@@ -77,6 +77,7 @@ def init_db() -> None:
                 from_id   VARCHAR NOT NULL,
                 to_id     VARCHAR NOT NULL,
                 label     VARCHAR NOT NULL,
+                weight    INTEGER,   -- figure_with_figure: distinct shared verses
                 PRIMARY KEY (from_id, to_id, label)
             );
             """
@@ -134,7 +135,7 @@ def _row_to_node(row, columns) -> dict:
 
 
 def _resolve(conn, label: str, name: str) -> Optional[str]:
-    """Resolve a node by name within a label; return its id or None.
+    """Resolve a node by exact ID or name within a label; return its id or None.
 
     Codes are the canonical identifiers — short, unique, and stable
     (books: GEN, JOH, REV; versions: KJV, VUL, DRB) — so they are tried
@@ -147,6 +148,14 @@ def _resolve(conn, label: str, name: str) -> Optional[str]:
       5. for regions and figures, keywords in attrs (e.g. "Syria" matches
          keyword "Damascus"; "Cephas" matches figure "Peter")
     """
+    row = conn.execute(
+        "SELECT id FROM nodes WHERE id = ? AND label = ?",
+        [name, label],
+    ).fetchone()
+    if row:
+        return row[0]
+    if name.startswith(f"{label}:"):
+        return None
     row = conn.execute(
         """
         SELECT id FROM nodes
@@ -164,7 +173,7 @@ def _resolve(conn, label: str, name: str) -> Optional[str]:
         LIMIT 1
         """,
         [label, name, f"{name}%", f"%{name}%", name, name,
-         name, name, name, name, f"{name}%", f"%{name}%"],
+         f"%{name}%", name, name, name, f"{name}%", f"%{name}%"],
     ).fetchone()
     return row[0] if row else None
 
@@ -172,8 +181,7 @@ def _resolve(conn, label: str, name: str) -> Optional[str]:
 def _figure_info(label: str, attrs) -> dict:
     """Testament/category/description for figure rows (empty for other labels).
 
-    Figures have no edges yet, so the frontend shows these details directly
-    from the search result instead of traversing to them.
+    The frontend can show these details directly from the search result.
     """
     if label != "figure" or not attrs:
         return {}
@@ -221,9 +229,14 @@ def search(
                        OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?)
                        OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?))
                 ORDER BY (label = 'figure' AND name NOT ILIKE ?),
-                         label IN ('location', 'verse'), label, name LIMIT ?;
+                         label IN ('location', 'verse'), label,
+                         (name ILIKE ? OR UPPER(book_code) = UPPER(?)
+                          OR UPPER(version_code) = UPPER(?)) DESC,
+                         name ILIKE ? DESC, name, chapter, verse_number, version_code, id
+                LIMIT ?;
                 """,
-                [label, like, contains_like, like, like, like, contains_like, contains_like, limit],
+                [label, like, contains_like, like, like, like, contains_like, contains_like,
+                 q, q, q, like, limit],
             ).fetchall()
         else:
             rows = conn.execute(
@@ -236,9 +249,14 @@ def search(
                    OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?)
                    OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?)
                 ORDER BY (label = 'figure' AND name NOT ILIKE ?),
-                         label IN ('location', 'verse'), label, name LIMIT ?;
+                         label IN ('location', 'verse'), label,
+                         (name ILIKE ? OR UPPER(book_code) = UPPER(?)
+                          OR UPPER(version_code) = UPPER(?)) DESC,
+                         name ILIKE ? DESC, name, chapter, verse_number, version_code, id
+                LIMIT ?;
                 """,
-                [like, contains_like, like, like, like, contains_like, contains_like, limit],
+                [like, contains_like, like, like, like, contains_like, contains_like,
+                 q, q, q, like, limit],
             ).fetchall()
         return {"query": q, "results": [
             {"id": r[0], "label": r[1], "name": r[2],
@@ -251,7 +269,7 @@ def search(
 
 
 class TraversalRequest(BaseModel):
-    start_node: str          # node name to resolve
+    start_node: str          # node ID, name or code to resolve
     label: str = "book"      # label of the start node
     edge: str = "verse_in_book"  # edge label to recurse along
 
@@ -864,6 +882,26 @@ def read_chapter(
                     "region": location[4],
                 }
                 for location in locations
+            ],
+            "figures": [
+                {
+                    "id": figure[0], "label": "figure", "name": figure[1],
+                    "verse_number": figure[2],
+                    "aliases": json.loads(figure[3]) if figure[3] else [],
+                }
+                for figure in conn.execute(
+                    """
+                    SELECT f.id, f.name, v.verse_number,
+                           json_extract(f.attrs, 'aliases')
+                    FROM nodes v
+                    JOIN edges e ON e.from_id = v.id AND e.label = 'figure_in_verse'
+                    JOIN nodes f ON f.id = e.to_id AND f.label = 'figure'
+                    WHERE v.label = 'verse' AND UPPER(v.book_code) = UPPER(?)
+                      AND v.chapter = ? AND UPPER(v.version_code) = UPPER(?)
+                    ORDER BY v.verse_number, f.name, f.id;
+                    """,
+                    [book_code, chapter, version_code],
+                ).fetchall()
             ],
         }
     finally:

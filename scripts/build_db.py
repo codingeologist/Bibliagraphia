@@ -74,6 +74,7 @@ def main() -> None:
             from_id   VARCHAR NOT NULL,
             to_id     VARCHAR NOT NULL,
             label     VARCHAR NOT NULL,
+            weight    INTEGER,   -- figure_with_figure: distinct shared verses
             PRIMARY KEY (from_id, to_id, label)
         );
         """
@@ -151,6 +152,7 @@ def main() -> None:
                to_json({
                    'testament': testament, 'category': category,
                    'keywords': keywords, 'description': description,
+                   'aliases': aliases,
                    'tipnr': tipnr
                })
         FROM t_figures;
@@ -227,6 +229,7 @@ def main() -> None:
         """
     )
     _figure_edges(conn)
+    _figure_pair_edges(conn)
 
     # ---- Indexes (after data — faster to build) -------------------------
     conn.execute("CREATE INDEX idx_nodes_label      ON nodes(label);")
@@ -297,6 +300,31 @@ def _figure_edges(conn) -> None:
         JOIN nodes v ON v.id = r.from_id;
         """,
         [from_ids, to_ids],
+    )
+
+
+def _figure_pair_edges(conn) -> None:
+    """figure --figure_with_figure--> figure, for every pair of figures
+    that appear in the same verse (co-occurrence).
+
+    Derived from figure_in_verse edges; each pair is stored once with the
+    canonical ordering from_id < to_id. `weight` is the number of distinct
+    verses (deduplicated across versions) in which both figures appear.
+    Join on the verse end (from_id) of figure_in_verse, never the figure
+    end — joining on the figure end explodes into tens of millions of
+    pairs and OOMs the build.
+    """
+    conn.execute(
+        """
+        INSERT INTO edges (from_id, to_id, label, weight)
+        SELECT e1.to_id, e2.to_id, 'figure_with_figure',
+               COUNT(DISTINCT regexp_replace(e1.from_id, '^verse:[A-Z]+:', ''))
+        FROM edges e1
+        JOIN edges e2
+          ON e1.from_id = e2.from_id AND e1.to_id < e2.to_id
+        WHERE e1.label = 'figure_in_verse' AND e2.label = 'figure_in_verse'
+        GROUP BY 1, 2;
+        """
     )
 
 

@@ -4,6 +4,8 @@ import { get } from "./api.js";
 import { createCircleMarker } from "./mapMarkers.js";
 import SiteHeader from "./SiteHeader.jsx";
 import PlaceGraphPreview from "./PlaceGraphPreview.jsx";
+import { mentionSegments } from "./readerMentions.js";
+import { relationshipHref } from "./nodeLinks.js";
 
 function PlaceMap({ location, href, onExpand }) {
   const mapElementRef = useRef(null);
@@ -47,7 +49,7 @@ function PlaceMap({ location, href, onExpand }) {
   }
 
   return (
-    <div className="place-map-preview">
+    <div className="place-map-preview relative mb-[17px]">
       <div
         className="place-map-canvas"
         ref={mapElementRef}
@@ -66,42 +68,6 @@ function PlaceMap({ location, href, onExpand }) {
       >⛶</a>
     </div>
   );
-}
-
-function placeSegments(text, locations) {
-  const candidates = new Map();
-  for (const location of locations) {
-    const aliases = new Set(location.aliases || [location.name]);
-    for (const alias of aliases) {
-      const phrase = alias.replace(/\s+\d+$/, "").trim();
-      if (!phrase) continue;
-      const key = phrase.toLocaleLowerCase();
-      const matches = candidates.get(key) || { phrase, locations: [] };
-      if (!matches.locations.some((item) => item.id === location.id)) {
-        matches.locations.push(location);
-      }
-      candidates.set(key, matches);
-    }
-  }
-  if (!candidates.size) return [{ text }];
-
-  const phrases = [...candidates.values()].sort((left, right) => right.phrase.length - left.phrase.length);
-  const pattern = phrases.map(({ phrase }) => phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
-  const matcher = new RegExp(`(?<![\\p{L}\\p{N}])(${pattern})(?![\\p{L}\\p{N}])`, "giu");
-  const segments = [];
-  let cursor = 0;
-  for (const match of text.matchAll(matcher)) {
-    if (match.index > cursor) segments.push({ text: text.slice(cursor, match.index) });
-    const place = candidates.get(match[1].toLocaleLowerCase());
-    segments.push({
-      text: match[0],
-      locations: place.locations,
-    });
-    cursor = match.index + match[0].length;
-  }
-  if (!cursor) return [{ text }];
-  if (cursor < text.length) segments.push({ text: text.slice(cursor) });
-  return segments;
 }
 
 function ReaderPage({ onExpandMap }) {
@@ -329,6 +295,17 @@ function ReaderPage({ onExpandMap }) {
     setComparisonVersions((current) => current.map((item) => item === code ? version : item));
     setVersion(code);
   };
+  const changeColumnVersion = (previous, next) => {
+    if (previous === version) {
+      changeVersion(next);
+    } else if (next === version) {
+      setVersion(previous);
+      setComparisonVersions((current) => current.map((code) => code === previous ? next : code));
+    } else {
+      setComparisonVersions((current) => current.map((code) =>
+        code === previous ? next : code === next ? previous : code));
+    }
+  };
 
   const moveChapter = (direction) => {
     if (direction < 0 && chapterIndex > 0) {
@@ -412,54 +389,23 @@ function ReaderPage({ onExpandMap }) {
   }, [placeRelations]);
 
   return (
-    <div className="app-shell">
+    <div className="app-shell min-h-screen">
       <SiteHeader currentPage="/read" dark={dark} onToggleTheme={() => setDark((value) => !value)} />
 
       <main>
         <section className="panel reader-panel" aria-label="Bible reader">
-          <div className="reader-heading">
-            <div>
-              <h2>Read Bible</h2>
-              {compared && <p>Book, chapter and verse stay in sync across translations.</p>}
-            </div>
-            <details className="reader-translation-picker" ref={translationPickerRef}>
-              <summary aria-label="Add translation">+ <span>Add translation</span></summary>
-              <div className="reader-translation-options">
-                <label className="reader-control">
-                  Choose a translation
-                  <select
-                    aria-label="Add translation to comparison"
-                    value=""
-                    disabled={!catalog}
-                    onChange={(event) => {
-                      const code = event.target.value;
-                      if (!code) return;
-                      setComparisonVersions((current) => [...current, code]);
-                      translationPickerRef.current.open = false;
-                      translationPickerRef.current.querySelector("summary").focus();
-                    }}
-                  >
-                    <option value="">Select translation</option>
-                    {catalog?.versions.filter((item) =>
-                      item.code !== version && !comparisonVersions.includes(item.code))
-                      .map((item) => (
-                        <option key={item.code} value={item.code}>{item.full_name || item.name}</option>
-                      ))}
-                  </select>
-                </label>
-                {catalog && comparisonVersions.length >= catalog.versions.length - 1 && (
-                  <p>All available translations are shown.</p>
-                )}
-              </div>
-            </details>
-          </div>
           {catalogError && <p className="notice error" role="alert">{catalogError}</p>}
           {catalog && (
             <>
               {!availableBooks.length && (
                 <p className="empty-result">No Bible text is available for this translation.</p>
               )}
+              <div className="reader-nav">
+                <button type="button" onClick={() => moveChapter(-1)} disabled={!availableBooks.length || atStart}>
+                  ← Previous
+                </button>
               <div className="reader-controls">
+                <div className="reader-passage-controls" role="group" aria-label="Passage navigation">
                 <label className="reader-control">
                   Book
                   <select
@@ -493,18 +439,6 @@ function ReaderPage({ onExpandMap }) {
                   </select>
                 </label>
                 <label className="reader-control">
-                  Translation
-                  <select
-                    aria-label="Translation"
-                    value={version}
-                    onChange={(event) => changeVersion(event.target.value)}
-                  >
-                    {catalog.versions.map((item) => (
-                      <option key={item.code} value={item.code}>{item.full_name || item.name}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="reader-control">
                   Passage
                   <select
                     aria-label="Jump to verse"
@@ -518,17 +452,50 @@ function ReaderPage({ onExpandMap }) {
                     ))}
                   </select>
                 </label>
+                </div>
+                <div className="reader-version-controls" role="group" aria-label="Translation controls">
+                  {!compared && (
+                    <label className="reader-control">
+                      Translation
+                      <select aria-label="Translation" value={version} onChange={(event) => changeVersion(event.target.value)}>
+                        {catalog.versions.map((item) => (
+                          <option key={item.code} value={item.code}>{item.full_name || item.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  <details className="reader-translation-picker relative shrink-0" ref={translationPickerRef}>
+                    <summary aria-label="Compare translations" title="Compare translations">+</summary>
+                    <div className="reader-translation-options">
+                      <label className="reader-control">
+                        Choose a translation
+                        <select
+                          aria-label="Add translation to comparison"
+                          value=""
+                          onChange={(event) => {
+                            const code = event.target.value;
+                            if (!code) return;
+                            setComparisonVersions((current) => [...current, code]);
+                            translationPickerRef.current.open = false;
+                            translationPickerRef.current.querySelector("summary").focus();
+                          }}
+                        >
+                          <option value="">Select translation</option>
+                          {catalog.versions.filter((item) =>
+                            item.code !== version && !comparisonVersions.includes(item.code))
+                            .map((item) => (
+                              <option key={item.code} value={item.code}>{item.full_name || item.name}</option>
+                            ))}
+                        </select>
+                      </label>
+                      {comparisonVersions.length >= catalog.versions.length - 1 && (
+                        <p>All available translations are shown.</p>
+                      )}
+                    </div>
+                  </details>
+                </div>
               </div>
 
-              <div className="reader-nav">
-                <button type="button" onClick={() => moveChapter(-1)} disabled={!availableBooks.length || atStart}>
-                  ← Previous
-                </button>
-                <span>
-                  {chapterData
-                    ? `${chapterData.book_name} ${chapterData.chapter} · ${[version, ...comparisonVersions].join(" / ")}`
-                    : "Select a book and chapter"}
-                </span>
                 <button type="button" onClick={() => moveChapter(1)} disabled={!availableBooks.length || atEnd}>
                   Next →
                 </button>
@@ -674,15 +641,25 @@ function ReaderPage({ onExpandMap }) {
                     </>
                   )}
                   {compared ? (
-                    <div className="reader-comparison-scroll" role="region" aria-label="Side-by-side translations" tabIndex={0}>
+                    <div className="reader-comparison-scroll max-w-full overflow-x-auto" role="region" aria-label="Side-by-side translations" tabIndex={0}>
                       <table className="reader-comparison-table" style={{ minWidth: `${columns.length * 280}px` }}>
-                        <caption>Translations aligned by verse number. Numbering may differ between translations.</caption>
                         <thead>
                           <tr>
                             {columns.map((column) => (
                               <th key={column.code} scope="col">
-                                <div className="reader-column-heading">
-                                  <span>{translationName(column.code)} <small>{column.code}</small></span>
+                                <div className="reader-column-heading flex items-start justify-between gap-2">
+                                  <label className="reader-control min-w-0 flex-1">
+                                    Translation
+                                    <select
+                                      aria-label={`Translation for ${column.code} column`}
+                                      value={column.code}
+                                      onChange={(event) => changeColumnVersion(column.code, event.target.value)}
+                                    >
+                                      {catalog.versions.map((item) => (
+                                        <option key={item.code} value={item.code}>{item.full_name || item.name}</option>
+                                      ))}
+                                    </select>
+                                  </label>
                                   <button
                                     type="button"
                                     aria-label={`Remove ${translationName(column.code)}`}
@@ -718,10 +695,11 @@ function ReaderPage({ onExpandMap }) {
                                         withId={false}
                                         selected={selectedVerse === String(number)}
                                         locations={column.data.locations.filter((location) => location.verse_number === number)}
+                                        figures={(column.data.figures || []).filter((figure) => figure.verse_number === number)}
                                         onSelectLocation={(location) => setSelectedLocation({ ...location, version_code: column.code })}
                                       />
                                     ) : (
-                                      <p className="reader-missing-verse">
+                                      <p className={"reader-missing-verse m-0 px-[10px] py-[7px] text-muted [font:12px/1.8_\"DM_Sans\",sans-serif]"}>
                                         {!column.loading && !column.error ? `Verse ${number} is not available.` : "—"}
                                       </p>
                                     )}
@@ -739,6 +717,7 @@ function ReaderPage({ onExpandMap }) {
                       verse={item}
                       selected={selectedVerse === String(item.number)}
                       locations={chapterData.locations.filter((location) => location.verse_number === item.number)}
+                      figures={(chapterData.figures || []).filter((figure) => figure.verse_number === item.number)}
                       onSelectLocation={setSelectedLocation}
                     />
                   ))}
@@ -752,8 +731,8 @@ function ReaderPage({ onExpandMap }) {
   );
 }
 
-function VerseText({ verse, locations, selected, onSelectLocation, withId = true }) {
-  const segments = placeSegments(verse.text, locations);
+function VerseText({ verse, locations, figures, selected, onSelectLocation, withId = true }) {
+  const segments = mentionSegments(verse.text, locations, figures);
   return (
     <p
       className={`reader-verse${selected ? " selected" : ""}`}
@@ -770,7 +749,12 @@ function VerseText({ verse, locations, selected, onSelectLocation, withId = true
             onClick={() => onSelectLocation(segment.locations[0])}
           >{segment.text}</button>
         )
-        : <span key={`${segment.text}-${index}`}>{segment.text}</span>)}
+        : segment.figures ? (
+          <a className="person-highlight" key={`${segment.text}-${index}`}
+            href={relationshipHref(segment.figures[0])}
+            title={`Person: ${segment.figures[0].name} — explore relationships`}
+          >{segment.text}</a>
+        ) : <span key={`${segment.text}-${index}`}>{segment.text}</span>)}
     </p>
   );
 }

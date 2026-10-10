@@ -13,7 +13,11 @@ const describe = (node) => node.label === "verse"
     ? `${node.name} · ${node.book_code} ${node.chapter}:${node.verse_number}`
     : node.name || node.id;
 
-function GraphNodeSearch({ node, fallback, onSelect }) {
+function GraphNodeSearch({
+  node, fallback, onSelect, allowedTypes,
+  label = "Choose graph centre", searchLabel = "Search graph nodes",
+  placeholder = "Search books, passages, places…", visibleLabel = false,
+}) {
   const id = useId();
   const inputRef = useRef(null);
   const triggerRef = useRef(null);
@@ -23,6 +27,7 @@ function GraphNodeSearch({ node, fallback, onSelect }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [active, setActive] = useState(-1);
+  const availableGroups = groups.filter(([type]) => !allowedTypes || allowedTypes.includes(type));
 
   useEffect(() => {
     if (!open) return undefined;
@@ -34,7 +39,7 @@ function GraphNodeSearch({ node, fallback, onSelect }) {
     setActive(-1);
     const timer = window.setTimeout(async () => {
       try {
-        const matches = await Promise.all(groups.map(async ([label]) => {
+        const matches = await Promise.all(groups.filter(([type]) => !allowedTypes || allowedTypes.includes(type)).map(async ([label]) => {
           const result = await get(`/search?${new URLSearchParams({ q: query.trim(), label, limit: "3" })}`);
           return result.results;
         }));
@@ -46,7 +51,7 @@ function GraphNodeSearch({ node, fallback, onSelect }) {
       }
     }, 250);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [open, query]);
+  }, [open, query, allowedTypes]);
 
   const close = () => {
     setOpen(false);
@@ -58,22 +63,23 @@ function GraphNodeSearch({ node, fallback, onSelect }) {
   };
 
   return (
-    <div className="graph-node-search" onBlur={(event) => {
+    <div className="graph-node-search relative min-w-0 flex-1" onBlur={(event) => {
       if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
     }}>
-      <button ref={triggerRef} type="button" className="graph-node-search-trigger"
-        aria-label="Choose graph centre" aria-expanded={open} aria-controls={`${id}-panel`}
+      {visibleLabel && <label className="block mb-2 text-[12px] text-muted" htmlFor={`${id}-trigger`}>{label}</label>}
+      <button id={`${id}-trigger`} ref={triggerRef} type="button" className="graph-node-search-trigger"
+        aria-label={label} aria-describedby={`${id}-selection`} aria-expanded={open} aria-controls={`${id}-panel`}
         onClick={() => { setQuery(""); setOpen((value) => !value); }}>
         {node && <NodeIcon type={node.label} />}
-        <span>{node ? describe(node) : fallback || "Choose a node"}</span>
+        <span id={`${id}-selection`}>{node ? describe(node) : fallback || "Choose a node"}</span>
         <span aria-hidden="true">⌄</span>
       </button>
       {open && (
         <div id={`${id}-panel`} className="graph-node-search-panel">
-          <input ref={inputRef} role="combobox" aria-label="Search graph nodes"
+          <input ref={inputRef} role="combobox" aria-label={searchLabel}
             aria-autocomplete="list" aria-expanded="true" aria-controls={`${id}-results`}
             aria-activedescendant={active >= 0 ? `${id}-option-${active}` : undefined}
-            placeholder="Search books, passages, places…" autoComplete="off" value={query}
+            placeholder={placeholder} autoComplete="off" value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(); }
@@ -86,15 +92,15 @@ function GraphNodeSearch({ node, fallback, onSelect }) {
                 if (results.length) choose(results[active < 0 ? 0 : active]);
               }
             }} />
-          {loading && <p role="status">Searching nodes…</p>}
+          {loading && <p role="status">Searching…</p>}
           {error && <p className="notice error" role="alert">{error}</p>}
-          {!loading && !error && !results.length && <p role="status">No matching nodes.</p>}
-          <div id={`${id}-results`} role="listbox" aria-label="Matching graph nodes" aria-busy={loading}>
-            {groups.map(([type, title]) => {
+          {!loading && !error && !results.length && <p role="status">No matches found.</p>}
+          <div id={`${id}-results`} role="listbox" aria-label={searchLabel} aria-busy={loading}>
+            {availableGroups.map(([type, title]) => {
               const matches = results.filter((item) => item.label === type);
               return matches.length > 0 && (
                 <div key={type} role="group" aria-label={title}>
-                  <div className="graph-node-search-group" aria-hidden="true">{title}</div>
+                  <div className="graph-node-search-group px-2 pt-3 pb-[5px] text-[11px] font-semibold text-muted" aria-hidden="true">{title}</div>
                   {matches.map((item) => {
                     const index = results.indexOf(item);
                     return (

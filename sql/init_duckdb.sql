@@ -1,6 +1,6 @@
 -- Bibliagraphia single-file DuckDB graph schema.
 --
--- The graph is heterogeneous (6 node types, 5 edge types), so both tables
+-- The graph is heterogeneous (6 node types, 6 edge types), so both tables
 -- carry a `label`/`type` column. We deliberately do NOT add self-
 -- referencing or cross-table foreign keys: edges are only ever created
 -- between nodes actually present (see load_data.sql / build_db.py).
@@ -30,12 +30,17 @@ CREATE TABLE IF NOT EXISTS nodes (
 --   location_in_verse   verse -> location     (a verse mentions a location)
 --   location_in_region  region -> location    (a region contains a location)
 --   figure_in_verse     verse -> figure       (a verse mentions a figure)
+--   figure_in_verse     verse -> figure       (a verse mentions a figure)
+--   figure_with_figure  figure -> figure     (two figures share a verse; `weight`
+--                                            = distinct shared verses, deduplicated
+--                                            across versions; derived at build time)
 -- (direction chosen so that recursive traversals fan out from the
 -- "container" side — book/version/region — toward the leaves.)
 CREATE TABLE IF NOT EXISTS edges (
     from_id   VARCHAR NOT NULL,
     to_id     VARCHAR NOT NULL,
     label     VARCHAR NOT NULL,
+    weight    INTEGER,            -- figure_with_figure only, NULL for the rest
     PRIMARY KEY (from_id, to_id, label)
 );
 
