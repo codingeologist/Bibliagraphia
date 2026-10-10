@@ -1,4 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <rect width="48" height="48" rx="24" fill="#754d2b"/>
-  <text x="24" y="33" fill="#fff" font-family="Georgia,serif" font-size="30" text-anchor="middle">B</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Bibliagraphia mark: open book, cross on the left page,
+       knowledge-graph nodes + edges on the right page. -->
+  <g fill="none" stroke="#b89b7b" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- book outline -->
+    <path d="M32 15 C26.5 9.5 17 8.5 9.5 9.8 C9.2 9.85 9 10.1 9 10.4 L9 50.6 C9 50.9 9.2 51.15 9.5 51.2 C17 52.5 26.5 51.5 32 57 C37.5 51.5 47 52.5 54.5 51.2 C54.8 51.15 55 50.9 55 50.6 L55 10.4 C55 10.1 54.8 9.85 54.5 9.8 C47 8.5 37.5 9.5 32 15 Z"/>
+    <!-- spine -->
+    <path d="M32 15 L32 57"/>
+  </g>
+  <!-- cross on the left page -->
+  <g stroke="#8a6e52" stroke-width="3" stroke-linecap="round">
+    <path d="M21 22 L21 39"/>
+    <path d="M14.5 27.5 L27.5 27.5"/>
+  </g>
+  <!-- graph on the right page: edges then nodes -->
+  <g stroke="#8a6e52" stroke-width="2" stroke-linecap="round">
+    <path d="M39 26 L48 30"/>
+    <path d="M48 30 L42 41"/>
+    <path d="M39 26 L42 41"/>
+  </g>
+  <g fill="#8a6e52">
+    <circle cx="39" cy="26" r="2.6"/>
+    <circle cx="48" cy="30" r="2.6"/>
+    <circle cx="42" cy="41" r="2.6"/>
+  </g>
 </svg>

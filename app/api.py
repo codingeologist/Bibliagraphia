@@ -1,10 +1,13 @@
 """Bibliagraphia single-file DuckDB graph API.
 
-A single FastAPI app that opens the materialised data/bible.db, runs
-parameterized recursive SQL for traversal / path / search, and serves a
-single-page frontend from the same process on port 8000. All queries use ?
+A single FastAPI app that opens the materialised data/bible.db and runs
+parameterized recursive SQL for traversal / path / search. All queries use ?
 placeholders — no string interpolation — so there is no SQL-injection
 surface (the original TypeQL loader built queries by f-string).
+
+The UI is the standalone React frontend in `frontend/` (the Vite dev server
+proxies to this API; in production nginx serves the built SPA and proxies
+the JSON routes here). This process serves the JSON API only.
 
 The graph is heterogeneous (versions, books, verses, regions, locations),
 so endpoints take a `label` and an `edge` where relevant.
@@ -20,12 +23,20 @@ from typing import Optional
 import duckdb
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+# MCP server (FastMCP) — built before the app so its lifespan can be wired
+# into the FastAPI constructor; mounted at /mcp at the bottom of this file.
+from app.mcp import mcp
+
+_mcp_app = mcp.http_app(path="/mcp")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-app = FastAPI(title="Bibliagraphia DuckDB Graph API")
+app = FastAPI(
+    title="Bibliagraphia DuckDB Graph API",
+    lifespan=_mcp_app.lifespan,
+)
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
@@ -883,7 +894,7 @@ def place_relations(location_id: str = Query(..., min_length=1)):
         conn.close()
 
 
-# Serve the single-page frontend. Mounted last so API routes win.
-_STATIC = REPO_ROOT / "app" / "static"
-if _STATIC.is_dir():
-    app.mount("/", StaticFiles(directory=str(_STATIC), html=True), name="static")
+# MCP over streamable HTTP — same process, same port as the JSON API.
+# Mounted at root so the endpoint is exactly /mcp (no trailing-slash redirect);
+# API routes are registered first, so they always win over this catch-all.
+app.mount("/", _mcp_app)
