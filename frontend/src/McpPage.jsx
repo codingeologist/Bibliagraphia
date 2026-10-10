@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import SiteHeader from "./SiteHeader.jsx";
-import { hostedMcpUrl, isLocalHost, localMcpUrl, mcpConfiguration } from "./mcpConnection.js";
+import { isLocalHost, localMcpUrl, mcpConfiguration } from "./mcpConnection.js";
 
 function CopyExample({ title, text }) {
   const [status, setStatus] = useState("");
@@ -41,7 +41,6 @@ function CopyExample({ title, text }) {
 export default function McpPage() {
   const hostname = window.location.hostname;
   const local = isLocalHost(hostname);
-  const [environment, setEnvironment] = useState(local ? "local" : "hosted");
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     return saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -50,7 +49,7 @@ export default function McpPage() {
     document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
-  const url = environment === "local" ? localMcpUrl(local ? hostname.replaceAll("[", "").replaceAll("]", "") : "localhost") : hostedMcpUrl;
+  const url = localMcpUrl(local ? hostname.replaceAll("[", "").replaceAll("]", "") : "localhost");
 
   return (
     <div className="app-shell min-h-screen">
@@ -59,22 +58,10 @@ export default function McpPage() {
         <section className="panel mb-5">
           <h2>Connect your AI assistant</h2>
           <p className="panel-copy">Use Bibliagraphia from an MCP-compatible assistant to read passages, compare translations and explore connections. MCP (Model Context Protocol) lets your assistant use these tools directly.</p>
-          <fieldset className="m-0 p-0 border-0">
-            <legend className="text-[12px] font-semibold mb-2">Choose a server</legend>
-            <div className="flex flex-wrap gap-4 text-[12px]">
-              {[["local", "Local Docker"], ["hosted", "Hosted API"]].map(([value, label]) => (
-                <label key={value} className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="mcp-environment" value={value} checked={environment === value} onChange={() => setEnvironment(value)} />
-                  {label}
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          <p className="panel-copy">Connect to Bibliagraphia running locally with Docker.</p>
           <CopyExample title="Server URL" text={url} />
           <p className="panel-copy mt-3">Transport: <strong>Streamable HTTP</strong>. No API key is required by this server.</p>
-          <p className="panel-copy">{environment === "local"
-            ? "Keep the local API container running. This address works for clients on this computer; cloud-hosted assistants cannot reach your localhost."
-            : "Use the hosted address for remote assistants. Availability depends on the hosted API."}</p>
+          <p className="panel-copy">Keep the local API container running. This address works for clients on this computer; cloud-hosted assistants cannot reach your localhost.</p>
         </section>
 
         <div className="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))]">
@@ -104,7 +91,6 @@ export default function McpPage() {
             <ul className="pl-5 text-[13px] leading-relaxed space-y-2 mt-2">
               <li>Opening the endpoint in a browser is not a connection test. MCP requires a client handshake and session.</li>
               <li>For Docker, use API port 8000, not frontend port 8080.</li>
-              <li>For remote servers, check network access and use a proxy that supports streaming without buffering.</li>
               <li>After connecting, confirm the client lists Bibliagraphia’s tools.</li>
             </ul>
           </section>

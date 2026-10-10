@@ -112,7 +112,11 @@
     @apply [--badge-color:var(--node-verse)];
   }
 
-  .badge-book, .badge-version, .badge-region, .badge-location, .badge-verse {
+  .badge-figure {
+    @apply [--badge-color:var(--node-figure)];
+  }
+
+  .badge-book, .badge-version, .badge-region, .badge-location, .badge-verse, .badge-figure {
     @apply [background:color-mix(in_srgb,_var(--badge-color)_11%,_var(--panel))] [color:var(--badge-color)];
   }
 

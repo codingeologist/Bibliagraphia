@@ -12,7 +12,7 @@ import McpPage from "./McpPage.jsx";
 import AboutPage from "./AboutPage.jsx";
 import { describeNode, nodeTypeName, pathNode, pathRelationshipDescription, relationshipHref } from "./nodeLinks.js";
 
-const labels = ["book", "verse", "location", "region", "version"];
+const labels = ["book", "verse", "location", "region", "version", "figure"];
 const genesis = { id: "book:GEN", label: "book", name: "Genesis", book_code: "GEN" };
 const initialTraversal = { node: genesis, edge: "verse_in_book" };
 const traversalTypes = ["book", "region", "version"];
@@ -62,7 +62,7 @@ function Notice({ children, error = false }) {
   return <p className={`notice${error ? " error" : ""}`} role={error ? "alert" : "status"}>{children}</p>;
 }
 
-function ResultRow({ node, friendly = false }) {
+function ResultRow({ node, friendly = false, onSelectFigure }) {
   return (
     <li>
       <a className="result-row no-underline" href={relationshipHref(node)}>
@@ -76,6 +76,11 @@ function ResultRow({ node, friendly = false }) {
           </span>
         )}
       </a>
+      {node.label === "figure" && onSelectFigure && (
+        <button className="button button-secondary" onClick={() => onSelectFigure(node)}>
+          About {displayName(node)}
+        </button>
+      )}
     </li>
   );
 }
@@ -91,6 +96,7 @@ function ExploreTools({ mode }) {
   const [searchMessage, setSearchMessage] = useState("");
   const [searchError, setSearchError] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
+  const [figure, setFigure] = useState(null);
   const [traversal, setTraversal] = useState(initialTraversal);
   const [traverseResult, setTraverseResult] = useState(null);
   const [traverseError, setTraverseError] = useState("");
@@ -135,6 +141,7 @@ function ExploreTools({ mode }) {
       const result = await get(`/search?${params}`);
       if (requestId !== requestsRef.current.search) return;
       setSearchResults(result.results);
+      setFigure(null);
       if (!result.results.length) setSearchMessage("No matching nodes. Try another name or code.");
     } catch (error) {
       if (requestId !== requestsRef.current.search) return;
@@ -252,7 +259,7 @@ function ExploreTools({ mode }) {
           <div className="primary-column">
             {mode === "search" && (
             <Panel title="Find a connection" eyebrow="01 — Search" className="search-panel">
-              <p className="panel-copy">Look up a book, verse, translation, place or region by name or code.</p>
+              <p className="panel-copy">Look up a book, verse, translation, place, region or biblical figure by name or code.</p>
               <form className="form-row search-form" onSubmit={runSearch}>
                 <Field
                   label="Search the graph"
@@ -275,9 +282,16 @@ function ExploreTools({ mode }) {
               {searchResults.length > 0 && (
                 <ul className="result-list" aria-label="Search results">
                   {searchResults.map((node) => (
-                    <ResultRow key={node.id} node={node} />
+                    <ResultRow key={node.id} node={node} onSelectFigure={setFigure} />
                   ))}
                 </ul>
+              )}
+              {figure && (
+                <div className="figure-detail" aria-live="polite">
+                  <p className="eyebrow">{[figure.testament, figure.category].filter(Boolean).join(" · ")}</p>
+                  <h3>{displayName(figure)}</h3>
+                  <p>{figure.description}</p>
+                </div>
               )}
             </Panel>
             )}

@@ -36,6 +36,7 @@ test("node types use reader-friendly names", () => {
   assert.equal(nodeTypeName("verse"), "Passage");
   assert.equal(nodeTypeName("location"), "Place");
   assert.equal(nodeTypeName("version"), "Translation");
+  assert.equal(nodeTypeName("figure"), "Figure");
 });
 
 test("connection explanations respect both directions of a walk", () => {
@@ -44,6 +45,7 @@ test("connection explanations respect both directions of a walk", () => {
     ["verse_in_version", "version", "verse", "Contains passage", "Available in translation"],
     ["location_in_verse", "verse", "location", "Mentions place", "Mentioned in passage"],
     ["location_in_region", "region", "location", "Contains place", "Located in region"],
+    ["figure_in_verse", "verse", "figure", "Mentions figure", "Mentioned in passage"],
   ];
   for (const [label, sourceType, targetType, forward, reverse] of cases) {
     assert.equal(pathRelationshipDescription(label, sourceType), forward);

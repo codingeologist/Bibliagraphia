@@ -20,6 +20,7 @@ const colorVars = {
   region: "--node-region",
   location: "--node-location",
   verse: "--node-verse",
+  figure: "--node-figure",
 };
 
 const nodeName = (node) => node.name || node.id;
@@ -34,6 +35,7 @@ const nodeTypeNames = {
   version: "Translations",
   location: "Places",
   region: "Regions",
+  figure: "Figures",
 };
 
 const nodeDescription = (node) => node.label === "verse"
@@ -524,7 +526,7 @@ function GraphExplorer({ seed, fullPage = false }) {
           setLabel(event.target.value);
           setControlRevision((value) => value + 1);
         }}>
-          {["book", "version", "region", "location", "verse"].map((item) => (
+          {["book", "version", "region", "location", "verse", "figure"].map((item) => (
             <option key={item}>{item}</option>
           ))}
         </select>}

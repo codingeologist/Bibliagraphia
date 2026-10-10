@@ -16,7 +16,7 @@ export const pathNode = (node) => typeof node === "string"
   : node;
 
 export const nodeTypeName = (label) => ({
-  book: "Book", verse: "Passage", location: "Place", region: "Region", version: "Translation",
+  book: "Book", verse: "Passage", location: "Place", region: "Region", version: "Translation", figure: "Figure",
 })[label] || label;
 
 const relationshipNames = {
@@ -24,6 +24,7 @@ const relationshipNames = {
   verse_in_version: ["Contains passage", "Available in translation"],
   location_in_verse: ["Mentions place", "Mentioned in passage"],
   location_in_region: ["Contains place", "Located in region"],
+  figure_in_verse: ["Mentions figure", "Mentioned in passage"],
 };
 
 export const relationshipDescription = (label, outgoing) =>
@@ -35,4 +36,5 @@ export const pathRelationshipDescription = (label, fromType) => relationshipDesc
   verse_in_version: "version",
   location_in_verse: "verse",
   location_in_region: "region",
+  figure_in_verse: "verse",
 })[label] === fromType);

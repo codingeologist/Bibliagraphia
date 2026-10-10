@@ -38,14 +38,15 @@ def test_builds_and_counts(db_path):
     conn = duckdb.connect(str(db_path), read_only=True)
     try:
         n = dict(conn.execute("SELECT label, COUNT(*) FROM nodes GROUP BY label").fetchall())
-        assert n["version"] == 3
+        assert n["version"] == 5
         assert n["book"] == 73
-        assert n["verse"] == 102722
+        assert n["verse"] == 141788
         assert n["region"] == 36
         assert n["location"] == 7460
+        assert n["figure"] == 238
         e = dict(conn.execute("SELECT label, COUNT(*) FROM edges GROUP BY label").fetchall())
-        assert e["verse_in_book"] == 102722
-        assert e["verse_in_version"] == 102722
+        assert e["verse_in_book"] == 141788
+        assert e["verse_in_version"] == 141788
         assert e["location_in_region"] == 7460
         assert e["location_in_verse"] > 0
     finally:
@@ -68,7 +69,7 @@ def test_traverse_verses_in_a_book(db_path):
             SELECT COUNT(*) FROM d
             """, [start]
         ).fetchone()[0]
-        assert rows == 4594  # Genesis has ~4594 verses across the 3 versions
+        assert rows == 6127  # Genesis across the 4 versions with an OT (SRG is NT only)
     finally:
         conn.close()
 
@@ -99,8 +100,8 @@ def test_cross_version_verse(db_path):
               AND chapter=3 AND verse_number=16 ORDER BY version_code
             """
         ).fetchall()
-        assert len(rows) == 3
-        assert all("God" in r[1] or "Deus" in r[1] for r in rows)
+        assert [r[0] for r in rows] == ["DRB", "KJV", "LEB", "SRG", "VUL"]
+        assert all(any(w in r[1] for w in ("God", "Deus", "Θεὸς")) for r in rows)
     finally:
         conn.close()
 
@@ -145,5 +146,30 @@ def test_path_verse_to_region(db_path):
             """, [vid[0], vid[0]]
         ).fetchone()[0]
         assert reachable
+    finally:
+        conn.close()
+
+
+def test_figure_in_verse_follows_each_versions_numbering(db_path):
+    # Figure edges need the STEP Bible download; skip when the build was offline.
+    conn = duckdb.connect(str(db_path), read_only=True)
+    try:
+        n = conn.execute("SELECT COUNT(*) FROM edges WHERE label='figure_in_verse'").fetchone()[0]
+        if n == 0:
+            pytest.skip("no STEP Bible data (offline build)")
+        linked = {r[0] for r in conn.execute(
+            "SELECT from_id FROM edges WHERE label='figure_in_verse' AND to_id=?",
+            ["figure:David"],
+        ).fetchall()}
+        # Psalm 23's title names David: KJV folds it into 23:1, while the
+        # Douay-Rheims numbers it Psalm 22 (Latin numbering).
+        assert "verse:KJV:PSA:23:1" in linked
+        assert "verse:DRB:PSA:22:1" in linked
+        assert "verse:DRB:PSA:1:1" not in linked  # Psalm 1 has no title
+        # Same-name figures stay apart: Mary Magdalene, not Mary of Bethany.
+        assert conn.execute(
+            "SELECT COUNT(*) FROM edges WHERE label='figure_in_verse' "
+            "AND from_id='verse:KJV:JOH:20:18' AND to_id='figure:Mary of Bethany'"
+        ).fetchone()[0] == 0
     finally:
         conn.close()

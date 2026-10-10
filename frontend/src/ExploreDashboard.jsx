@@ -8,7 +8,7 @@ import { describeNode, pathNode, relationshipHref } from "./nodeLinks.js";
 const widgets = [
   {
     id: "search", title: "Search scripture", icon: "search", href: "/explore/search",
-    action: "Open search", description: "Find books, passages, translations, places and regions.",
+    action: "Open search", description: "Find books, passages, translations, places, regions and biblical figures.",
     load: () => get("/search?q=&label=book&limit=4"),
   },
   {

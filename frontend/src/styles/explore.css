@@ -1,5 +1,21 @@
 /* Explore component utility recipes. */
 @layer components {
+  .figure-detail {
+    @apply mt-[13px] px-3 py-[10px] border border-line border-l-2 border-l-node-figure rounded-[5px];
+  }
+
+  .figure-detail .eyebrow {
+    @apply mt-0 mb-1 text-node-figure;
+  }
+
+  .figure-detail h3 {
+    @apply mt-0 mb-[6px];
+  }
+
+  .figure-detail p {
+    @apply m-0 text-xs leading-normal;
+  }
+
   .help-toggle > span:first-child {
     @apply flex items-center;
   }

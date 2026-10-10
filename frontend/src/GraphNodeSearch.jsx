@@ -4,7 +4,7 @@ import { NodeIcon } from "./nodeIcons.jsx";
 
 const groups = [
   ["book", "Books"], ["verse", "Passages"], ["location", "Places"],
-  ["version", "Translations"], ["region", "Regions"],
+  ["version", "Translations"], ["region", "Regions"], ["figure", "Figures"],
 ];
 
 const describe = (node) => node.label === "verse"

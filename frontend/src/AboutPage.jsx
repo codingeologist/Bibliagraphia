@@ -15,6 +15,7 @@ const sources = [
   ["verses.json", "Complete verse text across the original three translations.", "102,722 verses"],
   ["location_regions.json", "Geographical location mentions with coordinates.", "7,460 mentions"],
   ["regions.json", "Regional descriptions and keywords.", "36 regions"],
+  ["figures.json", "Biblical figures and their STEP Bible identifiers.", "238 figures"],
 ];
 
 function TeamAvatar({ name, icon, github }) {
@@ -75,6 +76,7 @@ export default function AboutPage() {
             <li><a className="text-accent" href="https://www.esri.com/" target="_blank" rel="noreferrer">Esri</a>, Maxar and Earthstar Geographics — imagery credits used by the satellite basemap.</li>
             <li><a className="text-accent" href="https://dare.ht.lu.se/" target="_blank" rel="noreferrer">DARE: Digital Atlas of the Roman Empire</a> — the Roman-era map layer.</li>
             <li><a className="text-accent" href="https://leafletjs.com/" target="_blank" rel="noreferrer">Leaflet</a> — interactive maps. Map-provider attribution remains visible on the maps themselves.</li>
+            <li><a className="text-accent" href="https://www.STEPBible.org" target="_blank" rel="noreferrer">STEP Bible</a> — TIPNR and TVTMS datasets from Tyndale House, Cambridge, used for biblical figure references and verse numbering under CC BY 4.0.</li>
             <li><a className="text-accent" href="https://duckdb.org/" target="_blank" rel="noreferrer">DuckDB</a>, <a className="text-accent" href="https://fastapi.tiangolo.com/" target="_blank" rel="noreferrer">FastAPI</a>, <a className="text-accent" href="https://react.dev/" target="_blank" rel="noreferrer">React</a>, <a className="text-accent" href="https://vite.dev/" target="_blank" rel="noreferrer">Vite</a>, <a className="text-accent" href="https://tailwindcss.com/" target="_blank" rel="noreferrer">Tailwind CSS</a>, <a className="text-accent" href="https://d3js.org/" target="_blank" rel="noreferrer">D3</a> and <a className="text-accent" href="https://gofastmcp.com/" target="_blank" rel="noreferrer">FastMCP</a> — open-source tools behind the app.</li>
           </ul>
           <p className="panel-copy mt-4">Source data and third-party services retain their respective rights and terms. These credits do not replace their licence notices.</p>

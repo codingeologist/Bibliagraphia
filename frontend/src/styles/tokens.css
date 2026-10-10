@@ -14,6 +14,7 @@
   --color-node-version: var(--node-version);
   --color-node-location: var(--node-location);
   --color-node-region: var(--node-region);
+  --color-node-figure: var(--node-figure);
   --color-danger: #b2483d;
   --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-display: "Playfair Display", Georgia, serif;
@@ -38,6 +39,7 @@
     --node-region: #3e8277;
     --node-location: #74894b;
     --node-verse: #8c8d87;
+    --node-figure: #a3486b;
   }
 
   :root.dark {
@@ -56,5 +58,6 @@
     --node-region: #70b6a9;
     --node-location: #abc47c;
     --node-verse: #888d85;
+    --node-figure: #d98aa6;
   }
 }

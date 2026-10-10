@@ -1,5 +1,3 @@
-export const hostedMcpUrl = "https://api.bibliographia.com/mcp";
-
 export function localMcpUrl(hostname) {
   return new URL("/mcp", `http://${hostname.includes(":") ? `[${hostname}]` : hostname}:8000`).href;
 }

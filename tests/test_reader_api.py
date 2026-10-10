@@ -98,6 +98,35 @@ def test_suggestions_prioritise_exact_names_before_partial_matches(reader_db, la
     assert result["results"][0]["id"] == "region:Syria"
 
 
+@pytest.mark.parametrize("label", ["figure", None])
+def test_figure_search_preserves_exact_ranking_aliases_and_details(reader_db, label):
+    conn = duckdb.connect(str(reader_db))
+    attrs = {
+        "testament": "New Testament", "category": "Apostle",
+        "description": "A disciple of Jesus.", "keywords": ["Cephas", "Jerusalem"],
+    }
+    conn.executemany(
+        "INSERT INTO nodes VALUES (?, ?, ?, NULL, NULL, NULL, NULL, ?)",
+        [
+            ("figure:Peter", "figure", "Peter", json.dumps(attrs)),
+            ("figure:Peter's companion", "figure", "Peter's companion", json.dumps({})),
+            ("region:Jerusalem", "region", "Jerusalem", json.dumps({})),
+        ],
+    )
+    assert api._resolve(conn, "figure", "Cephas") == "figure:Peter"
+    assert api._resolve(conn, "figure", "figure:Peter") == "figure:Peter"
+    conn.close()
+
+    results = api.search(q="Peter", label=label, limit=3)["results"]
+    assert results[0]["id"] == "figure:Peter"
+    assert results[0]["description"] == attrs["description"]
+    assert results[0]["testament"] == attrs["testament"]
+    assert api.search(q="Cephas", label=label, limit=3)["results"][0]["id"] == "figure:Peter"
+    if label is None:
+        results = api.search(q="Jerusalem", label=None, limit=3)["results"]
+        assert [node["id"] for node in results] == ["region:Jerusalem", "figure:Peter"]
+
+
 def test_connection_resolution_preserves_exact_passage_and_place(reader_db):
     source = "verse:KJV:GEN:1:1"
     target = "location:Eden:GEN:1:1:1"
