@@ -1,10 +1,10 @@
 import L from "leaflet";
 
-const STAR_PATH = "M 0 -10 L 2.9 -3.2 L 10 -3.2 L 4.4 0.8 L 6.5 8.5 L 0 3.7 L -6.5 8.5 L -4.4 0.8 L -10 -3.2 L -2.9 -3.2 Z";
+const STAR_PATH = "M16 2 L19.8 10.6 L29 11.3 L22 17.5 L24.8 27.1 L16 21.9 L7.2 27.1 L10 17.5 L3 11.3 L12.2 10.6 Z";
 
 function createStarIcon({ fillColor, size, strokeColor = "#fff", strokeWidth = 1.5 }) {
   const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="-12 -12 24 24" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 32 32" aria-hidden="true">
       <path d="${STAR_PATH}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linejoin="round" />
     </svg>
   `;
@@ -15,6 +15,7 @@ function createStarIcon({ fillColor, size, strokeColor = "#fff", strokeWidth = 1
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
     popupAnchor: [0, -size / 2],
+    tooltipAnchor: [0, -size / 2],
   });
 }
 
@@ -39,10 +40,16 @@ export function createStarMarker(latlng, {
   marker.selectedIcon = selectedIcon;
 
   marker.setStyle = (style = {}) => {
-    const radius = Number(style.radius ?? size);
     const color = style.fillColor || fillColor;
-    const nextSize = Math.max(12, radius * 2.2);
-    marker.setIcon(createStarIcon({ fillColor: color, size: nextSize, strokeColor, strokeWidth }));
+    const nextSize = Number(style.size ?? style.radius ? style.radius * 2.2 : size);
+    const icon = createStarIcon({
+      fillColor: color,
+      size: Math.max(12, nextSize),
+      strokeColor,
+      strokeWidth,
+    });
+    marker.setIcon(icon);
+    marker.defaultIcon = icon;
   };
 
   marker.setSelected = (selected) => {
