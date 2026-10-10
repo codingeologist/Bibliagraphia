@@ -1,28 +1,26 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { get, post } from "./api.js";
-import GraphExplorer from "./GraphExplorer.jsx";
+import ExploreDashboard from "./ExploreDashboard.jsx";
 import LandingPage from "./LandingPage.jsx";
-import MapExplorer from "./MapExplorer.jsx";
 import MapPage from "./MapPage.jsx";
 import ReaderPage from "./ReaderPage.jsx";
 import SiteHeader from "./SiteHeader.jsx";
 import RelationshipsPage from "./RelationshipsPage.jsx";
+import GraphNodeSearch from "./GraphNodeSearch.jsx";
+import McpPage from "./McpPage.jsx";
+import AboutPage from "./AboutPage.jsx";
+import { describeNode, nodeTypeName, pathNode, pathRelationshipDescription, relationshipHref } from "./nodeLinks.js";
 
 const labels = ["book", "verse", "location", "region", "version", "figure"];
-const initialTraversal = { node: "", label: "book", edge: "verse_in_book" };
+const genesis = { id: "book:GEN", label: "book", name: "Genesis", book_code: "GEN" };
+const initialTraversal = { node: genesis, edge: "verse_in_book" };
+const traversalTypes = ["book", "region", "version"];
 const initialPath = {
-  source: "",
-  sourceLabel: "book",
-  target: "",
-  targetLabel: "region",
+  source: genesis,
+  target: { id: "region:Syria", label: "region", name: "Syria" },
 };
-const initialVerse = { book: "", chapter: "", verse: "" };
-const displayName = (node) => node.name || node.id;
-const nodeCode = (node) =>
-  node.label === "book" ? node.book_code
-    : node.label === "version" ? node.version_code
-      : null;
+const displayName = describeNode;
 
 function Field({ label, value, onChange, placeholder, type = "text", min }) {
   return (
@@ -30,6 +28,7 @@ function Field({ label, value, onChange, placeholder, type = "text", min }) {
       aria-label={label}
       type={type}
       min={min}
+      required
       value={value}
       placeholder={placeholder}
       onChange={(event) => onChange(event.target.value)}
@@ -63,32 +62,36 @@ function Notice({ children, error = false }) {
   return <p className={`notice${error ? " error" : ""}`} role={error ? "alert" : "status"}>{children}</p>;
 }
 
-function ResultRow({ node, onClick }) {
+function ResultRow({ node, friendly = false, onSelectFigure }) {
   return (
     <li>
-      <button className="result-row" onClick={() => onClick?.(node)}>
-        <span className={`badge badge-${node.label}`}>{node.label}</span>
-        <span className="result-name">{displayName(node)}</span>
-        {(node.book_code || node.version_code) && (
-          <span className="result-meta">
+      <a className="result-row no-underline" href={relationshipHref(node)}>
+        <span className={`badge badge-${node.label}`}>{friendly ? nodeTypeName(node.label) : node.label}</span>
+        <span className="result-name overflow-hidden text-ellipsis">{displayName(node)}</span>
+        {!friendly && (node.book_code || node.version_code) && (
+          <span className="result-meta ml-auto whitespace-nowrap text-[10px] text-muted">
             {node.book_code}
             {node.chapter ? ` ${node.chapter}:${node.verse_number}` : ""}
             {node.version_code && !node.book_code ? ` ${node.version_code}` : ""}
           </span>
         )}
-      </button>
+      </a>
+      {node.label === "figure" && onSelectFigure && (
+        <button className="button button-secondary" onClick={() => onSelectFigure(node)}>
+          About {displayName(node)}
+        </button>
+      )}
     </li>
   );
 }
 
-function ExplorePage() {
+function ExploreTools({ mode }) {
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     return saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
   const [health, setHealth] = useState({ status: "connecting", db: "" });
-  const [helpOpen, setHelpOpen] = useState(false);
-  const [search, setSearch] = useState({ query: "", label: "" });
+  const [search, setSearch] = useState({ query: "GEN", label: "" });
   const [searchResults, setSearchResults] = useState([]);
   const [searchMessage, setSearchMessage] = useState("");
   const [searchError, setSearchError] = useState("");
@@ -96,28 +99,12 @@ function ExplorePage() {
   const [figure, setFigure] = useState(null);
   const [traversal, setTraversal] = useState(initialTraversal);
   const [traverseResult, setTraverseResult] = useState(null);
-  const [traverseMessage, setTraverseMessage] = useState("");
   const [traverseError, setTraverseError] = useState("");
   const [pathForm, setPathForm] = useState(initialPath);
   const [pathResult, setPathResult] = useState(null);
   const [pathError, setPathError] = useState("");
-  const [verseForm, setVerseForm] = useState(initialVerse);
-  const [verseResult, setVerseResult] = useState(null);
-  const [verseError, setVerseError] = useState("");
-  const [graphSeed, setGraphSeed] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    const node = params.get("graph_node");
-    return node ? { node, label: params.get("graph_label") || "location" } : null;
-  });
-  const [mapSeed, setMapSeed] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    const region = params.get("map_region");
-    const book = params.get("map_book");
-    return region ? { scope: "region", query: region, nonce: Date.now() }
-      : book ? { scope: "book", query: book, nonce: Date.now() }
-        : null;
-  });
   const [busy, setBusy] = useState({});
+  const requestsRef = useRef({ search: 0, traverse: 0, path: 0 });
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -138,9 +125,13 @@ function ExplorePage() {
   const setLoading = (key, value) => setBusy((current) => ({ ...current, [key]: value }));
 
   const runSearch = async (event) => {
-    event.preventDefault();
+    event?.preventDefault();
     const query = search.query.trim();
-    if (!query) return;
+    if (!query) {
+      setSearchError("Enter a name or code to search.");
+      return;
+    }
+    const requestId = ++requestsRef.current.search;
     setSearchLoading(true);
     setSearchError("");
     setSearchMessage("");
@@ -148,199 +139,127 @@ function ExplorePage() {
       const params = new URLSearchParams({ q: query });
       if (search.label) params.set("label", search.label);
       const result = await get(`/search?${params}`);
+      if (requestId !== requestsRef.current.search) return;
       setSearchResults(result.results);
       setFigure(null);
       if (!result.results.length) setSearchMessage("No matching nodes. Try another name or code.");
     } catch (error) {
+      if (requestId !== requestsRef.current.search) return;
       setSearchError(error.message);
       setSearchResults([]);
     } finally {
-      setSearchLoading(false);
-    }
-  };
-
-  const chooseNode = (node) => {
-    // Figures have no traversal or map view: show their details here and
-    // jump to the graph explorer centred on them.
-    setFigure(node.label === "figure" ? node : null);
-    if (node.label === "figure") {
-      setGraphSeed({ node: displayName(node), label: "figure" });
-      document.getElementById("graph-explorer")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
-    const code = nodeCode(node) || displayName(node);
-    if (["book", "region", "version"].includes(node.label)) {
-      const edge = node.label === "book" ? "verse_in_book"
-        : node.label === "region" ? "location_in_region" : "verse_in_version";
-      setTraversal({ node: code, label: node.label, edge });
-      setPathForm((current) => ({ ...current, source: code, sourceLabel: node.label }));
-      setGraphSeed({ node: code, label: node.label });
-      if (node.label === "book" || node.label === "region") {
-        setMapSeed({
-          scope: node.label === "book" ? "book" : "region",
-          query: code,
-          nonce: Date.now(),
-        });
-      }
-    } else if (node.label === "verse") {
-      setVerseForm({
-        book: node.book_code || "",
-        chapter: String(node.chapter || ""),
-        verse: String(node.verse_number || ""),
-      });
-      setGraphSeed({ node: displayName(node), label: "verse" });
-    } else {
-      setGraphSeed({ node: displayName(node), label: "location" });
+      if (requestId === requestsRef.current.search) setSearchLoading(false);
     }
   };
 
   const runTraverse = async (event) => {
-    event.preventDefault();
-    if (!traversal.node.trim()) return;
+    event?.preventDefault();
+    if (!traversal.node) {
+      setTraverseError("Choose a book, region or translation.");
+      return;
+    }
+    const requestId = ++requestsRef.current.traverse;
     setLoading("traverse", true);
     setTraverseResult(null);
     setTraverseError("");
     try {
-      setTraverseResult(await post("/traverse", {
-        start_node: traversal.node.trim(),
-        label: traversal.label,
+      const result = await post("/traverse", {
+        start_node: traversal.node.id,
+        label: traversal.node.label,
         edge: traversal.edge,
-      }));
+      });
+      if (requestId === requestsRef.current.traverse) setTraverseResult(result);
     } catch (error) {
-      setTraverseError(error.message);
+      if (requestId === requestsRef.current.traverse) setTraverseError(error.message);
     } finally {
-      setLoading("traverse", false);
+      if (requestId === requestsRef.current.traverse) setLoading("traverse", false);
     }
   };
 
   const runPath = async (event) => {
-    event.preventDefault();
-    if (!pathForm.source.trim() || !pathForm.target.trim()) return;
+    event?.preventDefault();
+    if (!pathForm.source || !pathForm.target) {
+      setPathError("Choose two books, passages, places, regions or translations.");
+      return;
+    }
+    const requestId = ++requestsRef.current.path;
     setLoading("path", true);
     setPathResult(null);
     setPathError("");
     try {
-      setPathResult(await post("/path", {
-        source: pathForm.source.trim(),
-        source_label: pathForm.sourceLabel,
-        target: pathForm.target.trim(),
-        target_label: pathForm.targetLabel,
-      }));
-    } catch (error) {
-      setPathError(error.message);
-    } finally {
-      setLoading("path", false);
-    }
-  };
-
-  const runVerse = async (event) => {
-    event.preventDefault();
-    const { book, chapter, verse } = verseForm;
-    if (!book.trim() || !chapter || !verse) return;
-    setLoading("verse", true);
-    setVerseResult(null);
-    setVerseError("");
-    try {
-      const params = new URLSearchParams({
-        book_code: book.trim().toUpperCase(),
-        chapter,
-        verse_number: verse,
+      const result = await post("/path", {
+        source: pathForm.source.id,
+        source_label: pathForm.source.label,
+        target: pathForm.target.id,
+        target_label: pathForm.target.label,
       });
-      setVerseResult(await get(`/verse?${params}`));
-    } catch (error) {
-      setVerseError(error.message);
-    } finally {
-      setLoading("verse", false);
-    }
-  };
-
-  const setTraversalField = (key, value) => {
-    setTraversal((current) => {
-      if (key === "label") {
-        const edge = value === "book" ? "verse_in_book"
-          : value === "region" ? "location_in_region" : "verse_in_version";
-        return { ...current, label: value, edge };
-      }
-      return { ...current, [key]: value };
-    });
-  };
-
-  const setPathField = (key, value) => setPathForm((current) => ({ ...current, [key]: value }));
-  const setVerseField = (key, value) => setVerseForm((current) => ({ ...current, [key]: value }));
-
-  const chooseTraversedNode = useCallback((node) => {
-    if (node.label === "verse") {
-      setVerseForm({
-        book: node.book_code || "",
-        chapter: String(node.chapter || ""),
-        verse: String(node.verse_number || ""),
+      if (requestId === requestsRef.current.path) setPathResult({
+        ...result,
+        path: result.path.map((node) => typeof node === "string"
+          ? [pathForm.source, pathForm.target].find((selected) => selected.id === node) || pathNode(node)
+          : node),
       });
-    } else if (node.label === "location") {
-      setPathForm((current) => ({
-        ...current,
-        source: node.name || "",
-        sourceLabel: "location",
-        target: node.attrs?.region || "",
-        targetLabel: "region",
-      }));
+    } catch (error) {
+      if (requestId === requestsRef.current.path) setPathError(error.message);
+    } finally {
+      if (requestId === requestsRef.current.path) setLoading("path", false);
     }
-  }, []);
+  };
+
+  useEffect(() => {
+    if (mode === "search") runSearch();
+    else {
+      runTraverse();
+      runPath();
+    }
+    return () => {
+      requestsRef.current.search++;
+      requestsRef.current.traverse++;
+      requestsRef.current.path++;
+    };
+  }, [mode]);
+
+  const chooseTraversal = (node) => {
+    requestsRef.current.traverse++;
+    setLoading("traverse", false);
+    setTraverseResult(null);
+    setTraverseError("");
+    const edge = node.label === "book" ? "verse_in_book"
+      : node.label === "region" ? "location_in_region" : "verse_in_version";
+    setTraversal({ node, edge });
+  };
+
+  const choosePath = (key, node) => {
+    requestsRef.current.path++;
+    setLoading("path", false);
+    setPathResult(null);
+    setPathError("");
+    setPathForm((current) => ({ ...current, [key]: node }));
+  };
 
   return (
-    <div className="app-shell">
+    <div className="app-shell min-h-screen">
       <SiteHeader currentPage="/explore" dark={dark} onToggleTheme={() => setDark((value) => !value)} />
 
-      <main>
+      <main className="explore-tools">
         <Notice error={health.status === "offline"}>
           {health.status === "offline" ? "Could not reach the API"
             : health.status === "empty" ? "No Bible data is available." : ""}
         </Notice>
-        <section className="intro">
-          <div>
-            <p className="eyebrow">A Bible graph in DuckDB</p>
-            <h2>Explore the connections<br />between <em>people, places &amp; passages.</em></h2>
-            <p className="intro-copy">
-              Search the graph, trace a path through scripture, compare translations,
-              and see biblical places on the map.
-            </p>
-          </div>
-          <div className="intro-art" aria-hidden="true">
-            <span className="art-line line-one" /><span className="art-line line-two" />
-            <span className="art-line line-three" />
-            <span className="art-node node-one">BOOK</span>
-            <span className="art-node node-two">VERSE</span>
-            <span className="art-node node-three">PLACE</span>
-            <span className="art-node node-four">REGION</span>
-          </div>
-        </section>
-
-        <section className="help-wrap">
-          <button
-            className="help-toggle"
-            type="button"
-            aria-expanded={helpOpen}
-            onClick={() => setHelpOpen((value) => !value)}
-          >
-            <span><span className="help-icon">i</span> How to explore the graph</span>
-            <span>{helpOpen ? "−" : "+"}</span>
-          </button>
-          {helpOpen && (
-            <div className="help-content">
-              <p>The database is a property graph of books, verses, Bible versions, regions, and locations.</p>
-              <div className="help-grid">
-                <p><code>verse_in_book</code><br />Book → its verses</p>
-                <p><code>verse_in_version</code><br />Version → its verses</p>
-                <p><code>location_in_region</code><br />Region → its places</p>
-              </div>
-              <p>Search for a node, then select a result to prefill the relevant tools. The graph explorer displays up to three hops; the map needs a book or region scope.</p>
-            </div>
+        <header className="explore-dashboard-heading">
+          <a className="text-accent text-[12px]" href="/explore">&larr; Explore dashboard</a>
+          {mode === "search" && (
+            <>
+              <h2>Search scripture</h2>
+              <p>Search by name or code, then open an exact node in Relationships.</p>
+            </>
           )}
-        </section>
-
-        <div className="workspace">
+        </header>
+        <div className={`explore-tools-grid ${mode === "search" ? "search-tools" : ""}`}>
           <div className="primary-column">
+            {mode === "search" && (
             <Panel title="Find a connection" eyebrow="01 — Search" className="search-panel">
-              <p className="panel-copy">Look up a book, verse, translation, place or region by name or code.</p>
+              <p className="panel-copy">Look up a book, verse, translation, place, region or biblical figure by name or code.</p>
               <form className="form-row search-form" onSubmit={runSearch}>
                 <Field
                   label="Search the graph"
@@ -359,10 +278,11 @@ function ExplorePage() {
                 </button>
               </form>
               <Notice error={Boolean(searchError)}>{searchError || searchMessage}</Notice>
+              {searchLoading && <Notice>Searching nodes...</Notice>}
               {searchResults.length > 0 && (
                 <ul className="result-list" aria-label="Search results">
                   {searchResults.map((node) => (
-                    <ResultRow key={node.id} node={node} onClick={chooseNode} />
+                    <ResultRow key={node.id} node={node} onSelectFigure={setFigure} />
                   ))}
                 </ul>
               )}
@@ -374,161 +294,102 @@ function ExplorePage() {
                 </div>
               )}
             </Panel>
+            )}
 
-            <Panel title="Walk the graph" eyebrow="02 — Traverse">
-              <p className="panel-copy">Follow a relationship from a starting node to its descendants.</p>
-              <form className="form-row" onSubmit={runTraverse}>
-                <Field
-                  label="Starting node"
-                  value={traversal.node}
-                  onChange={(node) => setTraversalField("node", node)}
-                  placeholder="Starting node — e.g. GEN"
-                />
-                <Select
-                  label="Starting node type"
-                  value={traversal.label}
-                  onChange={(label) => setTraversalField("label", label)}
-                  options={["book", "region", "version"]}
-                />
-                <Select
-                  label="Relationship"
-                  value={traversal.edge}
-                  onChange={(edge) => setTraversalField("edge", edge)}
-                  options={["verse_in_book", "location_in_region", "verse_in_version"]}
+            {mode === "connections" && <>
+            <Panel title="What’s connected?" eyebrow="Explore connections">
+              <p className="panel-copy">Choose a book, region or translation to see its passages or places.</p>
+              <form className="connection-form" onSubmit={runTraverse}>
+                <GraphNodeSearch
+                  label="Start with a book, region or translation"
+                  searchLabel="Find a book, region or translation"
+                  placeholder="Search by name…"
+                  visibleLabel
+                  allowedTypes={traversalTypes}
+                  node={traversal.node}
+                  onSelect={chooseTraversal}
                 />
                 <button className="button button-secondary" disabled={busy.traverse}>
-                  {busy.traverse ? "Walking…" : "Traverse"}
+                  {busy.traverse ? "Finding connections…" : "Show connections"}
                 </button>
               </form>
               <Notice error={Boolean(traverseError)}>{traverseError}</Notice>
+              {busy.traverse && <Notice>Finding connected passages and places...</Notice>}
               {traverseResult && (
                 <>
                   <p className="result-summary">
-                    {traverseResult.count} descendants of “{traverseResult.start}” via {traverseResult.edge}
+                    {traverseResult.count} {traverseResult.edge === "location_in_region" ? "places" : "passages"} in {displayName(traverseResult.start_node)}
                   </p>
-                  <ul className="result-list compact" aria-label="Traversal results">
+                  <ul className="result-list compact" aria-label="Connected passages and places">
                     {traverseResult.nodes.slice(0, 200).map((node) => (
-                      <ResultRow key={`${node.id}-${node.level}`} node={node} onClick={chooseTraversedNode} />
+                      <ResultRow key={`${node.id}-${node.level}`} node={node} friendly />
                     ))}
                     {traverseResult.nodes.length > 200 && (
-                      <li className="more-results">… {traverseResult.nodes.length - 200} more omitted</li>
+                      <li className="more-results">Showing the first 200. {traverseResult.nodes.length - 200} more available.</li>
                     )}
-                    {!traverseResult.nodes.length && <li className="empty-result">No descendants found.</li>}
+                    {!traverseResult.nodes.length && <li className="empty-result">No connections found.</li>}
                   </ul>
                 </>
               )}
             </Panel>
 
-            <Panel title="Find the shortest path" eyebrow="03 — Connect">
-              <p className="panel-copy">Discover how two nodes are connected through the graph, up to ten hops.</p>
-              <form className="form-row path-form" onSubmit={runPath}>
-                <Field
-                  label="Path starting node"
-                  value={pathForm.source}
-                  onChange={(source) => setPathField("source", source)}
-                  placeholder="From — e.g. JOH"
+            <Panel title="How are these connected?" eyebrow="Follow a connection">
+              <p className="panel-copy">Choose two books, passages or places and see the links between them.</p>
+              <form className="connection-form" onSubmit={runPath}>
+                <GraphNodeSearch
+                  label="From"
+                  searchLabel="Find a starting point"
+                  visibleLabel
+                  node={pathForm.source}
+                  onSelect={(node) => choosePath("source", node)}
                 />
-                <Select
-                  label="Starting node type"
-                  value={pathForm.sourceLabel}
-                  onChange={(sourceLabel) => setPathField("sourceLabel", sourceLabel)}
-                  options={["book", "verse", "version", "location"]}
-                />
-                <span className="path-arrow" aria-hidden="true">→</span>
-                <Field
-                  label="Path destination"
-                  value={pathForm.target}
-                  onChange={(target) => setPathField("target", target)}
-                  placeholder="To — e.g. Syria"
-                />
-                <Select
-                  label="Destination node type"
-                  value={pathForm.targetLabel}
-                  onChange={(targetLabel) => setPathField("targetLabel", targetLabel)}
-                  options={["region", "location", "book", "version"]}
+                <GraphNodeSearch
+                  label="To"
+                  searchLabel="Find a destination"
+                  visibleLabel
+                  node={pathForm.target}
+                  onSelect={(node) => choosePath("target", node)}
                 />
                 <button className="button button-secondary" disabled={busy.path}>
-                  {busy.path ? "Connecting…" : "Find path"}
+                  {busy.path ? "Finding a connection…" : "Show connection"}
                 </button>
               </form>
               <Notice error={Boolean(pathError)}>{pathError}</Notice>
+              {busy.path && <Notice>Finding a connection...</Notice>}
               {pathResult && !pathResult.found && (
-                <p className="empty-result">No path found within depth 10.</p>
+                <p className="empty-result">No recorded connection found between these choices.</p>
               )}
               {pathResult?.found && (
+                <>
+                <p className="result-summary">
+                  {pathResult.depth === 0 ? "Both choices refer to the same item." : "Follow the recorded links below. Select any item to explore further."}
+                </p>
                 <ol className="path-list">
                   {pathResult.path.map((node, index) => {
-                    const entry = typeof node === "string" ? { id: node, name: node, label: "node" } : node;
+                    const entry = pathNode(node);
                     return (
                     <li key={entry.id}>
-                      <span className="path-node">
-                        <span className={`badge badge-${entry.label}`}>{entry.label}</span>
+                      <a className="path-node text-ink no-underline" href={relationshipHref(entry)}>
+                        <span className={`badge badge-${entry.label}`}>{nodeTypeName(entry.label)}</span>
                         {displayName(entry)}
-                      </span>
+                      </a>
+                      {entry.label === "verse" && entry.attrs?.text && (
+                        <p className="mt-2 font-display text-[14px] leading-relaxed">{entry.attrs.text}</p>
+                      )}
                       {pathResult.edges[index] && (
-                        <span className="path-edge">↓ {pathResult.edges[index].label}</span>
+                        <span className="path-edge">↓ {pathRelationshipDescription(
+                          pathResult.edges[index].label,
+                          entry.label,
+                        )}</span>
                       )}
                     </li>
                     );
                   })}
                 </ol>
+                </>
               )}
             </Panel>
-          </div>
-
-          <div className="secondary-column">
-            <Panel title="Graph explorer" eyebrow="04 — Visualise" className="graph-panel" id="graph-explorer">
-              <p className="panel-copy">Explore a node’s neighbourhood. Drag to pan, scroll to zoom, select a node to recenter.</p>
-              <GraphExplorer seed={graphSeed} />
-            </Panel>
-
-            <Panel title="Map of places" eyebrow="05 — Locate" className="map-panel" id="map-explorer">
-              <p className="panel-copy">Plot biblical places by region or book. Select a point to read its verse.</p>
-              <MapExplorer seed={mapSeed} />
-            </Panel>
-
-            <Panel title="Compare translations" eyebrow="06 — Compare">
-              <p className="panel-copy">Read one verse side by side in every loaded Bible version.</p>
-              <form className="form-row verse-form" onSubmit={runVerse}>
-                <Field
-                  label="Book code"
-                  value={verseForm.book}
-                  onChange={(book) => setVerseField("book", book)}
-                  placeholder="JOH"
-                />
-                <Field
-                  label="Chapter"
-                  type="number"
-                  min="1"
-                  value={verseForm.chapter}
-                  onChange={(chapter) => setVerseField("chapter", chapter)}
-                  placeholder="Chapter"
-                />
-                <Field
-                  label="Verse"
-                  type="number"
-                  min="1"
-                  value={verseForm.verse}
-                  onChange={(verse) => setVerseField("verse", verse)}
-                  placeholder="Verse"
-                />
-                <button className="button button-secondary" disabled={busy.verse}>
-                  {busy.verse ? "Comparing…" : "Compare"}
-                </button>
-              </form>
-              <Notice error={Boolean(verseError)}>{verseError}</Notice>
-              {verseResult && (
-                <div className="verse-results">
-                  {!verseResult.verses.length && <p className="empty-result">No verse found for this reference.</p>}
-                  {verseResult.verses.map((item) => (
-                    <article className="verse-card" key={item.id}>
-                      <p>{item.version}</p>
-                      <div>{item.text}</div>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </Panel>
+            </>}
           </div>
         </div>
       </main>
@@ -592,9 +453,13 @@ function App() {
   if (route.path === "/map") {
     return <MapPage key={route.key} initialMap={route.initialMap} onMapReady={route.onMapReady} />;
   }
-  if (route.path === "/explore" || window.location.search) return <ExplorePage />;
+  if (route.path === "/explore/search") return <ExploreTools key={`${route.path}-${route.key}`} mode="search" />;
+  if (route.path === "/explore/connections") return <ExploreTools key={`${route.path}-${route.key}`} mode="connections" />;
+  if (route.path === "/explore") return <ExploreDashboard key={route.key} />;
+  if (route.path === "/connect-mcp") return <McpPage key={route.key} />;
+  if (route.path === "/about") return <AboutPage key={route.key} />;
   if (route.path === "/") return <LandingPage />;
-  return <ExplorePage />;
+  return <ExploreDashboard key={route.key} />;
 }
 
 export default App;

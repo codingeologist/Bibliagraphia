@@ -86,6 +86,93 @@ def test_search_filters_suggestions_by_text_and_type(reader_db):
     assert api.search(q="unmatched", label="book", limit=3)["results"] == []
 
 
+@pytest.mark.parametrize("label", ["region", None])
+def test_suggestions_prioritise_exact_names_before_partial_matches(reader_db, label):
+    conn = duckdb.connect(str(reader_db))
+    conn.executemany(
+        "INSERT INTO nodes VALUES (?, 'region', ?, NULL, NULL, NULL, NULL, '{}')",
+        [(f"region:{name}", name) for name in ["Assyria", "Coelesyria", "Syria"]],
+    )
+    conn.close()
+    result = api.search(q="Syria", label=label, limit=3)
+    assert result["results"][0]["id"] == "region:Syria"
+
+
+@pytest.mark.parametrize("label", ["figure", None])
+def test_figure_search_preserves_exact_ranking_aliases_and_details(reader_db, label):
+    conn = duckdb.connect(str(reader_db))
+    attrs = {
+        "testament": "New Testament", "category": "Apostle",
+        "description": "A disciple of Jesus.", "keywords": ["Cephas", "Jerusalem"],
+    }
+    conn.executemany(
+        "INSERT INTO nodes VALUES (?, ?, ?, NULL, NULL, NULL, NULL, ?)",
+        [
+            ("figure:Peter", "figure", "Peter", json.dumps(attrs)),
+            ("figure:Peter's companion", "figure", "Peter's companion", json.dumps({})),
+            ("region:Jerusalem", "region", "Jerusalem", json.dumps({})),
+        ],
+    )
+    assert api._resolve(conn, "figure", "Cephas") == "figure:Peter"
+    assert api._resolve(conn, "figure", "figure:Peter") == "figure:Peter"
+    conn.close()
+
+    results = api.search(q="Peter", label=label, limit=3)["results"]
+    assert results[0]["id"] == "figure:Peter"
+    assert results[0]["description"] == attrs["description"]
+    assert results[0]["testament"] == attrs["testament"]
+    assert api.search(q="Cephas", label=label, limit=3)["results"][0]["id"] == "figure:Peter"
+    if label is None:
+        results = api.search(q="Jerusalem", label=None, limit=3)["results"]
+        assert [node["id"] for node in results] == ["region:Jerusalem", "figure:Peter"]
+
+
+def test_connection_resolution_preserves_exact_passage_and_place(reader_db):
+    source = "verse:KJV:GEN:1:1"
+    target = "location:Eden:GEN:1:1:1"
+    result = api.path(api.PathRequest(
+        source=source, source_label="verse", target=target, target_label="location",
+    ))
+    assert result["found"] is True
+    assert [node["id"] for node in result["path"]] == [source, target]
+
+    reverse = api.path(api.PathRequest(
+        source=target, source_label="location", target=source, target_label="verse",
+    ))
+    assert [node["id"] for node in reverse["path"]] == [target, source]
+
+
+def test_connection_ids_are_checked_against_type_and_do_not_fall_back(reader_db):
+    conn = duckdb.connect(str(reader_db), read_only=True)
+    try:
+        assert api._resolve(conn, "verse", "verse:DRB:GEN:1:2") == "verse:DRB:GEN:1:2"
+        assert api._resolve(conn, "verse", "verse:KJV:GEN:99:99") is None
+        assert api._resolve(conn, "book", "verse:KJV:GEN:1:1") is None
+        assert api._resolve(conn, "book", "GEN") == "book:GEN"
+        assert api._resolve(conn, "book", "Genesis") == "book:GEN"
+    finally:
+        conn.close()
+
+
+def test_connected_places_accept_exact_region_id(reader_db):
+    result = api.traverse(api.TraversalRequest(
+        start_node="region:Canaan", label="region", edge="location_in_region",
+    ))
+    assert result["start_id"] == "region:Canaan"
+    assert [node["id"] for node in result["nodes"]] == ["location:Eden:GEN:1:1:1"]
+
+
+def test_connection_to_same_exact_item_retains_zero_hop_contract(reader_db):
+    node_id = "verse:DRB:GEN:1:2"
+    result = api.path(api.PathRequest(
+        source=node_id, source_label="verse", target=node_id, target_label="verse",
+    ))
+    assert result["found"] is True
+    assert result["depth"] == 0
+    assert result["path"] == [node_id]
+    assert result["edges"] == []
+
+
 def test_reader_catalog_lists_available_versions_and_chapters(reader_db):
     result = api.reader_catalog("KJV")
 

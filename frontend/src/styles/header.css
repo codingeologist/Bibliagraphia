@@ -1,0 +1,93 @@
+/* Header component utility recipes. */
+@layer components {
+  .topbar {
+    @apply h-[76px] [padding:0_max(5vw,_calc((100vw_-_1320px)_/_2))] flex items-center justify-between bg-panel [border-bottom:1px_solid_var(--line)];
+  }
+
+  .brand, .header-actions, .theme-toggle {
+    @apply flex items-center;
+  }
+
+  .brand {
+    @apply gap-[12px] text-inherit no-underline;
+  }
+
+  .brand:focus-visible {
+    @apply [outline:2px_solid_var(--accent)] [outline-offset:4px] rounded-[4px];
+  }
+
+  .brand-mark {
+    @apply w-[37px] h-[37px] block [border:1px_solid_#b89b7b] rounded-[50%] object-contain p-[3px];
+  }
+
+  .brand h1 {
+    @apply m-0 [font:600_18px_"Playfair_Display",_Georgia,_serif] tracking-[-.2px];
+  }
+
+  .brand p {
+    @apply [margin:1px_0_0] text-muted text-[11px] tracking-[.03em];
+  }
+
+  .header-actions {
+    @apply gap-[22px] min-w-0;
+  }
+
+  .site-nav {
+    @apply flex items-center gap-[14px] min-w-0 overflow-x-auto;
+  }
+
+  .site-nav a {
+    @apply inline-flex items-center gap-[5px] shrink-0 whitespace-nowrap text-muted no-underline text-[12px] py-1;
+  }
+
+  .site-nav svg, .menu-toggle {
+    @apply shrink-0;
+  }
+
+  .site-nav a:hover, .site-nav a[aria-current="page"] {
+    @apply text-accent;
+  }
+
+  .menu-toggle {
+    @apply grid place-items-center w-[40px] h-[40px] [border:1px_solid_var(--line)] rounded-[6px] bg-panel text-ink;
+  }
+
+  .site-menu-panel {
+    @apply absolute [inset-inline-end:0] [top:calc(100%_+_8px)] z-[1100] w-[200px] [max-width:calc(100vw_-_36px)] p-[8px] [border:1px_solid_var(--line)] rounded-[6px] bg-panel [box-shadow:0_5px_18px_rgb(0_0_0_/_12%)];
+  }
+
+  .site-menu-panel .theme-toggle {
+    @apply w-full min-h-[40px] text-start;
+  }
+
+  .theme-toggle {
+    @apply gap-[7px] [padding:7px_10px] [border:1px_solid_var(--line)] rounded-[6px] bg-panel text-ink text-[12px];
+  }
+
+  @media (max-width: 620px) {
+    .header-actions {
+      @apply min-w-0 gap-[11px];
+    }
+    .site-nav {
+      @apply [max-width:calc(100vw_-_125px)] overflow-x-auto whitespace-nowrap gap-[9px];
+    }
+    .topbar {
+      @apply h-[66px] [padding:0_18px];
+    }
+    .brand-mark {
+      @apply w-[33px] h-[33px];
+    }
+    .brand h1 {
+      @apply text-[16px];
+    }
+    .site-nav a {
+      @apply text-[10px];
+    }
+  }
+
+  @media (max-width: 440px) {
+    .brand > div {
+      @apply hidden;
+    }
+  }
+}

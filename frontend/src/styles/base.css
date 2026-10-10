@@ -1,0 +1,43 @@
+/* Document defaults shared by every route. */
+@layer base {
+  :root {
+    @apply font-sans text-ink bg-canvas;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    font-optical-sizing: auto;
+  }
+
+  :root.dark {
+    color-scheme: dark;
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  body {
+    @apply m-0 min-w-[340px] bg-canvas text-ink;
+  }
+
+  button, input, select {
+    @apply [font:inherit];
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  button:focus-visible, input:focus-visible, select:focus-visible {
+    @apply [outline:3px_solid_color-mix(in_srgb,_var(--accent)_35%,_transparent)] [outline-offset:2px];
+  }
+
+  main {
+    @apply max-w-[1320px] m-auto [padding:0_5vw_70px];
+  }
+
+  @media (max-width: 620px) {
+    main {
+      @apply [padding:0_15px_45px];
+    }
+  }
+}

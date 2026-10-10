@@ -44,7 +44,7 @@ function PlaceGraphPreview({ location }) {
   ] : [];
 
   return (
-    <section className="place-graph-section">
+    <section className="place-graph-section mb-5">
       <div className="place-graph-heading">
         <h4>Graph relationships</h4>
         <a href={href} aria-label={`Expand relationships for ${name}`} title="Open full relationships graph">
@@ -81,7 +81,7 @@ function PlaceGraphPreview({ location }) {
           </svg>
           {!neighbours.length && <p className="empty-result">No connected nodes found.</p>}
           {(neighbours.length > shown.length || graph.truncated) && (
-            <p className="place-graph-caption">Showing {shown.length} connections. Expand to explore more.</p>
+            <p className="place-graph-caption mt-[7px] mb-0 text-[11px] text-muted">Showing {shown.length} connections. Expand to explore more.</p>
           )}
         </>
       )}

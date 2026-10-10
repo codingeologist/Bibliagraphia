@@ -25,7 +25,7 @@ The original TypeDB loader (`bible_loader.py`) and schema
 ## What and Why?
 
 The Bible exists in many translations, and most tools treat it as a flat book: search by keyword, look up by reference.
-Bibliagraphia instead stores open-licensed translations (KJV, Latin Vulgate, Douay–Rheims, Lexham English Bible, Statistical Restoration Greek New Testament and hopefully more...) in a single queryable graph: 
+Bibliagraphia instead stores open-licensed translations (KJV, Latin Vulgate, Douay–Rheims, Lexham English Bible, Statistical Restoration Greek New Testament and hopefully more...) in a single queryable graph:
 - verses connect to their books and versions
 - every place mentioned connects to a geocoded location and its region.
 The result is a non-linear way to explore the scriptures: walk the graph around a verse, compare one verse side by side across translations,
@@ -166,8 +166,61 @@ npm run dev
 
 The frontend uses Vite, React, and Tailwind CSS. Tailwind utility classes can be
 used directly in the JSX components under `frontend/src/`.
+
+#### Styling structure
+
+[`frontend/src/styles.css`](frontend/src/styles.css) is the import entry point,
+not a component stylesheet. Styles are organised under
+[`frontend/src/styles/`](frontend/src/styles/):
+
+- `tokens.css` maps light/dark theme variables to Tailwind colours and fonts.
+  The underlying CSS variables remain available to the graph canvas and Leaflet.
+- `base.css` contains document defaults and keyboard focus styling.
+- `shared.css` contains reusable panel, form, button and result-row recipes.
+- `landing.css`, `header.css`, `explore.css`, `graph.css`, `reader.css` and
+  `map.css` own their respective feature styles. `widgets.css` owns the Explore
+  dashboard and dedicated discovery-tool layouts.
+- `leaflet.css` contains third-party map and popup overrides. These intentionally
+  stay outside cascade layers so they can override Leaflet's unlayered stylesheet.
+  Leaflet's core stylesheet is imported centrally by `styles.css` before these
+  overrides, so standalone and reader maps never depend on another widget loading.
+- `motion.css` contains animations and reduced-motion rules.
+
+Prefer Tailwind utilities directly in JSX for simple elements. Use `@apply`
+recipes in the relevant feature's `@layer components` for shared selectors,
+responsive layouts and complex component states. Use theme utilities such as
+`bg-panel`, `text-ink`, `text-muted` and `border-line` rather than duplicating
+theme values. Keep semantic class hooks used by JavaScript and tests.
+
+Utilities in one `@apply` may be reordered by Tailwind. Keep overlapping
+shorthand and longhand declarations in separate `@apply` statements when their
+order matters (for example `font` followed by `font-size`).
 The header logo links to the home page. Open the settings menu (three-line
 icon) to switch between light and dark mode; the choice is saved across pages.
+Main navigation is ordered **Home, Read, Map, Relationships, Explore, MCP, About**, with
+decorative icons alongside each label. It scrolls horizontally on small screens.
+Open `/about` for the team (Ally, Jonah, Elle, Sidd and Jonathon), playful
+team icons, canonical data sources and project/map/software acknowledgements.
+Dataset counts are explicitly labelled as the README baseline, not live totals.
+
+Open `/explore` for a fixed dashboard of live preview widgets. Book suggestions,
+Genesis 1:1 translations, a Genesis relationship graph, mapped place mentions
+and a Genesis-to-Syria path load automatically. Each widget links to its full
+tool and displays loading, empty and error states; failed previews can be retried.
+`/explore/search` opens the search tool with Genesis results already loaded.
+Search includes biblical figures with an **About** button for their details
+and an exact-item link to Relationships.
+`/explore/connections` asks "What's connected?" and "How are these connected?",
+initially showing Genesis passages and its connection to Syria. Searchable
+pickers offer three suggestions per type and use exact IDs, so selecting a
+passage or place mention preserves its identity. The first tool accepts books,
+regions and translations; the second connects any two items. Results explain
+recorded links in plain English, respecting their direction, and open exact
+items in Relationships. Changing a choice clears outdated results.
+The `/traverse` and `/path` APIs accept exact IDs as well as names and codes.
+Read/compare, graph and map widgets open `/read`, `/relationships` and `/map`.
+Place preview links use `/map?place=...` to select a matching place or alias.
+
 Open `/relationships` for a full-viewport relationship graph. It starts at
 Genesis by default. The centre selector and depth control sit together at the
 graph's top left. Click the selector to search across books, passages,
@@ -189,7 +242,11 @@ the selected centre's branch while retaining the total 200-node budget.
 Select another node to explore its branch. Hidden counts are distinct neighbours
 not loaded in this graph, not a total count of all paths or passages.
 Verse translations and repeated place mentions remain separate exact-ID nodes.
-The embedded Explore graph retains its original expansion behaviour.
+The node-type key at the bottom right includes checkboxes to hide or show each
+type and its incident edges. Filtering only affects the view: loaded data,
+layout positions and sidebar connections remain intact, and hidden nodes cannot
+be clicked on the canvas. **Fit graph** fits visible nodes. Selecting a new
+centre reveals its type if hidden. The key reports visible versus loaded nodes.
 
 Choose a centre and depth to explore another neighbourhood. Selecting a node
 redraws immediately; depth changes redraw after a short pause. No Draw graph
@@ -218,8 +275,12 @@ Map markers are circles across the map, explorer and reader previews.
 Open `/read` in the Vite app to read a Bible book. Choose a book, chapter,
 translation, or jump directly to a verse; previous/next controls move between
 chapters.
-Use **+ Add translation** beside the reader title to compare translations
-side by side. Shared book, chapter and verse controls keep columns in sync;
+Book, chapter, verse and translation controls sit between Previous and Next
+in one navigation bar, with grouped rows on mobile. Use the **+** button
+(Compare translations) beside the translation selector
+to compare versions side by side. In comparison mode, each column has its own
+translation selector; selecting an already displayed version swaps columns
+without duplicates. Shared book, chapter and verse controls keep columns in sync;
 verses align by number (numbering can differ between translations). Unavailable
 text is labelled rather than replaced with another passage. Remove columns
 with their **×** buttons; comparison selections are preserved in the reader URL.
@@ -340,20 +401,29 @@ implementation, two interfaces:
 
 ### Connect an MCP client
 
-Claude Desktop / Claude Code (`claude_desktop_config.json` or
-`.mcp.json`):
+Open **MCP** in the navigation (`/connect-mcp`) for connection URLs, copyable
+VS Code and Claude Code configurations, troubleshooting and example prompts.
+The guide shows the local Docker API on port 8000 only, using the current
+loopback hostname locally or `localhost` when viewed on a hosted site.
+`/mcp` remains the protocol endpoint on the API, not a frontend page.
+
+Claude Code (`.mcp.json`):
 
 ```json
 {
   "mcpServers": {
     "bibliagraphia": {
+      "type": "http",
       "url": "https://api.bibliographia.com/mcp"
     }
   }
 }
 ```
 
-Cursor, or any streamable-HTTP client, uses the same URL. Locally:
+VS Code uses `.vscode/mcp.json` with a top-level `servers` object instead of
+`mcpServers`; each server has `"type": "http"` and the same URL. Other clients
+should follow their own remote-server configuration instructions.
+Any streamable-HTTP client uses the same URL. Locally:
 `http://localhost:8000/mcp`.
 
 ### Scripted client (no handshake juggling)
@@ -432,9 +502,8 @@ Bibliagraphia/
 │   └── bible.db                               # generated — do not edit
 ├── scripts/
 │   ├── build_db.py                            # JSON -> data/bible.db (idempotent, bulk-loaded)
-│   └── stepbible.py                           # STEP Bible TIPNR/TVTMS: figure refs + verse numbering
+│   ├── stepbible.py                           # STEP Bible TIPNR/TVTMS: figure refs + verse numbering
 │   └── mcp_client.py                          # MCP client — handshake handled for you (see “MCP server”)
-│   └── stepbible.py                           # STEP Bible TIPNR/TVTMS: figure refs + verse numbering 
 ├── sql/
 │   ├── init_duckdb.sql                        # schema (reference)
 │   ├── load_data.sql                          # load steps (reference)
