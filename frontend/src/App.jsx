@@ -380,6 +380,8 @@ function ExploreTools({ mode }) {
                         <span className="path-edge">↓ {pathRelationshipDescription(
                           pathResult.edges[index].label,
                           entry.label,
+                          pathResult.edges[index],
+                          entry.id,
                         )}</span>
                       )}
                     </li>

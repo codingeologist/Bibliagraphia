@@ -134,6 +134,55 @@ def tipnr_refs(path: Path) -> dict[str, list[tuple[str, int, int]]]:
     return people
 
 
+def tipnr_family(path: Path) -> dict[str, dict]:
+    """TIPNR person id -> family links (genealogy columns of the record).
+
+    Each person record's header line carries structured family columns:
+    Parents ("Father + Mother"), Siblings, Partners, Offspring, each
+    referencing relatives by their TIPNR UniqueNames. Returns
+    {person id: {"sex": "Male"/"Female"/None,
+                "father": [ids], "mother": [ids],
+                "siblings": [ids], "partners": [ids],
+                "offspring": [ids]}}.
+    Uncertainty markers ("(?)") and Strong-number suffixes are
+    stripped from the ids so they match the person ids tipnr_refs()
+    and figures.json `tipnr` use.
+    """
+    def ids(cell: str) -> list[str]:
+        out = []
+        for token in cell.split(","):
+            token = token.strip()
+            if "@" not in token:
+                continue
+            uid = re.sub(r"\(\?\)", "", token.split("=")[0]).strip()
+            if uid and uid not in out:
+                out.append(uid)
+        return out
+
+    fam: dict[str, dict] = {}
+    in_people = False
+    for raw in path.open(encoding="utf-8-sig"):
+        line = raw.rstrip("\r\n")
+        if line.startswith("$=========="):
+            in_people = "PERSON" in line and "PLACE" not in line
+            continue
+        if not in_people:
+            continue
+        cols = line.split("\t")
+        if "@" in cols[0] and "=" in cols[0] and not line.startswith(("–", "@")):
+            parents = cols[2].split(" + ") if len(cols) > 2 else []
+            sex = cols[8].strip() if len(cols) > 8 and cols[8].strip() in ("Male", "Female") else None
+            fam[cols[0].split("=")[0].strip()] = {
+                "sex": sex,
+                "father": ids(parents[0]) if parents else [],
+                "mother": ids(parents[1]) if len(parents) > 1 else [],
+                "siblings": ids(cols[3]) if len(cols) > 3 else [],
+                "partners": ids(cols[4]) if len(cols) > 4 else [],
+                "offspring": ids(cols[5]) if len(cols) > 5 else [],
+            }
+    return fam
+
+
 # --------------------------------------------------------------------------- #
 # TVTMS
 # --------------------------------------------------------------------------- #

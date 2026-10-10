@@ -14,7 +14,9 @@ The JSON files are loaded straight into DuckDB temp tables with
 read_json_auto (no Python row-by-row), then the graph is built with
 INSERT ... SELECT. The whole build is a few seconds for ~150k nodes.
 
-Figure -> verse edges come from STEP Bible's TIPNR + TVTMS data (CC BY 4.0),
+Figure -> verse edges and figure -> figure kinship edges
+(figure_relative_of, from TIPNR's genealogy columns) come from STEP Bible's
+TIPNR + TVTMS data (CC BY 4.0),
 which is downloaded and cached on first build - see scripts/stepbible.py.
 If it can't be downloaded the build still succeeds, without those edges.
 
@@ -74,7 +76,7 @@ def main() -> None:
             from_id   VARCHAR NOT NULL,
             to_id     VARCHAR NOT NULL,
             label     VARCHAR NOT NULL,
-            weight    INTEGER,   -- figure_with_figure: distinct shared verses
+            attrs     JSON,   -- figure_relative_of: {"relationship": ...}
             PRIMARY KEY (from_id, to_id, label)
         );
         """
@@ -229,7 +231,7 @@ def main() -> None:
         """
     )
     _figure_edges(conn)
-    _figure_pair_edges(conn)
+    _figure_relative_edges(conn)
 
     # ---- Indexes (after data — faster to build) -------------------------
     conn.execute("CREATE INDEX idx_nodes_label      ON nodes(label);")
@@ -303,28 +305,61 @@ def _figure_edges(conn) -> None:
     )
 
 
-def _figure_pair_edges(conn) -> None:
-    """figure --figure_with_figure--> figure, for every pair of figures
-    that appear in the same verse (co-occurrence).
+def _figure_relative_edges(conn) -> None:
+    """figure --figure_relative_of--> figure, from TIPNR genealogy columns.
 
-    Derived from figure_in_verse edges; each pair is stored once with the
-    canonical ordering from_id < to_id. `weight` is the number of distinct
-    verses (deduplicated across versions) in which both figures appear.
-    Join on the verse end (from_id) of figure_in_verse, never the figure
-    end — joining on the figure end explodes into tens of millions of
-    pairs and OOMs the build.
+    Direction keeps family trees traversable from ancestors:
+      father/mother/parent edges run parent -> child,
+      sibling/partner edges are stored once per pair in canonical id order.
+    `attrs` carries the relationship kind. Relatives that are not
+    themselves figures (most of TIPNR's ~3k people) are skipped — both
+    ends of every edge exist in `nodes`.
     """
+    step = stepbible.fetch(STEP_DIR)
+    if step is None:
+        return
+    family = stepbible.tipnr_family(step["tipnr"])
+
+    by_uid = conn.execute(
+        "SELECT name, tipnr FROM t_figures WHERE tipnr IS NOT NULL"
+    ).fetchall()
+    uid2name = {tipnr: name for name, tipnr in by_uid}
+
+    triples = []  # (from_id, to_id, relationship)
+    for name, tipnr in by_uid:
+        rels = family.get(tipnr)
+        if rels is None:
+            continue
+        # Parents (from this figure's own record): parent -> child.
+        for kind, uids in (("father", rels["father"]), ("mother", rels["mother"])):
+            for uid in uids:
+                if uid in uid2name:
+                    triples.append((f"figure:{uid2name[uid]}", f"figure:{name}", kind))
+        # Siblings and partners: symmetric, one canonical row per pair.
+        for kind, uids in (("sibling", rels["siblings"]), ("partner", rels["partners"])):
+            for uid in uids:
+                if uid in uid2name and uid != tipnr:
+                    a, b = sorted((f"figure:{name}", f"figure:{uid2name[uid]}"))
+                    triples.append((a, b, kind))
+        # Offspring: this figure -> child, kind from this figure's own sex.
+        own = {"Male": "father", "Female": "mother"}.get(rels["sex"], "parent")
+        for uid in rels["offspring"]:
+            if uid in uid2name:
+                triples.append((f"figure:{name}", f"figure:{uid2name[uid]}", own))
+
+    if not triples:
+        return
     conn.execute(
         """
-        INSERT INTO edges (from_id, to_id, label, weight)
-        SELECT e1.to_id, e2.to_id, 'figure_with_figure',
-               COUNT(DISTINCT regexp_replace(e1.from_id, '^verse:[A-Z]+:', ''))
-        FROM edges e1
-        JOIN edges e2
-          ON e1.from_id = e2.from_id AND e1.to_id < e2.to_id
-        WHERE e1.label = 'figure_in_verse' AND e2.label = 'figure_in_verse'
-        GROUP BY 1, 2;
-        """
+        INSERT OR IGNORE INTO edges (from_id, to_id, label, attrs)
+        SELECT r.from_id, r.to_id, 'figure_relative_of',
+               to_json({'relationship': r.kind})
+        FROM (SELECT unnest(?) AS from_id, unnest(?) AS to_id,
+                     unnest(?) AS kind) r
+        JOIN nodes n ON n.id = r.from_id AND n.label = 'figure'
+        JOIN nodes m ON m.id = r.to_id AND m.label = 'figure';
+        """,
+        [[t[0] for t in triples], [t[1] for t in triples], [t[2] for t in triples]],
     )
 
 

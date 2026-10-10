@@ -54,3 +54,40 @@ test("connection explanations respect both directions of a walk", () => {
     assert.equal(relationshipDescription(label, false), reverse);
   }
 });
+
+test("kinship edges describe the relationship kind", () => {
+  assert.equal(relationshipDescription("figure_relative_of", true, { relationship: "father" }), "Father of");
+  assert.equal(relationshipDescription("figure_relative_of", false, { relationship: "father" }), "Child of");
+  assert.equal(relationshipDescription("figure_relative_of", true, { relationship: "mother" }), "Mother of");
+  assert.equal(relationshipDescription("figure_relative_of", true, { relationship: "partner" }), "Partner of");
+  assert.equal(relationshipDescription("figure_relative_of", false, { relationship: "sibling" }), "Sibling of");
+  assert.equal(relationshipDescription("figure_relative_of", true), "Relative of");
+  assert.equal(relationshipDescription("figure_relative_of", true, { relationship: "uncle" }), "Relative of");
+});
+
+test("kinship path edges read the kind off the stored edge", () => {
+  const edge = {
+    source: "figure:David", target: "figure:Solomon",
+    label: "figure_relative_of", attrs: { relationship: "father" },
+  };
+  assert.equal(
+    pathRelationshipDescription("figure_relative_of", "figure", edge, "figure:David"),
+    "Father of",
+  );
+  assert.equal(
+    pathRelationshipDescription("figure_relative_of", "figure", edge, "figure:Solomon"),
+    "Child of",
+  );
+  const siblings = {
+    source: "figure:Aaron", target: "figure:Moses",
+    label: "figure_relative_of", attrs: { relationship: "sibling" },
+  };
+  assert.equal(
+    pathRelationshipDescription("figure_relative_of", "figure", siblings, "figure:Aaron"),
+    "Sibling of",
+  );
+  assert.equal(
+    pathRelationshipDescription("figure_relative_of", "figure", siblings, "figure:Moses"),
+    "Sibling of",
+  );
+});

@@ -77,7 +77,7 @@ def init_db() -> None:
                 from_id   VARCHAR NOT NULL,
                 to_id     VARCHAR NOT NULL,
                 label     VARCHAR NOT NULL,
-                weight    INTEGER,   -- figure_with_figure: distinct shared verses
+                attrs     JSON,   -- figure_relative_of: {"relationship": ...}
                 PRIMARY KEY (from_id, to_id, label)
             );
             """
@@ -132,6 +132,22 @@ def _row_to_node(row, columns) -> dict:
         except (ValueError, TypeError):
             pass
     return n
+
+
+def _parse_attrs(value) -> Optional[dict]:
+    """Render a JSON-typed edge attrs value as a dict for JSON responses.
+
+    Only figure_relative_of (kinship) edges carry attrs —
+    {"relationship": "father" | "mother" | "parent" | "sibling" | "partner"}
+    — every other edge label returns None.
+    """
+    if value is None or isinstance(value, dict):
+        return value
+    try:
+        parsed = json.loads(value)
+    except (ValueError, TypeError):
+        return None
+    return parsed if isinstance(parsed, dict) else None
 
 
 def _resolve(conn, label: str, name: str) -> Optional[str]:
@@ -323,10 +339,11 @@ def traverse(request: TraversalRequest):
         ids = {n["id"] for n in nodes}
         edges = (
             [
-                {"source": from_id, "target": to_id, "label": request.edge}
-                for (from_id, to_id) in conn.execute(
+                {"source": from_id, "target": to_id, "label": request.edge,
+                 "attrs": _parse_attrs(attrs)}
+                for (from_id, to_id, attrs) in conn.execute(
                     """
-                    SELECT e.from_id, e.to_id FROM edges e
+                    SELECT e.from_id, e.to_id, e.attrs FROM edges e
                     WHERE e.label = ?
                       AND e.to_id IN (SELECT unnest(?))
                       AND e.from_id IN (SELECT unnest(?))
@@ -382,15 +399,17 @@ def path(req: PathRequest):
                     "target": req.target, "path": [src_id], "edges": []}
 
         # Load adjacency (both directions) once. ~360k edges -> ~tens of MB, fine.
-        rows = conn.execute("SELECT from_id, to_id, label FROM edges").fetchall()
-        adj: dict[str, list[tuple[str, str]]] = {}
-        for f, t, lbl in rows:
-            adj.setdefault(f, []).append((t, lbl))
-            adj.setdefault(t, []).append((f, lbl))
+        rows = conn.execute(
+            "SELECT from_id, to_id, label, attrs FROM edges"
+        ).fetchall()
+        adj: dict[str, list[tuple[str, str, object]]] = {}
+        for f, t, lbl, eattrs in rows:
+            adj.setdefault(f, []).append((t, lbl, eattrs))
+            adj.setdefault(t, []).append((f, lbl, eattrs))
 
         # Plain BFS.
         from collections import deque
-        prev: dict[str, tuple[str, str]] = {src_id: (None, None)}
+        prev: dict[str, tuple[str, str, object]] = {src_id: (None, None, None)}
         q = deque([src_id])
         found = False
         while q:
@@ -398,26 +417,29 @@ def path(req: PathRequest):
             if cur == tgt_id:
                 found = True
                 break
-            for nbr, lbl in adj.get(cur, []):
+            for nbr, lbl, eattrs in adj.get(cur, []):
                 if nbr not in prev:
-                    prev[nbr] = (cur, lbl)
+                    prev[nbr] = (cur, lbl, eattrs)
                     q.append(nbr)
         if not found:
             return {"source": req.source, "target": req.target,
                     "path": [], "edges": [], "found": False}
 
-        # Reconstruct.
+        # Reconstruct. Edges keep their stored attrs, so kinship kinds
+        # (father/mother/sibling/...) read correctly whichever way the
+        # walk ran against the stored direction.
         path_ids = []
-        path_labels = []
+        path_edges = []
         cur = tgt_id
         while cur is not None:
             path_ids.append(cur)
-            p, l = prev[cur]
+            p, l, a = prev[cur]
             if l is not None:
-                path_labels.append(l)
+                path_edges.append({"source": p, "target": cur, "label": l,
+                                    "attrs": _parse_attrs(a)})
             cur = p
         path_ids.reverse()
-        path_labels.reverse()
+        path_edges.reverse()
 
         node_rows = conn.execute(
             "SELECT id,label,name,version_code,book_code,chapter,verse_number,attrs "
@@ -432,8 +454,7 @@ def path(req: PathRequest):
             "source_id": src_id, "target_id": tgt_id,
             "found": True, "depth": len(path_ids) - 1,
             "path": nodes,
-            "edges": [{"source": path_ids[i], "target": path_ids[i + 1],
-                       "label": path_labels[i]} for i in range(len(path_labels))],
+            "edges": path_edges,
         }
     except Exception as exc:  # noqa: BLE001
         return {"error": str(exc)}
@@ -460,6 +481,8 @@ def graph(
     cuts the outermost ring first. Balanced mode prioritises passages and
     limits each branch by neighbour type; branch_expansion widens only the
     centre's branch. Omitted neighbours are counted separately from the cap.
+    Edges carry their attrs: figure_relative_of (kinship) edges name their
+    kind (father/mother/parent/sibling/partner) so the UI can label them.
     """
     from collections import deque
 
@@ -477,9 +500,11 @@ def graph(
             return {"error": f"No {label} named '{node}'. Try Search, or a "
                             "book/version code like JOH or KJV."}
 
-        rows = conn.execute("SELECT from_id, to_id, label FROM edges").fetchall()
+        rows = conn.execute(
+            "SELECT from_id, to_id, label, attrs FROM edges"
+        ).fetchall()
         adj: dict[str, list[tuple[str, str]]] = {}
-        for f, t, lbl in rows:
+        for f, t, lbl, _eattrs in rows:
             adj.setdefault(f, []).append((t, lbl))
             adj.setdefault(t, []).append((f, lbl))
 
@@ -551,10 +576,12 @@ def graph(
                 if hidden:
                     hidden_connections[cur] = hidden
 
-        # Edges among the included nodes only.
+        # Edges among the included nodes only. Kinship edges
+        # (figure_relative_of) carry their kind in attrs so the UI can
+        # label them ("Father of", "Sibling of", ...).
         links = [
-            {"source": f, "target": t, "label": lbl}
-            for f, t, lbl in rows
+            {"source": f, "target": t, "label": lbl, "attrs": _parse_attrs(eattrs)}
+            for f, t, lbl, eattrs in rows
             if f in included and t in included
         ]
 
