@@ -1,0 +1,325 @@
+/* Landing component utility recipes. */
+@layer components {
+  .landing-page {
+    @apply relative grid min-h-[100vh];
+    @apply min-h-[100dvh] place-items-center overflow-hidden [padding:48px_24px] [background:radial-gradient(ellipse_at_50%_40%,_color-mix(in_srgb,_var(--panel)_82%,_transparent),_transparent_60%),_var(--bg)];
+    min-height: calc(100vh - 76px);
+    min-height: calc(100dvh - 76px);
+  }
+
+  .landing-ambience {
+    @apply absolute inset-0 z-0 overflow-hidden pointer-events-none;
+    color: #aaa296;
+  }
+
+  :root.dark .landing-ambience {
+    color: #817b70;
+  }
+
+  .landing-ambience-artwork {
+    @apply absolute [inset:-46%_-8%_auto] w-[116%] h-[124%] overflow-visible opacity-0;
+    transition: opacity 800ms ease;
+  }
+
+  .ambience-reading { transform: translate(3%, 12%); }
+  .ambience-mapping { transform: translate(2%, 8%) scale(1.02); }
+  .ambience-exploring { transform: translateY(2%); }
+  .ambience-telescope { transform: translate(0, 1%); }
+
+  .ambience-scripture text {
+    fill: currentColor;
+    stroke: none;
+    font-family: Georgia, serif;
+  }
+
+  .ambience-scripture-reference {
+    font: 600 11px "DM Sans", sans-serif !important;
+    letter-spacing: 1.2px;
+    opacity: .7;
+  }
+
+  .ambience-scripture-line { font-size: 24px; opacity: .64; }
+  .ambience-scripture-highlight { opacity: .95; }
+  .ambience-scripture .ambience-verse-number { font-size: 18px; font-weight: 700; opacity: .78; }
+  .ambience-scripture .ambience-verse-highlight { fill: color-mix(in srgb, #795a36 86%, currentColor); }
+
+  .ambience-map path, .ambience-graph path, .ambience-telescope-art path,
+  .ambience-telescope-orbit {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    opacity: .55;
+  }
+
+  .ambience-telescope-art { opacity: .62; }
+  .ambience-telescope-art .ambience-telescope-body {
+    fill: color-mix(in srgb, currentColor 4%, var(--bg));
+    stroke-width: 2;
+    stroke-linejoin: round;
+  }
+  .ambience-telescope-art .ambience-telescope-detail { stroke-width: 1.6; }
+  .ambience-telescope-art .ambience-telescope-orbit { stroke-width: 1; stroke-dasharray: 2 9; opacity: .3; }
+  .ambience-telescope-art .ambience-telescope-star { fill: none; stroke: currentColor; stroke-width: 1.2; opacity: .48; }
+  .ambience-telescope-art .ambience-telescope-joint { fill: var(--bg); stroke: currentColor; stroke-width: 1.6; }
+  .ambience-map .ambience-world-grid { opacity: .18; }
+  .ambience-map .ambience-world-land path {
+    fill: color-mix(in srgb, currentColor 3%, var(--bg));
+    stroke: currentColor;
+    stroke-width: 1.15;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    opacity: .72;
+  }
+  .ambience-map .ambience-route {
+    stroke-width: 1.35;
+    stroke-dasharray: 3 10;
+    stroke-linecap: round;
+    opacity: .58;
+  }
+  .ambience-map circle {
+    fill: color-mix(in srgb, currentColor 8%, var(--bg));
+    stroke: currentColor;
+    stroke-width: 1.25;
+    opacity: .62;
+  }
+  .ambience-graph .ambience-synapses {
+    stroke-width: 2;
+    stroke-dasharray: 5 6;
+    opacity: .58;
+  }
+  .ambience-graph .ambience-node {
+    fill: color-mix(in srgb, currentColor 14%, var(--panel));
+    stroke: currentColor;
+    stroke-width: 2.4;
+    opacity: .9;
+  }
+  .ambience-graph .ambience-node-core { fill: currentColor; stroke: none; opacity: .85; }
+  .ambience-map .ambience-world-land { filter: drop-shadow(0 1px 1px rgb(90 82 68 / 8%)); }
+
+  .landing-page:has(.landing-card-reading:hover) .ambience-reading,
+  .landing-page:not(:has(.landing-card:hover)):has(.landing-card-reading:focus-visible) .ambience-reading,
+  .landing-page:has(.landing-card-mapping:hover) .ambience-mapping,
+  .landing-page:not(:has(.landing-card:hover)):has(.landing-card-mapping:focus-visible) .ambience-mapping,
+  .landing-page:has(.landing-card-relationships:hover) .ambience-exploring,
+  .landing-page:not(:has(.landing-card:hover)):has(.landing-card-relationships:focus-visible) .ambience-exploring,
+  .landing-page:has(.landing-card-exploring:hover) .ambience-telescope,
+  .landing-page:not(:has(.landing-card:hover)):has(.landing-card-exploring:focus-visible) .ambience-telescope {
+    opacity: .26;
+    animation: landing-ambience-drift 22s ease-in-out infinite alternate;
+  }
+  .landing-page:has(.landing-card-mapping:hover) .ambience-mapping,
+  .landing-page:not(:has(.landing-card:hover)):has(.landing-card-mapping:focus-visible) .ambience-mapping {
+    opacity: .32;
+  }
+  .landing-page:has(.landing-card-reading:hover) .ambience-reading,
+  .landing-page:not(:has(.landing-card:hover)):has(.landing-card-reading:focus-visible) .ambience-reading {
+    opacity: .28;
+  }
+
+  @keyframes landing-ambience-drift {
+    from { translate: -1% -1%; }
+    to { translate: 1% 1%; }
+  }
+
+  .landing-content {
+    @apply relative z-[1] [width:min(100%,_960px)] text-center;
+  }
+
+  .landing-glow {
+    @apply absolute w-[380px] [aspect-ratio:1] [border:1px_solid_color-mix(in_srgb,_var(--accent)_9%,_transparent)] rounded-[50%] pointer-events-none;
+  }
+
+  .landing-glow-one {
+    @apply top-[-240px] right-[-90px];
+  }
+
+  .landing-glow-two {
+    @apply bottom-[-270px] left-[-150px] w-[480px];
+  }
+
+  .landing-brand-mark {
+    @apply grid w-[54px] h-[54px] place-items-center [margin:0_auto_22px] [border:1px_solid_#c7ad90] rounded-[50%] bg-panel [box-shadow:0_8px_24px_rgb(44_37_29_/_7%)];
+  }
+
+  .landing-brand-mark img {
+    @apply w-[36px] h-[36px];
+  }
+
+  .landing-eyebrow {
+    @apply [margin:0_0_12px] text-accent text-[10px] font-bold tracking-[.18em] uppercase;
+  }
+
+  .landing-content h1 {
+    @apply m-0 [font:500_clamp(48px,_8vw,_78px)/1_"Playfair_Display",_Georgia,_serif] tracking-[-.055em];
+  }
+
+  .landing-content h1 em {
+    @apply text-accent font-medium;
+  }
+
+  .landing-subtitle {
+    @apply [margin:17px_0_0] text-ink [font:500_clamp(17px,_2vw,_21px)_"Playfair_Display",_Georgia,_serif];
+  }
+
+  .landing-description {
+    @apply [margin:10px_0_0] text-muted text-[13px] leading-[1.7];
+  }
+
+  .landing-destinations {
+    @apply grid [grid-template-columns:repeat(4,_minmax(0,_1fr))] gap-[15px] [margin:38px_auto_0];
+  }
+
+  .landing-card {
+    @apply [--card-accent:var(--accent)] flex min-h-[220px] flex-col items-center [padding:15px_18px_17px] [border:1px_solid_var(--line)] rounded-[9px] [background:color-mix(in_srgb,_var(--panel)_92%,_transparent)] [box-shadow:0_8px_22px_rgb(44_37_29_/_3%)] text-ink no-underline;
+  }
+
+  .landing-card-mapping {
+    @apply [--card-accent:var(--node-region)];
+  }
+
+  .landing-card-exploring {
+    @apply [--card-accent:#8a806f];
+  }
+
+  .landing-card-relationships {
+    @apply [--card-accent:var(--node-region)];
+  }
+
+  .landing-card:hover, .landing-card:focus-visible {
+    @apply [transform:translateY(-5px)] [border-color:color-mix(in_srgb,_var(--card-accent)_48%,_var(--line))] bg-panel [box-shadow:0_15px_36px_rgb(44_37_29_/_9%)];
+  }
+
+  .landing-preview {
+    @apply grid w-full h-[92px] place-items-center mb-[8px] overflow-hidden rounded-[6px] [background:color-mix(in_srgb,_var(--card-accent)_6%,_var(--bg))] [color:var(--card-accent)];
+  }
+
+  .landing-preview svg {
+    @apply w-[180px] max-w-[95%] h-[90px] overflow-visible;
+  }
+
+  .preview-book {
+    @apply relative grid w-[80px] h-[68px] content-center gap-[5px] [padding:12px_10px] [border:1px_solid_color-mix(in_srgb,_var(--card-accent)_40%,_var(--line))] rounded-[4px_10px_10px_4px] bg-panel [box-shadow:-7px_4px_0_color-mix(in_srgb,_var(--card-accent)_15%,_var(--panel))] [transform:perspective(140px)_rotateY(-9deg)];
+  }
+
+  .preview-book-title {
+    @apply w-[45%] h-[3px] mb-[2px] rounded-[2px] [background:var(--card-accent)];
+  }
+
+  .preview-line {
+    @apply w-full h-[2px] rounded-[2px] [background:color-mix(in_srgb,_var(--card-accent)_27%,_var(--line))];
+  }
+
+  .preview-line.short {
+    @apply w-[65%];
+  }
+
+  .preview-line.medium {
+    @apply w-[80%];
+  }
+
+  .preview-highlight {
+    @apply absolute right-[8px] bottom-[9px] w-[25px] h-[6px] rounded-[2px] [background:color-mix(in_srgb,_var(--card-accent)_24%,_transparent)];
+  }
+
+  .landing-card-reading:hover .preview-book, .landing-card-reading:focus-visible .preview-book {
+    @apply [transform:perspective(140px)_rotateY(0)_translateY(-3px)];
+  }
+
+  .map-land {
+    @apply [fill:color-mix(in_srgb,_var(--card-accent)_13%,_var(--panel))] [stroke:color-mix(in_srgb,_var(--card-accent)_40%,_var(--line))] [stroke-width:1.5] [stroke-linejoin:round];
+  }
+
+  .map-route {
+    @apply [fill:none] [stroke:var(--card-accent)] [stroke-dasharray:4_4] [stroke-width:1.5];
+  }
+
+  .map-point {
+    @apply [fill:var(--card-accent)] [stroke:var(--panel)] [stroke-width:2] [transform-box:fill-box] origin-center;
+  }
+
+  .graph-edge {
+    @apply [fill:none] [stroke:color-mix(in_srgb,_var(--card-accent)_40%,_var(--line))] [stroke-width:1.5] [stroke-dasharray:4_4];
+  }
+
+  .graph-node {
+    @apply [fill:var(--panel)] [stroke:var(--card-accent)] [stroke-width:2] [transform-box:fill-box] origin-center;
+  }
+
+  .graph-node-one, .graph-node-four {
+    @apply [fill:color-mix(in_srgb,_var(--card-accent)_12%,_var(--panel))];
+  }
+
+  .telescope-icon {
+    fill: none;
+    stroke: var(--card-accent);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .telescope-icon .telescope-tube { fill: color-mix(in srgb, var(--card-accent) 13%, var(--panel)); }
+  .telescope-icon .telescope-finder { fill: color-mix(in srgb, var(--card-accent) 8%, var(--panel)); stroke-width: 2; }
+  .telescope-icon circle { fill: var(--panel); stroke-width: 2; }
+  .landing-card-exploring:hover .telescope-icon,
+  .landing-card-exploring:focus-visible .telescope-icon { transform: translateY(-2px); }
+
+  .landing-card-title {
+    @apply [font:600_18px_"Playfair_Display",_Georgia,_serif];
+  }
+
+  .landing-card-description {
+    @apply max-w-[250px] max-h-0 overflow-hidden text-muted text-[11px] leading-[1.5] opacity-[0] [transform:translateY(5px)];
+  }
+
+  .landing-card:hover .landing-card-description, .landing-card:focus-visible .landing-card-description {
+    @apply max-h-[54px] mt-[7px] opacity-[1] [transform:translateY(0)];
+  }
+
+  .landing-card-action {
+    @apply mt-auto pt-[9px] [color:var(--card-accent)] text-[10px] font-bold tracking-[.04em];
+  }
+
+  .landing-footnote {
+    @apply [margin:25px_0_0] text-muted text-[10px] tracking-[.04em];
+  }
+
+  @media (max-width: 620px) {
+    .landing-page {
+      @apply [padding:38px_20px];
+      min-height: calc(100vh - 66px);
+      min-height: calc(100dvh - 66px);
+    }
+    .landing-brand-mark {
+      @apply mb-[18px];
+    }
+    .landing-description {
+      @apply max-w-[290px] mr-auto ml-auto;
+    }
+    .landing-destinations {
+      @apply [grid-template-columns:1fr] gap-[10px] [width:min(100%,_390px)] mt-[27px];
+    }
+    .landing-card {
+      @apply min-h-0 grid [grid-template-columns:76px_1fr_auto] [grid-template-rows:auto_auto] [gap:1px_12px] items-center [padding:10px_12px] text-left;
+    }
+    .landing-preview {
+      @apply [grid-row:1_/_3] w-[76px] h-[60px] m-0;
+    }
+    .landing-preview svg {
+      @apply w-[120px] h-[58px];
+    }
+    .preview-book {
+      @apply [transform:scale(.8)_perspective(140px)_rotateY(-9deg)];
+    }
+    .landing-card-title {
+      @apply self-end text-[16px];
+    }
+    .landing-card-description {
+      @apply [grid-column:2_/_4] [grid-row:2] max-h-[54px] mt-[3px] opacity-[1] [transform:none];
+    }
+    .landing-card-action {
+      @apply [grid-column:3] [grid-row:1] self-end p-0 whitespace-nowrap;
+    }
+    .landing-footnote {
+      @apply max-w-[260px] [margin:19px_auto_0] leading-[1.6];
+    }
+  }
+}

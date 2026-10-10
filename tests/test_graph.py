@@ -38,14 +38,15 @@ def test_builds_and_counts(db_path):
     conn = duckdb.connect(str(db_path), read_only=True)
     try:
         n = dict(conn.execute("SELECT label, COUNT(*) FROM nodes GROUP BY label").fetchall())
-        assert n["version"] == 3
+        assert n["version"] == 5
         assert n["book"] == 73
-        assert n["verse"] == 102722
+        assert n["verse"] == 141788
         assert n["region"] == 36
         assert n["location"] == 7460
+        assert n["figure"] == 243
         e = dict(conn.execute("SELECT label, COUNT(*) FROM edges GROUP BY label").fetchall())
-        assert e["verse_in_book"] == 102722
-        assert e["verse_in_version"] == 102722
+        assert e["verse_in_book"] == 141788
+        assert e["verse_in_version"] == 141788
         assert e["location_in_region"] == 7460
         assert e["location_in_verse"] > 0
     finally:
@@ -68,7 +69,7 @@ def test_traverse_verses_in_a_book(db_path):
             SELECT COUNT(*) FROM d
             """, [start]
         ).fetchone()[0]
-        assert rows == 4594  # Genesis has ~4594 verses across the 3 versions
+        assert rows == 6127  # Genesis across the 4 versions with an OT (SRG is NT only)
     finally:
         conn.close()
 
@@ -99,8 +100,8 @@ def test_cross_version_verse(db_path):
               AND chapter=3 AND verse_number=16 ORDER BY version_code
             """
         ).fetchall()
-        assert len(rows) == 3
-        assert all("God" in r[1] or "Deus" in r[1] for r in rows)
+        assert [r[0] for r in rows] == ["DRB", "KJV", "LEB", "SRG", "VUL"]
+        assert all(any(w in r[1] for w in ("God", "Deus", "Θεὸς")) for r in rows)
     finally:
         conn.close()
 
@@ -145,5 +146,105 @@ def test_path_verse_to_region(db_path):
             """, [vid[0], vid[0]]
         ).fetchone()[0]
         assert reachable
+    finally:
+        conn.close()
+
+
+def test_figure_kinship_edges_carry_relationship_kind(db_path):
+    # Kinship edges need the STEP Bible download; skip when the build was offline.
+    conn = duckdb.connect(str(db_path), read_only=True)
+    try:
+        total, named = conn.execute(
+            "SELECT COUNT(*), COUNT(json_extract_string(attrs, 'relationship')) "
+            "FROM edges WHERE label = 'figure_relative_of'"
+        ).fetchone()
+        if total == 0:
+            pytest.skip("no STEP Bible data (offline build)")
+        kinds = {r[0] for r in conn.execute(
+            "SELECT DISTINCT json_extract_string(attrs, 'relationship') "
+            "FROM edges WHERE label = 'figure_relative_of'"
+        ).fetchall()}
+    finally:
+        conn.close()
+    assert total == named  # every kinship edge names its kind
+    assert kinds <= {"father", "mother", "parent", "sibling", "partner"}
+    assert "father" in kinds
+
+
+def test_kinship_attrs_surface_in_api_responses(db_path, monkeypatch):
+    """The /graph, /path, and /traverse responses carry the kinship kind
+    on their edges, so the UI can label figure_relative_of connections
+    ("Father of", "Sibling of", ...) instead of the raw edge label.
+    """
+    conn = duckdb.connect(str(db_path), read_only=True)
+    try:
+        has_kinship = conn.execute(
+            "SELECT COUNT(*) FROM edges WHERE label = 'figure_relative_of'"
+        ).fetchone()[0]
+    finally:
+        conn.close()
+    if has_kinship == 0:
+        pytest.skip("no STEP Bible data (offline build)")
+
+    monkeypatch.setenv("BIBLE_DB_PATH", str(db_path))
+    import importlib
+
+    import app.api as api
+    api = importlib.reload(api)  # re-read BIBLE_DB_PATH from the environment
+    kinds = {"father", "mother", "parent", "sibling", "partner"}
+
+    # /graph: the ego-graph around Salmon carries kinship links with kinds.
+    ego = api.graph(node="Salmon", label="figure", hops=1)
+    kinship = [l for l in ego["links"] if l["label"] == "figure_relative_of"]
+    assert kinship
+    assert all(l["attrs"] and l["attrs"]["relationship"] in kinds for l in kinship)
+    assert any(
+        l["source"] == "figure:Salmon" and l["attrs"]["relationship"] == "father"
+        for l in kinship
+    )  # Salmon -> Boaz runs parent -> child
+
+    # /path: David -> Solomon is a direct father edge.
+    result = api.path(api.PathRequest(
+        source="David", source_label="figure",
+        target="Solomon", target_label="figure",
+    ))
+    assert result["found"] and result["depth"] == 1
+    edge = result["edges"][0]
+    assert edge["label"] == "figure_relative_of"
+    assert edge["attrs"]["relationship"] in ("father", "parent")
+
+    # /traverse: Abraham's family tree along kinship edges, kinds intact.
+    tree = api.traverse(api.TraversalRequest(
+        start_node="Abraham", label="figure", edge="figure_relative_of"
+    ))
+    assert "Isaac" in {n["name"] for n in tree["nodes"]}
+    assert tree["edges"]
+    assert all(
+        e["attrs"] and e["attrs"].get("relationship") in kinds
+        for e in tree["edges"]
+    )
+
+
+def test_figure_in_verse_follows_each_versions_numbering(db_path):
+    # Figure edges need the STEP Bible download; skip when the build was offline.
+    conn = duckdb.connect(str(db_path), read_only=True)
+    try:
+        n = conn.execute("SELECT COUNT(*) FROM edges WHERE label='figure_in_verse'").fetchone()[0]
+        if n == 0:
+            pytest.skip("no STEP Bible data (offline build)")
+        linked = {r[0] for r in conn.execute(
+            "SELECT from_id FROM edges WHERE label='figure_in_verse' AND to_id=?",
+            ["figure:David"],
+        ).fetchall()}
+        # Psalm 23's title names David: KJV folds it into 23:1, while the
+        # Douay-Rheims numbers it Psalm 22 (Latin numbering).
+        assert "verse:KJV:PSA:23:1" in linked
+        assert "verse:DRB:PSA:22:1" in linked
+        assert "verse:DRB:PSA:1:1" not in linked  # Psalm 1 has no title
+        # Same-name figures stay apart: Mary Magdalene, not Mary of Bethany.
+        assert conn.execute(
+            "SELECT COUNT(*) FROM edges WHERE label='figure_in_verse' "
+            "AND from_id='verse:KJV:JOH:20:18' AND to_id='figure:Mary of Bethany'"
+        ).fetchone()[0] == 0
     finally:
         conn.close()

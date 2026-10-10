@@ -2,7 +2,8 @@
 
 Mirrors sql/init_duckdb.sql + sql/load_data.sql but in a single idempotent Python script.
 
-The graph is heterogeneous (versions, books, verses, regions, locations),
+The graph is heterogeneous (versions, books, verses, regions, locations,
+figures),
 so we store every node in one `nodes` table (synthetic id + label + a few
 pulled-out query columns + a JSON `attrs` blob for the rest) and every
 relation in one `edges` table with a `label`. Edges are only created
@@ -11,7 +12,13 @@ partial views clean.
 
 The JSON files are loaded straight into DuckDB temp tables with
 read_json_auto (no Python row-by-row), then the graph is built with
-INSERT ... SELECT. The whole build is a few seconds for ~120k nodes.
+INSERT ... SELECT. The whole build is a few seconds for ~150k nodes.
+
+Figure -> verse edges and figure -> figure kinship edges
+(figure_relative_of, from TIPNR's genealogy columns) come from STEP Bible's
+TIPNR + TVTMS data (CC BY 4.0),
+which is downloaded and cached on first build - see scripts/stepbible.py.
+If it can't be downloaded the build still succeeds, without those edges.
 
 Usage:
     python scripts/build_db.py
@@ -20,20 +27,25 @@ Usage:
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 import duckdb
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import stepbible  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent  # repo root
 DATA = Path(os.environ.get("BIBLE_DATA_DIR", ROOT / "data"))
 DB_PATH = Path(os.environ.get("BIBLE_DB_PATH", DATA / "bible.db"))
+STEP_DIR = Path(os.environ.get("BIBLE_STEP_DIR", DATA / ".stepbible"))
 
 
 def main() -> None:
     if not DATA.is_dir():
         raise SystemExit(f"data dir not found: {DATA}")
     for name in ("books.json", "versions.json", "verses.json",
-                 "location_regions.json", "regions.json"):
+                 "location_regions.json", "regions.json", "figures.json"):
         if not (DATA / name).exists():
             raise SystemExit(f"missing canonical source: {DATA / name}")
 
@@ -64,6 +76,7 @@ def main() -> None:
             from_id   VARCHAR NOT NULL,
             to_id     VARCHAR NOT NULL,
             label     VARCHAR NOT NULL,
+            attrs     JSON,   -- figure_relative_of: {"relationship": ...}
             PRIMARY KEY (from_id, to_id, label)
         );
         """
@@ -74,13 +87,14 @@ def main() -> None:
     paths = {k: str(DATA / f) for k, f in [
         ("versions", "versions.json"), ("books", "books.json"),
         ("verses", "verses.json"), ("locations", "location_regions.json"),
-        ("regions", "regions.json"),
+        ("regions", "regions.json"), ("figures", "figures.json"),
     ]}
     conn.execute("CREATE TEMP TABLE t_versions  AS SELECT * FROM read_json_auto(?)", [paths["versions"]])
     conn.execute("CREATE TEMP TABLE t_books     AS SELECT * FROM read_json_auto(?)", [paths["books"]])
     conn.execute("CREATE TEMP TABLE t_verses    AS SELECT * FROM read_json_auto(?)", [paths["verses"]])
     conn.execute("CREATE TEMP TABLE t_locations AS SELECT * FROM read_json_auto(?)", [paths["locations"]])
     conn.execute("CREATE TEMP TABLE t_regions   AS SELECT * FROM read_json_auto(?)", [paths["regions"]])
+    conn.execute("CREATE TEMP TABLE t_figures   AS SELECT * FROM read_json_auto(?)", [paths["figures"]])
 
     # ---- Versions -------------------------------------------------------
     conn.execute(
@@ -129,6 +143,21 @@ def main() -> None:
         SELECT 'region:' || name, 'region', name, NULL, NULL, NULL, NULL,
                to_json({'keywords': keywords, 'description': description})
         FROM t_regions;
+        """
+    )
+
+    # ---- Figures --------------------------------------------------------
+    conn.execute(
+        """
+        INSERT INTO nodes
+        SELECT 'figure:' || name, 'figure', name, NULL, NULL, NULL, NULL,
+               to_json({
+                   'testament': testament, 'category': category,
+                   'keywords': keywords, 'description': description,
+                   'aliases': aliases,
+                   'tipnr': tipnr
+               })
+        FROM t_figures;
         """
     )
 
@@ -201,6 +230,8 @@ def main() -> None:
          AND v.verse_number = l.verse_number;
         """
     )
+    _figure_edges(conn)
+    _figure_relative_edges(conn)
 
     # ---- Indexes (after data — faster to build) -------------------------
     conn.execute("CREATE INDEX idx_nodes_label      ON nodes(label);")
@@ -226,6 +257,110 @@ def main() -> None:
     print(f"Built {DB_PATH}")
     print(f"  nodes: {n_nodes}  ({counts})")
     print(f"  edges: {n_edges}  ({ecounts})")
+
+
+def _figure_edges(conn) -> None:
+    """verse --figure_in_verse--> figure, for every verse a figure appears in.
+
+    Each figure's `tipnr` id gives its verse refs (standard English
+    numbering); `tipnr_books`, when set, limits them to those books (used
+    for Jacob and his sons, whose TIPNR records also cover the tribes).
+    Every ref is converted to each version's own numbering, so a figure
+    links to the matching verse in every version that has it.
+    """
+    step = stepbible.fetch(STEP_DIR)
+    if step is None:
+        return
+    people = stepbible.tipnr_refs(step["tipnr"])
+
+    verses: dict[str, dict[tuple[str, int, int], int]] = {}
+    for code, book, chapter, verse, words in conn.execute(
+        """
+        SELECT version_code, book_code, chapter, verse,
+               len(string_split(trim(text), ' '))
+        FROM t_verses WHERE trim(coalesce(text, '')) <> '';
+        """
+    ).fetchall():
+        verses.setdefault(code, {})[(book, chapter, verse)] = words
+    numbering = stepbible.versification(step["tvtms"], verses)
+
+    from_ids, to_ids = [], []
+    for name, tipnr, books in conn.execute(
+        "SELECT name, tipnr, tipnr_books FROM t_figures WHERE tipnr IS NOT NULL"
+    ).fetchall():
+        refs = [r for r in people.get(tipnr, []) if not books or r[0] in books]
+        for code, vs in verses.items():
+            for ref in refs:
+                for book, chapter, verse in stepbible.convert(ref, numbering[code], vs):
+                    from_ids.append(f"verse:{code}:{book}:{chapter}:{verse}")
+                    to_ids.append(f"figure:{name}")
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO edges (from_id, to_id, label)
+        SELECT r.from_id, r.to_id, 'figure_in_verse'
+        FROM (SELECT unnest(?) AS from_id, unnest(?) AS to_id) r
+        JOIN nodes v ON v.id = r.from_id;
+        """,
+        [from_ids, to_ids],
+    )
+
+
+def _figure_relative_edges(conn) -> None:
+    """figure --figure_relative_of--> figure, from TIPNR genealogy columns.
+
+    Direction keeps family trees traversable from ancestors:
+      father/mother/parent edges run parent -> child,
+      sibling/partner edges are stored once per pair in canonical id order.
+    `attrs` carries the relationship kind. Relatives that are not
+    themselves figures (most of TIPNR's ~3k people) are skipped — both
+    ends of every edge exist in `nodes`.
+    """
+    step = stepbible.fetch(STEP_DIR)
+    if step is None:
+        return
+    family = stepbible.tipnr_family(step["tipnr"])
+
+    by_uid = conn.execute(
+        "SELECT name, tipnr FROM t_figures WHERE tipnr IS NOT NULL"
+    ).fetchall()
+    uid2name = {tipnr: name for name, tipnr in by_uid}
+
+    triples = []  # (from_id, to_id, relationship)
+    for name, tipnr in by_uid:
+        rels = family.get(tipnr)
+        if rels is None:
+            continue
+        # Parents (from this figure's own record): parent -> child.
+        for kind, uids in (("father", rels["father"]), ("mother", rels["mother"])):
+            for uid in uids:
+                if uid in uid2name:
+                    triples.append((f"figure:{uid2name[uid]}", f"figure:{name}", kind))
+        # Siblings and partners: symmetric, one canonical row per pair.
+        for kind, uids in (("sibling", rels["siblings"]), ("partner", rels["partners"])):
+            for uid in uids:
+                if uid in uid2name and uid != tipnr:
+                    a, b = sorted((f"figure:{name}", f"figure:{uid2name[uid]}"))
+                    triples.append((a, b, kind))
+        # Offspring: this figure -> child, kind from this figure's own sex.
+        own = {"Male": "father", "Female": "mother"}.get(rels["sex"], "parent")
+        for uid in rels["offspring"]:
+            if uid in uid2name:
+                triples.append((f"figure:{name}", f"figure:{uid2name[uid]}", own))
+
+    if not triples:
+        return
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO edges (from_id, to_id, label, attrs)
+        SELECT r.from_id, r.to_id, 'figure_relative_of',
+               to_json({'relationship': r.kind})
+        FROM (SELECT unnest(?) AS from_id, unnest(?) AS to_id,
+                     unnest(?) AS kind) r
+        JOIN nodes n ON n.id = r.from_id AND n.label = 'figure'
+        JOIN nodes m ON m.id = r.to_id AND m.label = 'figure';
+        """,
+        [[t[0] for t in triples], [t[1] for t in triples], [t[2] for t in triples]],
+    )
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ export const nodeIconPaths = {
   version: "M3 5h12M9 3v2M6 5c0 5 3 8 7 10M12 5c0 5-3 8-7 10M14 21l4-10 4 10M16 17h4",
   location: "M12 22s8-8 8-13a8 8 0 0 0-16 0c0 5 8 13 8 13ZM15 9a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
   region: "M2 5l7-3 6 3 7-3v17l-7 3-6-3-7 3V5Zm7-3v17M15 5v17",
+  figure: "M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21c0-4 4-7 8-7s8 3 8 7",
 };
 
 export function NodeIcon({ type }) {

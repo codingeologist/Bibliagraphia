@@ -28,7 +28,7 @@ function RelationshipsPage() {
   }, [dark]);
 
   return (
-    <div className="app-shell">
+    <div className="app-shell min-h-screen">
       <SiteHeader currentPage="/relationships" dark={dark} onToggleTheme={() => setDark((value) => !value)} />
       <main className="relationships-page">
         <h2 className="visually-hidden">Relationships</h2>

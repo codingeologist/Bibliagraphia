@@ -25,7 +25,7 @@ The original TypeDB loader (`bible_loader.py`) and schema
 ## What and Why?
 
 The Bible exists in many translations, and most tools treat it as a flat book: search by keyword, look up by reference.
-Bibliagraphia instead stores open-licensed translations (KJV, Latin Vulgate, Douay–Rheims and hopefully more...) in a single queryable graph: 
+Bibliagraphia instead stores open-licensed translations (KJV, Latin Vulgate, Douay–Rheims, Lexham English Bible, Statistical Restoration Greek New Testament and hopefully more...) in a single queryable graph:
 - verses connect to their books and versions
 - every place mentioned connects to a geocoded location and its region.
 The result is a non-linear way to explore the scriptures: walk the graph around a verse, compare one verse side by side across translations,
@@ -52,10 +52,19 @@ The graph database maps Bible verses with:
 The database is built from the canonical JSON files in `/data`:
 
 - `books.json` — Bible books with translation names (73 books)
-- `versions.json` — Bible version information (VUL, DRB, KJV)
-- `verses.json` — Complete verse text (102,722 verses across 3 versions)
+- `versions.json` — Bible version information (VUL, DRB, KJV, LEB, SRG)
+- `verses.json` — Complete verse text (141,788 verses across 5 versions; SRG is New Testament only)
 - `location_regions.json` — Geographical locations with coordinates (7,460 mentions)
 - `regions.json` — Regional descriptions and keywords (36 regions)
+- `figures.json` — Biblical figures (243), each with a STEP Bible TIPNR id
+
+Figure → verse links (`figure_in_verse` edges) use two datasets from
+[STEP Bible](https://www.STEPBible.org): TIPNR (every verse each person
+appears in) and TVTMS (verse-numbering differences between Bible traditions).
+STEP Bible asks that their data isn't redistributed, so it isn't stored in
+this repo: `scripts/build_db.py` downloads it from their GitHub on the first
+build and caches it in `data/.stepbible/` (gitignored). Without internet
+access the build still works, just without figure edges.
 
 ## Schema design
 
@@ -79,6 +88,12 @@ The graph is heterogeneous, stored in two tables:
 | `verse_in_version`   | version -> verse   | a version contains a verse   |
 | `location_in_verse`  | verse -> location  | a verse mentions a location  |
 | `location_in_region` | region -> location | a region contains a location |
+| `figure_in_verse`    | verse -> figure    | a verse mentions a figure     |
+| `figure_relative_of` | figure -> figure   | kinship from TIPNR genealogy: father/mother/parent edges run parent -> child, sibling/partner edges stored once per pair; `attrs.relationship` names the kind |
+
+Figures that merely **share a verse** (e.g. Peter and Moses both in Luke 9:33)
+are *not* given an edge — the link is a path, person → verse → person, queried
+by joining the verse end of `figure_in_verse` (see `sql/queries.sql`).
 
 There are deliberately **no self-referencing foreign keys**: edges are only created between
 nodes actually present (referential integrity), which keeps the graph clean.
@@ -157,8 +172,61 @@ npm run dev
 
 The frontend uses Vite, React, and Tailwind CSS. Tailwind utility classes can be
 used directly in the JSX components under `frontend/src/`.
+
+#### Styling structure
+
+[`frontend/src/styles.css`](frontend/src/styles.css) is the import entry point,
+not a component stylesheet. Styles are organised under
+[`frontend/src/styles/`](frontend/src/styles/):
+
+- `tokens.css` maps light/dark theme variables to Tailwind colours and fonts.
+  The underlying CSS variables remain available to the graph canvas and Leaflet.
+- `base.css` contains document defaults and keyboard focus styling.
+- `shared.css` contains reusable panel, form, button and result-row recipes.
+- `landing.css`, `header.css`, `explore.css`, `graph.css`, `reader.css` and
+  `map.css` own their respective feature styles. `widgets.css` owns the Explore
+  dashboard and dedicated discovery-tool layouts.
+- `leaflet.css` contains third-party map and popup overrides. These intentionally
+  stay outside cascade layers so they can override Leaflet's unlayered stylesheet.
+  Leaflet's core stylesheet is imported centrally by `styles.css` before these
+  overrides, so standalone and reader maps never depend on another widget loading.
+- `motion.css` contains animations and reduced-motion rules.
+
+Prefer Tailwind utilities directly in JSX for simple elements. Use `@apply`
+recipes in the relevant feature's `@layer components` for shared selectors,
+responsive layouts and complex component states. Use theme utilities such as
+`bg-panel`, `text-ink`, `text-muted` and `border-line` rather than duplicating
+theme values. Keep semantic class hooks used by JavaScript and tests.
+
+Utilities in one `@apply` may be reordered by Tailwind. Keep overlapping
+shorthand and longhand declarations in separate `@apply` statements when their
+order matters (for example `font` followed by `font-size`).
 The header logo links to the home page. Open the settings menu (three-line
 icon) to switch between light and dark mode; the choice is saved across pages.
+Main navigation is ordered **Home, Read, Map, Relationships, Explore, MCP, About**, with
+decorative icons alongside each label. It scrolls horizontally on small screens.
+Open `/about` for the team (Ally, Jonah, Elle, Sidd and Jonathon), playful
+team icons, canonical data sources and project/map/software acknowledgements.
+Dataset counts are explicitly labelled as the README baseline, not live totals.
+
+Open `/explore` for a fixed dashboard of live preview widgets. Book suggestions,
+Genesis 1:1 translations, a Genesis relationship graph, mapped place mentions
+and a Genesis-to-Syria path load automatically. Each widget links to its full
+tool and displays loading, empty and error states; failed previews can be retried.
+`/explore/search` opens the search tool with Genesis results already loaded.
+Search includes biblical figures with an **About** button for their details
+and an exact-item link to Relationships.
+`/explore/connections` asks "What's connected?" and "How are these connected?",
+initially showing Genesis passages and its connection to Syria. Searchable
+pickers offer three suggestions per type and use exact IDs, so selecting a
+passage or place mention preserves its identity. The first tool accepts books,
+regions and translations; the second connects any two items. Results explain
+recorded links in plain English, respecting their direction, and open exact
+items in Relationships. Changing a choice clears outdated results.
+The `/traverse` and `/path` APIs accept exact IDs as well as names and codes.
+Read/compare, graph and map widgets open `/read`, `/relationships` and `/map`.
+Place preview links use `/map?place=...` to select a matching place or alias.
+
 Open `/relationships` for a full-viewport relationship graph. It starts at
 Genesis by default. The centre selector and depth control sit together at the
 graph's top left. Click the selector to search across books, passages,
@@ -180,7 +248,11 @@ the selected centre's branch while retaining the total 200-node budget.
 Select another node to explore its branch. Hidden counts are distinct neighbours
 not loaded in this graph, not a total count of all paths or passages.
 Verse translations and repeated place mentions remain separate exact-ID nodes.
-The embedded Explore graph retains its original expansion behaviour.
+The node-type key at the bottom right includes checkboxes to hide or show each
+type and its incident edges. Filtering only affects the view: loaded data,
+layout positions and sidebar connections remain intact, and hidden nodes cannot
+be clicked on the canvas. **Fit graph** fits visible nodes. Selecting a new
+centre reveals its type if hidden. The key reports visible versus loaded nodes.
 
 Choose a centre and depth to explore another neighbourhood. Selecting a node
 redraws immediately; depth changes redraw after a short pause. No Draw graph
@@ -191,7 +263,9 @@ inside the three-dot options control beside the depth selector
 for keyboard navigation. **Fit graph** and fullscreen controls sit at the top
 right; the node-type key sits at the bottom right. **Fit graph** restores the view.
 Node/connection counts and truncation status sit at the bottom left.
-The existing graph does not include people nodes.
+Figures appear as graph nodes. Kinship edges between figures are drawn dashed
+in the figure colour (keyed **Kinship** in the node-type key), and the sidebar
+names the recorded kind — Father of, Mother of, Child of, Sibling of, Partner of.
 Underlined places in the reader open details with a **Graph relationships**
 preview showing the place and up to six directly connected nodes. Its **Expand**
 control opens the full graph centred on that exact place mention. Selecting a graph node preserves its
@@ -205,12 +279,17 @@ The sidebar groups directly connected nodes into collapsible sections by type.
 Each entry describes its relationship to the selected node and opens that exact
 node when clicked. Counts describe the loaded graph, not the entire database;
 capped graphs show a reminder that additional connections may exist.
+The bottom-left graph summary includes the live visible/loaded node count.
 Map markers are circles across the map, explorer and reader previews.
 Open `/read` in the Vite app to read a Bible book. Choose a book, chapter,
 translation, or jump directly to a verse; previous/next controls move between
 chapters.
-Use **+ Add translation** beside the reader title to compare translations
-side by side. Shared book, chapter and verse controls keep columns in sync;
+Book, chapter, verse and translation controls sit between Previous and Next
+in one navigation bar, with grouped rows on mobile. Use the **+** button
+(Compare translations) beside the translation selector
+to compare versions side by side. In comparison mode, each column has its own
+translation selector; selecting an already displayed version swaps columns
+without duplicates. Shared book, chapter and verse controls keep columns in sync;
 verses align by number (numbering can differ between translations). Unavailable
 text is labelled rather than replaced with another passage. Remove columns
 with their **×** buttons; comparison selections are preserved in the reader URL.
@@ -218,6 +297,14 @@ On narrow screens, scroll the comparison horizontally.
 Underlined place mentions in every column open place
 details with links to the graph and map. Open `/map` to browse all mappable
 places; select a marker to read the passages that mention it.
+Every node in the reader's Graph relationships preview links to Relationships
+centred on that exact item, retaining passage translation and place-mention IDs.
+People named in a verse have a pink, solid-underlined link to their exact
+Relationships view; places retain their dotted highlight and drawer.
+People highlights use recorded STEP Bible verse links and canonical names or
+explicit spelling aliases, never general search keywords. Only names present
+in the people dataset are highlighted; pronouns are not. Each comparison
+column uses its own translation's verse links.
 Use the map's search box to find places by name or alternative name. Choose an
 autocomplete suggestion (or use the arrow keys and Enter) to zoom to that place
 and open its passages.
@@ -240,9 +327,9 @@ no SQL-injection surface.
 |---------------------------------------------------------------|------------------------------------------------|--------------------------------------------------|
 | `GET /health`                                                 | —                                              | `{status, db, empty}`                            |
 | `GET /search?q=&label=`                                       | `q` prefix, optional `label` filter            | autocomplete node list                           |
-| `POST /traverse`                                              | `{start_node, label, edge}`                    | recursive descendants along `edge` + their edges |
-| `POST /path`                                                  | `{source, source_label, target, target_label}` | shortest path (BFS) between two nodes            |
-| `GET /graph?node=&label=&node_id=`                            | node name and label; optional exact node ID     | nearby nodes and relationship edges              |
+| `POST /traverse`                                              | `{start_node, label, edge}`                    | recursive descendants along `edge` + their edges (kinship edges carry their kind in `attrs`) |
+| `POST /path`                                                  | `{source, source_label, target, target_label}` | shortest path (BFS) between two nodes, edges carry `attrs` |
+| `GET /graph?node=&label=&node_id=`                            | node name and label; optional exact node ID     | nearby nodes and relationship edges; kinship edges carry their kind in `attrs` |
 | `GET /map/points?region=&book=&limit=`                        | a region or book code                           | geocoded location mentions for selected scope    |
 | `GET /map/places`                                              | —                                              | unique mappable places with repeated mentions grouped |
 | `GET /verse?book_code=&chapter=&verse_number=`                | verse reference                                | the same verse across all versions               |
@@ -331,24 +418,59 @@ implementation, two interfaces:
 
 ### Connect an MCP client
 
-Claude Desktop / Claude Code (`claude_desktop_config.json` or
-`.mcp.json`):
+Open **MCP** in the navigation (`/connect-mcp`) for connection URLs, copyable
+VS Code and Claude Code configurations, troubleshooting and example prompts.
+The guide uses `https://bibliagraphia.com/mcp` in every client example, with
+no server selector.
+Both nginx and the local Vite server proxy `/mcp` to the API. nginx disables
+response buffering and keeps streaming sessions open; deploy the updated
+frontend configuration before using the public endpoint.
+`/mcp` remains the protocol endpoint on the API, not a frontend page.
+
+Claude Code (`.mcp.json`):
 
 ```json
 {
   "mcpServers": {
     "bibliagraphia": {
+      "type": "http",
       "url": "https://api.bibliographia.com/mcp"
     }
   }
 }
 ```
 
-Cursor, or any streamable-HTTP client, uses the same URL. Locally:
+VS Code uses `.vscode/mcp.json` with a top-level `servers` object instead of
+`mcpServers`; each server has `"type": "http"` and the same URL. Other clients
+should follow their own remote-server configuration instructions.
+Any streamable-HTTP client uses the same URL. Locally:
 `http://localhost:8000/mcp`.
+
+### Scripted client (no handshake juggling)
+
+FastMCP ships a client that performs the whole streamable-HTTP dance
+automatically — `initialize`, session-id capture, `notifications/initialized`,
+session echo. `scripts/mcp_client.py` wraps it:
+
+```bash
+# list the tools the server exposes
+python scripts/mcp_client.py tools
+
+# call one tool (args as JSON)
+python scripts/mcp_client.py call get_verse \
+    --args '{"book_code": "JOH", "chapter": 3, "verse_number": 16}'
+
+# ad-hoc REPL: one tool call per line, q to quit
+python scripts/mcp_client.py interactive
+```
+
+Endpoint defaults to `http://localhost:8000/mcp`; override with `--url` or the
+`BIBLIAGRAPHIA_MCP_URL` environment variable (e.g.
+`https://api.bibliographia.com/mcp`).
 
 ### Raw handshake (curl)
 
+For debugging the transport itself, the manual version:
 Streamable HTTP is session-based: `initialize` returns an `mcp-session-id`
 response header that later requests echo back.
 
@@ -395,10 +517,13 @@ curl -s -X POST $API -H 'content-type: application/json' \
 Bibliagraphia/
 ├── data/                                      # canonical JSON sources (+ generated bible.db)
 │   ├── books.json versions.json verses.json
-│   ├── location_regions.json  regions.json
+│   ├── location_regions.json  regions.json  figures.json
+│   ├── .stepbible/                            # STEP Bible download cache (gitignored)
 │   └── bible.db                               # generated — do not edit
 ├── scripts/
-│   └── build_db.py                            # JSON -> data/bible.db (idempotent, bulk-loaded)
+│   ├── build_db.py                            # JSON -> data/bible.db (idempotent, bulk-loaded)
+│   ├── stepbible.py                           # STEP Bible TIPNR/TVTMS: figure refs + verse numbering
+│   └── mcp_client.py                          # MCP client — handshake handled for you (see “MCP server”)
 ├── sql/
 │   ├── init_duckdb.sql                        # schema (reference)
 │   ├── load_data.sql                          # load steps (reference)
@@ -470,6 +595,14 @@ python -m unittest discover -s tests -p test_api_startup.py
 ## License
 
 [GNU General Public License v3.0](LICENSE)
+
+Figure verse references and verse-numbering mappings come from
+[STEP Bible](https://www.STEPBible.org) (TIPNR and TVTMS datasets, Tyndale
+House Cambridge), used under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Changes: matched
+to Bibliagraphia figures (some limited to Genesis, where TIPNR's record also
+covers a tribe) and converted to each version's verse numbering. The data
+itself is not redistributed here; it is downloaded at build time.
 
 __Ave Christus Rex__
 

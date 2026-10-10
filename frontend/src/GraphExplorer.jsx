@@ -12,6 +12,7 @@ import { get } from "./api.js";
 import { NodeIcon, nodeIconPaths } from "./nodeIcons.jsx";
 import GraphNodeSearch from "./GraphNodeSearch.jsx";
 import { saveRelationshipState } from "./relationshipState.js";
+import { relationshipDescription } from "./nodeLinks.js";
 
 const colorVars = {
   book: "--node-book",
@@ -19,6 +20,7 @@ const colorVars = {
   region: "--node-region",
   location: "--node-location",
   verse: "--node-verse",
+  figure: "--node-figure",
 };
 
 const nodeName = (node) => node.name || node.id;
@@ -33,13 +35,7 @@ const nodeTypeNames = {
   version: "Translations",
   location: "Places",
   region: "Regions",
-};
-
-const relationshipNames = {
-  verse_in_book: ["Contains passage", "Belongs to book"],
-  verse_in_version: ["Contains passage", "Available in translation"],
-  location_in_verse: ["Mentions place", "Mentioned in passage"],
-  location_in_region: ["Contains place", "Located in region"],
+  figure: "Figures",
 };
 
 const nodeDescription = (node) => node.label === "verse"
@@ -55,6 +51,9 @@ function GraphExplorer({ seed, fullPage = false }) {
   const [showNames, setShowNames] = useState(seed?.showNames === true);
   const showNamesRef = useRef(showNames);
   showNamesRef.current = showNames;
+  const [hiddenTypes, setHiddenTypes] = useState(() => new Set());
+  const hiddenTypesRef = useRef(hiddenTypes);
+  hiddenTypesRef.current = hiddenTypes;
   const [graph, setGraph] = useState(null);
   const [summary, setSummary] = useState("");
   const [error, setError] = useState("");
@@ -85,6 +84,14 @@ function GraphExplorer({ seed, fullPage = false }) {
     }
     const requestId = ++requestRef.current;
     const previousCentre = exactCentreRef.current;
+    if (nodeId !== previousCentre?.id || start !== previousCentre?.query || nodeLabel !== previousCentre?.label) {
+      setHiddenTypes((current) => {
+        if (!current.has(nodeLabel)) return current;
+        const next = new Set(current);
+        next.delete(nodeLabel);
+        return next;
+      });
+    }
     branchExpansionRef.current = expansion ?? (
       nodeId && nodeId === previousCentre?.id ? branchExpansionRef.current : 1
     );
@@ -95,10 +102,10 @@ function GraphExplorer({ seed, fullPage = false }) {
     setSummary("Loading graph…");
     try {
       const params = new URLSearchParams({ node: start, label: nodeLabel, hops });
-      if (fullPage) {
-        params.set("balanced", "true");
-        params.set("branch_expansion", String(branchExpansionRef.current));
-      }
+      // Balanced mode in both views: passages are capped per branch so
+      // figures and their kinship edges stay visible in the node budget.
+      params.set("balanced", "true");
+      params.set("branch_expansion", String(branchExpansionRef.current));
       if (nodeId) params.set("node_id", nodeId);
       const result = await get(`/graph?${params}`);
       if (requestId !== requestRef.current) return;
@@ -174,18 +181,40 @@ function GraphExplorer({ seed, fullPage = false }) {
     context.translate(view.x, view.y);
     context.scale(view.scale, view.scale);
 
+    const visibleLink = (link) => typeof link.source === "object"
+      && typeof link.target === "object"
+      && !hiddenTypesRef.current.has(link.source.label)
+      && !hiddenTypesRef.current.has(link.target.label);
+
     context.strokeStyle = rootStyles.getPropertyValue("--edge").trim();
     context.lineWidth = 1 / view.scale;
     context.beginPath();
     for (const link of links) {
-      if (typeof link.source === "object" && typeof link.target === "object") {
+      if (visibleLink(link) && link.label !== "figure_relative_of") {
         context.moveTo(link.source.x, link.source.y);
         context.lineTo(link.target.x, link.target.y);
       }
     }
     context.stroke();
 
+    // Kinship edges between figures: dashed, in the figure colour.
+    const kinship = links.filter((link) => visibleLink(link)
+      && link.label === "figure_relative_of");
+    if (kinship.length) {
+      context.save();
+      context.strokeStyle = rootStyles.getPropertyValue("--node-figure").trim();
+      context.setLineDash([5 / view.scale, 4 / view.scale]);
+      context.beginPath();
+      for (const link of kinship) {
+        context.moveTo(link.source.x, link.source.y);
+        context.lineTo(link.target.x, link.target.y);
+      }
+      context.stroke();
+      context.restore();
+    }
+
     for (const node of nodes) {
+      if (hiddenTypesRef.current.has(node.label)) continue;
       const radius = fullPage ? (node.id === startIdRef.current ? 20 : 15)
         : node.id === startIdRef.current ? 9 : node.label === "verse" ? 3 : 5.5;
       context.beginPath();
@@ -248,6 +277,11 @@ function GraphExplorer({ seed, fullPage = false }) {
     }
     context.restore();
   }, [fullPage]);
+
+  useEffect(() => {
+    hoveredRef.current = null;
+    draw();
+  }, [hiddenTypes, draw]);
 
   useEffect(() => {
     draw();
@@ -334,6 +368,7 @@ function GraphExplorer({ seed, fullPage = false }) {
   const nodeAt = (event) => {
     const point = toWorld(event);
     return [...nodesRef.current].reverse().find((node) => {
+      if (hiddenTypesRef.current.has(node.label)) return false;
       const radius = fullPage ? (node.id === startIdRef.current ? 20 : 15)
         : node.id === startIdRef.current ? 9 : node.label === "verse" ? 3 : 5.5;
       const dx = point.x - node.x;
@@ -411,7 +446,7 @@ function GraphExplorer({ seed, fullPage = false }) {
   };
 
   const resetView = () => {
-    const nodes = nodesRef.current;
+    const nodes = nodesRef.current.filter((node) => !hiddenTypesRef.current.has(node.label));
     if (!nodes.length) return;
     const canvas = canvasRef.current;
     const width = canvas.clientWidth;
@@ -445,6 +480,7 @@ function GraphExplorer({ seed, fullPage = false }) {
   };
 
   const legend = [...new Set(graph?.nodes?.map((node) => node.label) || [])];
+  const hasKinship = (graph?.links || []).some((link) => link.label === "figure_relative_of");
   const centreNode = graph?.nodes?.find((node) => node.id === graph.start_id);
   const hiddenCentreConnections = graph?.hidden_connections?.[graph.start_id] || {};
   const readerHref = (node) => `/read?${new URLSearchParams({
@@ -469,7 +505,7 @@ function GraphExplorer({ seed, fullPage = false }) {
       const group = connectedGroups.get(node.label) || new Map();
       const entry = group.get(node.id) || { node, relationships: new Set() };
       entry.relationships.add(
-        relationshipNames[link.label]?.[outgoing ? 0 : 1] || link.label.replaceAll("_", " "),
+        relationshipDescription(link.label, outgoing, link.attrs),
       );
       group.set(node.id, entry);
       connectedGroups.set(node.label, group);
@@ -510,7 +546,7 @@ function GraphExplorer({ seed, fullPage = false }) {
           setLabel(event.target.value);
           setControlRevision((value) => value + 1);
         }}>
-          {["book", "version", "region", "location", "verse"].map((item) => (
+          {["book", "version", "region", "location", "verse", "figure"].map((item) => (
             <option key={item}>{item}</option>
           ))}
         </select>}
@@ -548,6 +584,15 @@ function GraphExplorer({ seed, fullPage = false }) {
               {centreNode.book_code && centreNode.chapter && centreNode.verse_number && (
                 <a href={`${readerHref(centreNode)}&${new URLSearchParams({ place_id: centreNode.id })}`}>Read passage →</a>
               )}
+            </>
+          )}
+          {centreNode.label === "figure" && (
+            <>
+              {(centreNode.attrs?.testament || centreNode.attrs?.category) && (
+                <span>{[centreNode.attrs?.testament, centreNode.attrs?.category]
+                  .filter(Boolean).join(" · ")}</span>
+              )}
+              {centreNode.attrs?.description && <p>{centreNode.attrs.description}</p>}
             </>
           )}
           <div className="relationship-connections">
@@ -603,7 +648,10 @@ function GraphExplorer({ seed, fullPage = false }) {
         </section>
       )}
       <div className="graph-wrap" ref={wrapperRef}>
-        {fullPage && summary && <p className="result-summary graph-summary-overlay" role="status">{summary}</p>}
+        {fullPage && summary && <p className="result-summary graph-summary-overlay" role="status">
+          {summary}
+          {!loading && graph && ` · ${graph.nodes.filter((node) => !hiddenTypes.has(node.label)).length} / ${graph.nodes.length} visible`}
+        </p>}
         {fullPage && (
           <div className="graph-search-overlay">
             <GraphNodeSearch node={centreNode} fallback={query} onSelect={(node) => {
@@ -686,8 +734,24 @@ function GraphExplorer({ seed, fullPage = false }) {
           }}
         />
         {legend.length > 0 && (
-          <div className="graph-legend" aria-label="Node types">
-            {legend.map((item) => <span key={item}>{fullPage ? <NodeIcon type={item} /> : <i className={`legend-dot badge-${item}`} />}{item}</span>)}
+          <div className="graph-legend" role={fullPage ? "group" : undefined} aria-label="Node types">
+            {legend.map((item) => fullPage ? (
+              <label key={item} className="graph-type-toggle">
+                <input type="checkbox" checked={!hiddenTypes.has(item)}
+                  aria-label={`Show ${nodeTypeNames[item] || item}`}
+                  onChange={(event) => {
+                    const checked = event.target.checked;
+                    setHiddenTypes((current) => {
+                      const next = new Set(current);
+                      if (checked) next.delete(item);
+                      else next.add(item);
+                      return next;
+                    });
+                  }} />
+                <NodeIcon type={item} />{nodeTypeNames[item] || item}
+              </label>
+            ) : <span key={item}><i className={`legend-dot badge-${item}`} />{item}</span>)}
+            {hasKinship && <span><i className="legend-dash" />Kinship</span>}
           </div>
         )}
         {!graph && !loading && !error && <div className="graph-placeholder">Your graph will appear here</div>}

@@ -77,6 +77,7 @@ def init_db() -> None:
                 from_id   VARCHAR NOT NULL,
                 to_id     VARCHAR NOT NULL,
                 label     VARCHAR NOT NULL,
+                attrs     JSON,   -- figure_relative_of: {"relationship": ...}
                 PRIMARY KEY (from_id, to_id, label)
             );
             """
@@ -133,8 +134,24 @@ def _row_to_node(row, columns) -> dict:
     return n
 
 
+def _parse_attrs(value) -> Optional[dict]:
+    """Render a JSON-typed edge attrs value as a dict for JSON responses.
+
+    Only figure_relative_of (kinship) edges carry attrs —
+    {"relationship": "father" | "mother" | "parent" | "sibling" | "partner"}
+    — every other edge label returns None.
+    """
+    if value is None or isinstance(value, dict):
+        return value
+    try:
+        parsed = json.loads(value)
+    except (ValueError, TypeError):
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
 def _resolve(conn, label: str, name: str) -> Optional[str]:
-    """Resolve a node by name within a label; return its id or None.
+    """Resolve a node by exact ID or name within a label; return its id or None.
 
     Codes are the canonical identifiers — short, unique, and stable
     (books: GEN, JOH, REV; versions: KJV, VUL, DRB) — so they are tried
@@ -144,8 +161,17 @@ def _resolve(conn, label: str, name: str) -> Optional[str]:
       2. book_code / version_code match (case-insensitive)
       3. name prefix ("ACT" matches "Acts")
       4. name contains ("John" matches "The Gospel According to John")
-      5. for regions, keywords in attrs (e.g. "Syria" matches keyword "Damascus")
+      5. for regions and figures, keywords in attrs (e.g. "Syria" matches
+         keyword "Damascus"; "Cephas" matches figure "Peter")
     """
+    row = conn.execute(
+        "SELECT id FROM nodes WHERE id = ? AND label = ?",
+        [name, label],
+    ).fetchone()
+    if row:
+        return row[0]
+    if name.startswith(f"{label}:"):
+        return None
     row = conn.execute(
         """
         SELECT id FROM nodes
@@ -153,19 +179,30 @@ def _resolve(conn, label: str, name: str) -> Optional[str]:
           AND (name = ? OR name ILIKE ? OR name ILIKE ?
                OR UPPER(book_code) = UPPER(?)
                OR UPPER(version_code) = UPPER(?)
-               OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?))
+               OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?))
         ORDER BY name = ? DESC,
                  UPPER(book_code) = UPPER(?) DESC,
                  UPPER(version_code) = UPPER(?) DESC,
                  name ILIKE ? DESC,
-                 (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?) DESC,
+                 (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?) DESC,
                  length(name), name
         LIMIT 1
         """,
         [label, name, f"{name}%", f"%{name}%", name, name,
-         name, name, name, name, f"{name}%", f"%{name}%"],
+         f"%{name}%", name, name, name, f"{name}%", f"%{name}%"],
     ).fetchone()
     return row[0] if row else None
+
+
+def _figure_info(label: str, attrs) -> dict:
+    """Testament/category/description for figure rows (empty for other labels).
+
+    The frontend can show these details directly from the search result.
+    """
+    if label != "figure" or not attrs:
+        return {}
+    a = json.loads(attrs) if isinstance(attrs, str) else attrs
+    return {k: a.get(k) for k in ("testament", "category", "description")}
 
 
 # --------------------------------------------------------------------------- #
@@ -186,9 +223,11 @@ def search(
 
     Codes are the canonical identifiers, so "JOH" finds John's Gospel even
     though its name ("The Gospel According to John") doesn't start with JOH.
-    Books/versions/regions sort before locations and verses — the latter
+    Books/versions/regions/figures sort before locations and verses — the latter
     are per-mention instances that also carry book_code, and would otherwise
-    flood the results for any code search.
+    flood the results for any code search. Figures matched only by a
+    keyword (e.g. "Jerusalem" in David's keywords) sort last, so they never
+    push out a direct name match.
     """
     conn = duckdb.connect(DB_PATH, read_only=True)
     try:
@@ -197,36 +236,48 @@ def search(
         if label:
             rows = conn.execute(
                 """
-                SELECT id, label, name, book_code, chapter, verse_number, version_code
+                SELECT id, label, name, book_code, chapter, verse_number, version_code, attrs
                 FROM nodes
                 WHERE label = ?
                   AND (name ILIKE ? OR name ILIKE ?
                        OR UPPER(book_code) ILIKE UPPER(?)
                        OR UPPER(version_code) ILIKE UPPER(?)
-                       OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?)
-                       OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?))
-                ORDER BY label IN ('location', 'verse'), label, name LIMIT ?;
+                       OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?)
+                       OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?))
+                ORDER BY (label = 'figure' AND name NOT ILIKE ?),
+                         label IN ('location', 'verse'), label,
+                         (name ILIKE ? OR UPPER(book_code) = UPPER(?)
+                          OR UPPER(version_code) = UPPER(?)) DESC,
+                         name ILIKE ? DESC, name, chapter, verse_number, version_code, id
+                LIMIT ?;
                 """,
-                [label, like, contains_like, like, like, like, contains_like, limit],
+                [label, like, contains_like, like, like, like, contains_like, contains_like,
+                 q, q, q, like, limit],
             ).fetchall()
         else:
             rows = conn.execute(
                 """
-                SELECT id, label, name, book_code, chapter, verse_number, version_code
+                SELECT id, label, name, book_code, chapter, verse_number, version_code, attrs
                 FROM nodes
                 WHERE name ILIKE ? OR name ILIKE ?
                    OR UPPER(book_code) ILIKE UPPER(?)
                    OR UPPER(version_code) ILIKE UPPER(?)
-                   OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?)
-                   OR (label = 'region' AND json_extract_string(attrs, 'keywords') ILIKE ?)
-                ORDER BY label IN ('location', 'verse'), label, name LIMIT ?;
+                   OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?)
+                   OR (label IN ('region', 'figure') AND json_extract_string(attrs, 'keywords') ILIKE ?)
+                ORDER BY (label = 'figure' AND name NOT ILIKE ?),
+                         label IN ('location', 'verse'), label,
+                         (name ILIKE ? OR UPPER(book_code) = UPPER(?)
+                          OR UPPER(version_code) = UPPER(?)) DESC,
+                         name ILIKE ? DESC, name, chapter, verse_number, version_code, id
+                LIMIT ?;
                 """,
-                [like, contains_like, like, like, like, contains_like, limit],
+                [like, contains_like, like, like, like, contains_like, contains_like,
+                 q, q, q, like, limit],
             ).fetchall()
         return {"query": q, "results": [
             {"id": r[0], "label": r[1], "name": r[2],
              "book_code": r[3], "chapter": r[4], "verse_number": r[5],
-             "version_code": r[6]}
+             "version_code": r[6], **_figure_info(r[1], r[7])}
             for r in rows
         ]}
     finally:
@@ -234,7 +285,7 @@ def search(
 
 
 class TraversalRequest(BaseModel):
-    start_node: str          # node name to resolve
+    start_node: str          # node ID, name or code to resolve
     label: str = "book"      # label of the start node
     edge: str = "verse_in_book"  # edge label to recurse along
 
@@ -288,10 +339,11 @@ def traverse(request: TraversalRequest):
         ids = {n["id"] for n in nodes}
         edges = (
             [
-                {"source": from_id, "target": to_id, "label": request.edge}
-                for (from_id, to_id) in conn.execute(
+                {"source": from_id, "target": to_id, "label": request.edge,
+                 "attrs": _parse_attrs(attrs)}
+                for (from_id, to_id, attrs) in conn.execute(
                     """
-                    SELECT e.from_id, e.to_id FROM edges e
+                    SELECT e.from_id, e.to_id, e.attrs FROM edges e
                     WHERE e.label = ?
                       AND e.to_id IN (SELECT unnest(?))
                       AND e.from_id IN (SELECT unnest(?))
@@ -328,7 +380,7 @@ class PathRequest(BaseModel):
 def path(req: PathRequest):
     """Shortest path between two named nodes (BFS), walking edges in either
     direction. DuckDB recursive CTEs can't cheaply maintain a visited set
-    over 235k edges, so we load the adjacency once and do a plain BFS in
+    over ~360k edges, so we load the adjacency once and do a plain BFS in
     Python — the graph is small and the result is a handful of hops.
     """
     conn = duckdb.connect(DB_PATH, read_only=True)
@@ -346,16 +398,18 @@ def path(req: PathRequest):
             return {"found": True, "depth": 0, "source": req.source,
                     "target": req.target, "path": [src_id], "edges": []}
 
-        # Load adjacency (both directions) once. 235k edges -> ~tens of MB, fine.
-        rows = conn.execute("SELECT from_id, to_id, label FROM edges").fetchall()
-        adj: dict[str, list[tuple[str, str]]] = {}
-        for f, t, lbl in rows:
-            adj.setdefault(f, []).append((t, lbl))
-            adj.setdefault(t, []).append((f, lbl))
+        # Load adjacency (both directions) once. ~360k edges -> ~tens of MB, fine.
+        rows = conn.execute(
+            "SELECT from_id, to_id, label, attrs FROM edges"
+        ).fetchall()
+        adj: dict[str, list[tuple[str, str, object]]] = {}
+        for f, t, lbl, eattrs in rows:
+            adj.setdefault(f, []).append((t, lbl, eattrs))
+            adj.setdefault(t, []).append((f, lbl, eattrs))
 
         # Plain BFS.
         from collections import deque
-        prev: dict[str, tuple[str, str]] = {src_id: (None, None)}
+        prev: dict[str, tuple[str, str, object]] = {src_id: (None, None, None)}
         q = deque([src_id])
         found = False
         while q:
@@ -363,26 +417,29 @@ def path(req: PathRequest):
             if cur == tgt_id:
                 found = True
                 break
-            for nbr, lbl in adj.get(cur, []):
+            for nbr, lbl, eattrs in adj.get(cur, []):
                 if nbr not in prev:
-                    prev[nbr] = (cur, lbl)
+                    prev[nbr] = (cur, lbl, eattrs)
                     q.append(nbr)
         if not found:
             return {"source": req.source, "target": req.target,
                     "path": [], "edges": [], "found": False}
 
-        # Reconstruct.
+        # Reconstruct. Edges keep their stored attrs, so kinship kinds
+        # (father/mother/sibling/...) read correctly whichever way the
+        # walk ran against the stored direction.
         path_ids = []
-        path_labels = []
+        path_edges = []
         cur = tgt_id
         while cur is not None:
             path_ids.append(cur)
-            p, l = prev[cur]
+            p, l, a = prev[cur]
             if l is not None:
-                path_labels.append(l)
+                path_edges.append({"source": p, "target": cur, "label": l,
+                                    "attrs": _parse_attrs(a)})
             cur = p
         path_ids.reverse()
-        path_labels.reverse()
+        path_edges.reverse()
 
         node_rows = conn.execute(
             "SELECT id,label,name,version_code,book_code,chapter,verse_number,attrs "
@@ -397,8 +454,7 @@ def path(req: PathRequest):
             "source_id": src_id, "target_id": tgt_id,
             "found": True, "depth": len(path_ids) - 1,
             "path": nodes,
-            "edges": [{"source": path_ids[i], "target": path_ids[i + 1],
-                       "label": path_labels[i]} for i in range(len(path_labels))],
+            "edges": path_edges,
         }
     except Exception as exc:  # noqa: BLE001
         return {"error": str(exc)}
@@ -418,13 +474,15 @@ def graph(
 ):
     """Ego-graph for the force-directed visualisation.
 
-    The whole database (~150k nodes, 235k edges) is far too large to draw,
+    The whole database (~150k nodes, ~360k edges) is far too large to draw,
     so the UI queries the neighborhood of one node instead: BFS out from
     the start node up to `hops` levels, return every node reached (capped
     at `limit`) plus the edges among them. Level-by-level BFS means the cap
     cuts the outermost ring first. Balanced mode prioritises passages and
     limits each branch by neighbour type; branch_expansion widens only the
     centre's branch. Omitted neighbours are counted separately from the cap.
+    Edges carry their attrs: figure_relative_of (kinship) edges name their
+    kind (father/mother/parent/sibling/partner) so the UI can label them.
     """
     from collections import deque
 
@@ -442,15 +500,19 @@ def graph(
             return {"error": f"No {label} named '{node}'. Try Search, or a "
                             "book/version code like JOH or KJV."}
 
-        rows = conn.execute("SELECT from_id, to_id, label FROM edges").fetchall()
+        rows = conn.execute(
+            "SELECT from_id, to_id, label, attrs FROM edges"
+        ).fetchall()
         adj: dict[str, list[tuple[str, str]]] = {}
-        for f, t, lbl in rows:
+        for f, t, lbl, _eattrs in rows:
             adj.setdefault(f, []).append((t, lbl))
             adj.setdefault(t, []).append((f, lbl))
 
         node_info = {}
-        branch_limits = {"verse": 10, "location": 5, "book": 5, "version": 5, "region": 5}
-        type_order = {"verse": 0, "book": 1, "version": 2, "location": 3, "region": 4}
+        branch_limits = {"verse": 10, "location": 5, "book": 5, "version": 5, "region": 5,
+                         "figure": 5}
+        type_order = {"verse": 0, "book": 1, "version": 2, "location": 3, "region": 4,
+                      "figure": 5}
         if balanced:
             if not 1 <= branch_expansion <= 20:
                 return {"error": "Branch expansion must be between 1 and 20."}
@@ -514,10 +576,12 @@ def graph(
                 if hidden:
                     hidden_connections[cur] = hidden
 
-        # Edges among the included nodes only.
+        # Edges among the included nodes only. Kinship edges
+        # (figure_relative_of) carry their kind in attrs so the UI can
+        # label them ("Father of", "Sibling of", ...).
         links = [
-            {"source": f, "target": t, "label": lbl}
-            for f, t, lbl in rows
+            {"source": f, "target": t, "label": lbl, "attrs": _parse_attrs(eattrs)}
+            for f, t, lbl, eattrs in rows
             if f in included and t in included
         ]
 
@@ -845,6 +909,26 @@ def read_chapter(
                     "region": location[4],
                 }
                 for location in locations
+            ],
+            "figures": [
+                {
+                    "id": figure[0], "label": "figure", "name": figure[1],
+                    "verse_number": figure[2],
+                    "aliases": json.loads(figure[3]) if figure[3] else [],
+                }
+                for figure in conn.execute(
+                    """
+                    SELECT f.id, f.name, v.verse_number,
+                           json_extract(f.attrs, 'aliases')
+                    FROM nodes v
+                    JOIN edges e ON e.from_id = v.id AND e.label = 'figure_in_verse'
+                    JOIN nodes f ON f.id = e.to_id AND f.label = 'figure'
+                    WHERE v.label = 'verse' AND UPPER(v.book_code) = UPPER(?)
+                      AND v.chapter = ? AND UPPER(v.version_code) = UPPER(?)
+                    ORDER BY v.verse_number, f.name, f.id;
+                    """,
+                    [book_code, chapter, version_code],
+                ).fetchall()
             ],
         }
     finally:

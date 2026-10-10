@@ -1,0 +1,1980 @@
+[
+    {
+        "name": "Naomi",
+        "testament": "Old Testament",
+        "category": "People of Ruth",
+        "keywords": "Mara,Noemi,Ruth",
+        "aliases": ["Noemi", "Noëmi", "Mara"],
+        "description": "Ruth's mother-in-law, who returned to Bethlehem after losing her husband and sons.",
+        "tipnr": "Naomi@Rut.1.2-"
+    },
+    {
+        "name": "Orpah",
+        "testament": "Old Testament",
+        "category": "People of Ruth",
+        "keywords": "Orpha,Naomi,Chilion",
+        "aliases": ["Orpha"],
+        "description": "Naomi's daughter-in-law who returned to her people in Moab.",
+        "tipnr": "Orpah@Rut.1.4-"
+    },
+    {
+        "name": "Elimelech",
+        "testament": "Old Testament",
+        "category": "People of Ruth",
+        "keywords": "Naomi,Mahlon,Chilion",
+        "aliases": [],
+        "description": "Naomi's husband, who moved with his family from Bethlehem to Moab.",
+        "tipnr": "Elimelech@Rut.1.2-"
+    },
+    {
+        "name": "Mahlon",
+        "testament": "Old Testament",
+        "category": "People of Ruth",
+        "keywords": "Mahalon,Ruth,Naomi",
+        "aliases": ["Mahalon"],
+        "description": "A son of Naomi and Elimelech, and Ruth's first husband.",
+        "tipnr": "Mahlon@Rut.1.2-"
+    },
+    {
+        "name": "Chilion",
+        "testament": "Old Testament",
+        "category": "People of Ruth",
+        "keywords": "Chelion,Orpah,Naomi",
+        "aliases": ["Chelion"],
+        "description": "A son of Naomi and Elimelech, and Orpah's husband.",
+        "tipnr": "Chilion@Rut.1.2-"
+    },
+    {
+        "name": "Aaron",
+        "testament": "Old Testament",
+        "category": "Priests",
+        "keywords": "Aharon,Moses,Levi,High Priest,Golden Calf",
+        "description": "Brother of Moses and first High Priest of Israel, founder of the Aaronic priesthood.",
+        "tipnr": "Aaron@Exo.4.14-Heb"
+    },
+    {
+        "name": "Abel",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Cain,Adam,Eve",
+        "description": "Second son of Adam and Eve, a shepherd whose offering God accepted, murdered by his brother Cain.",
+        "tipnr": "Abel@Gen.4.2-Heb"
+    },
+    {
+        "name": "Abigail",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Nabal,David,Carmel",
+        "description": "Wise wife of Nabal who averted David's anger, later becoming one of David's wives.",
+        "tipnr": "Abigail@1Sa.25.3-1Ch"
+    },
+    {
+        "name": "Abijam",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Abijah,Abia,Rehoboam,Judah",
+        "description": "Son of Rehoboam and king of Judah who fought against Jeroboam.",
+        "tipnr": "Abijah@1Ki.14.31-Mat"
+    },
+    {
+        "name": "Abraham",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Abram,Sarah,Ur,Canaan,Hebron,Covenant",
+        "description": "Patriarch called by God out of Ur to Canaan, with whom God made a covenant promising countless descendants; father of Isaac and Ishmael.",
+        "tipnr": "Abraham@Gen.11.26-1Pe"
+    },
+    {
+        "name": "Adam",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Eden,Eve,Genesis",
+        "description": "The first man, formed from the dust of the earth and placed in the Garden of Eden, whose disobedience brought about the Fall.",
+        "tipnr": "Adam@Gen.2.19-Jud"
+    },
+    {
+        "name": "Agabus",
+        "testament": "New Testament",
+        "category": "Prophets",
+        "keywords": "Antioch,Caesarea,Famine,Paul",
+        "description": "Prophet of the early Church who foretold a great famine and Paul's arrest in Jerusalem.",
+        "tipnr": "Agabus@Act.11.28-"
+    },
+    {
+        "name": "Agur",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Jakeh,Proverbs,Massa",
+        "description": "Son of Jakeh, to whom the sayings of Proverbs chapter 30 are attributed.",
+        "tipnr": "Agur@Pro.30.1"
+    },
+    {
+        "name": "Ahab",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Omri,Jezebel,Samaria,Elijah,Naboth,Baal",
+        "description": "King of Israel who, with his wife Jezebel, promoted the worship of Baal and was opposed by Elijah.",
+        "tipnr": "Ahab@1Ki.16.28-Mic"
+    },
+    {
+        "name": "Ahaz",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Achaz,Jotham,Judah,Assyria,Isaiah",
+        "description": "King of Judah who turned to Assyria for help against Israel and Syria, ignoring Isaiah's counsel.",
+        "tipnr": "Ahaz@2Ki.15.38-Mat"
+    },
+    {
+        "name": "Ahaziah of Israel",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Ahaziah,Ahab,Israel,Baalzebub",
+        "description": "Son of Ahab who died after a fall, having sought an oracle from Baal-zebub.",
+        "tipnr": "Ahaziah@1Ki.22.40-2Ch"
+    },
+    {
+        "name": "Ahaziah of Judah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Ahaziah,Jehoram,Athaliah,Judah",
+        "description": "King of Judah killed by Jehu during his revolt against the house of Ahab.",
+        "tipnr": "Ahaziah@2Ki.8.24-2Ch"
+    },
+    {
+        "name": "Ahijah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Shiloh,Jeroboam",
+        "description": "Prophet of Shiloh who foretold the division of the kingdom by tearing his cloak into twelve pieces before Jeroboam.",
+        "tipnr": "Ahijah@1Ki.11.29-2Ch"
+    },
+    {
+        "name": "Alexander the Great",
+        "testament": "Deuterocanon",
+        "category": "Greek rulers",
+        "keywords": "Alexander,Macedon,Philip,Greece,Persia",
+        "description": "King of Macedon whose conquest of the Persian Empire opens the First Book of Maccabees."
+    },
+    {
+        "name": "Amaziah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Joash,Judah,Edom",
+        "description": "King of Judah who defeated Edom but was then routed by Jehoash of Israel.",
+        "tipnr": "Amaziah@2Ki.12.21-2Ch"
+    },
+    {
+        "name": "Amminadab",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Aminadab,Ram,Nahshon",
+        "description": "Son of Ram and father of Nahshon, whose daughter Elisheba married Aaron.",
+        "tipnr": "Amminadab@Exo.6.23-Luk"
+    },
+    {
+        "name": "Amon",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Manasseh,Judah,Josiah",
+        "description": "Son of Manasseh, assassinated by his servants after a two-year reign.",
+        "tipnr": "Amon@2Ki.21.18-Mat"
+    },
+    {
+        "name": "Amos",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Tekoa,Shepherd,Israel,Bethel",
+        "description": "Shepherd of Tekoa who prophesied against social injustice in the northern kingdom.",
+        "tipnr": "Amos@Amo.1.1-"
+    },
+    {
+        "name": "Amoz",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Isaiah",
+        "description": "Father of the prophet Isaiah.",
+        "tipnr": "Amoz@2Ki.19.2-Isa"
+    },
+    {
+        "name": "Andrew",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "Peter,Bethsaida,Fisherman",
+        "description": "Fisherman of Bethsaida, brother of Simon Peter and the first apostle called by Jesus.",
+        "tipnr": "Andrew@Mat.4.18-Act"
+    },
+    {
+        "name": "Anna",
+        "testament": "New Testament",
+        "category": "Prophets",
+        "keywords": "Phanuel,Asher,Temple,Prophetess",
+        "description": "Aged prophetess who recognised the infant Jesus at his presentation in the Temple.",
+        "tipnr": "Anna@Luk.2.36"
+    },
+    {
+        "name": "Annas",
+        "testament": "New Testament",
+        "category": "Priests",
+        "keywords": "Ananus,High Priest,Caiaphas",
+        "description": "First High Priest of Roman Judaea and father-in-law of Caiaphas, before whom Jesus was first brought.",
+        "tipnr": "Annas@Luk.3.2-Act"
+    },
+    {
+        "name": "Antiochus III the Great",
+        "testament": "Deuterocanon",
+        "category": "Greek rulers",
+        "keywords": "Antiochus,Seleucid,Syria,Magnesia",
+        "description": "Seleucid king who took Judaea from the Ptolemies and was defeated by Rome at Magnesia."
+    },
+    {
+        "name": "Antiochus IV Epiphanes",
+        "testament": "Deuterocanon",
+        "category": "Greek rulers",
+        "keywords": "Antiochus,Epiphanes,Seleucid,Temple,Abomination",
+        "description": "Seleucid king whose desecration of the Temple and persecution of the Jews provoked the Maccabean revolt."
+    },
+    {
+        "name": "Apollos",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Alexandria,Corinth,Ephesus",
+        "description": "Eloquent Jewish Christian of Alexandria who taught in Ephesus and Corinth.",
+        "tipnr": "Apollos@Act.18.24-Tit"
+    },
+    {
+        "name": "Aquila",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Priscilla,Pontus,Corinth,Tentmaker",
+        "description": "Jewish tentmaker from Pontus who, with his wife Priscilla, worked alongside Paul.",
+        "tipnr": "Aquila@Act.18.2-2Ti"
+    },
+    {
+        "name": "Arpachshad",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Arphaxad,Shem",
+        "description": "Son of Shem, born two years after the Flood, in the line leading to Abraham.",
+        "tipnr": "Arpachshad@Gen.10.22-Luk"
+    },
+    {
+        "name": "Asa",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Abijam,Judah,Reform",
+        "description": "King of Judah who removed idols from the land and reigned for forty-one years.",
+        "tipnr": "Asa@1Ki.15.8-Mat"
+    },
+    {
+        "name": "Asher",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Aser,Jacob,Zilpah",
+        "description": "Son of Jacob and Zilpah, ancestor of the tribe of Asher along the northern coast.",
+        "tipnr": "Asher@Gen.30.13-Rev",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Astyages",
+        "testament": "Deuterocanon",
+        "category": "Persian rulers",
+        "keywords": "Media,Cyrus,Bel",
+        "description": "Last king of the Medes, mentioned at the opening of the story of Bel and the Dragon."
+    },
+    {
+        "name": "Athaliah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Ahab,Jezebel,Judah,Jehoiada",
+        "description": "Daughter of Ahab who seized the throne of Judah, the only reigning queen of Judah, until overthrown by the priest Jehoiada.",
+        "tipnr": "Athaliah@2Ki.8.26-2Ch"
+    },
+    {
+        "name": "Augustus",
+        "testament": "New Testament",
+        "category": "Roman emperors",
+        "keywords": "Caesar,Octavian,Rome,Census",
+        "description": "First Roman emperor, whose decree of a census brought Joseph and Mary to Bethlehem.",
+        "tipnr": "Augustus@Luk.2.1-Act"
+    },
+    {
+        "name": "Azariah (prophet)",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Azariah,Oded,Asa",
+        "description": "Son of Oded who encouraged King Asa to carry out religious reforms.",
+        "tipnr": "Azariah@2Ch.15.1"
+    },
+    {
+        "name": "Baasha",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Ahijah,Israel,Tirzah",
+        "description": "King of Israel who seized the throne by killing Nadab and wiped out the house of Jeroboam.",
+        "tipnr": "Baasha@1Ki.15.16-Jer"
+    },
+    {
+        "name": "Balaam",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Beor,Balak,Moab,Donkey,Pethor",
+        "description": "Non-Israelite seer hired by Balak of Moab to curse Israel, who instead blessed them after his donkey spoke.",
+        "tipnr": "Balaam@Num.22.5-Rev"
+    },
+    {
+        "name": "Barnabas",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "Joses,Cyprus,Antioch,Paul",
+        "description": "Levite of Cyprus, companion of Paul on his first missionary journey.",
+        "tipnr": "Barnabas@Act.4.36-Col"
+    },
+    {
+        "name": "Bartholomew",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "Nathanael,Cana",
+        "description": "Apostle commonly identified with Nathanael of Cana, in whom Jesus said there was no guile.",
+        "tipnr": "Bartholomew@Mat.10.3-Act"
+    },
+    {
+        "name": "Baruch",
+        "testament": "Deuterocanon",
+        "category": "Others",
+        "keywords": "Neriah,Jeremiah,Scribe",
+        "description": "Scribe and companion of Jeremiah, to whom the Book of Baruch is attributed.",
+        "tipnr": "Baruch@Jer.32.12-"
+    },
+    {
+        "name": "Beeri",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Hosea",
+        "description": "Father of the prophet Hosea.",
+        "tipnr": "Beeri@Hos.1.1"
+    },
+    {
+        "name": "Benjamin",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Jacob,Rachel,Gibeah",
+        "description": "Youngest son of Jacob and Rachel, ancestor of the tribe of Benjamin, from which came King Saul and the apostle Paul.",
+        "tipnr": "Benjamin@Gen.35.18-Rev",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Beor",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Bosor,Balaam",
+        "description": "Father of the seer Balaam.",
+        "tipnr": "Beor@Num.22.5-2Pe"
+    },
+    {
+        "name": "Boaz",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Booz,Ruth,Bethlehem",
+        "description": "Wealthy landowner of Bethlehem who married Ruth the Moabite as her kinsman-redeemer; great-grandfather of David.",
+        "tipnr": "Boaz@Rut.2.1-Luk"
+    },
+    {
+        "name": "Buzi",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Ezekiel,Priest",
+        "description": "Priest and father of the prophet Ezekiel.",
+        "tipnr": "Buzi@Ezk.1.3"
+    },
+    {
+        "name": "Caiaphas",
+        "testament": "New Testament",
+        "category": "Priests",
+        "keywords": "Joseph,High Priest,Sanhedrin,Annas",
+        "description": "High Priest who presided over the Sanhedrin at the trial of Jesus.",
+        "tipnr": "Caiaphas@Mat.26.3-Act"
+    },
+    {
+        "name": "Cainan",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Kainan,Arphaxad",
+        "description": "Son of Arphaxad found in the Septuagint and Luke's genealogy but absent from the Masoretic text.",
+        "tipnr": "Cainan@Luk.3.36"
+    },
+    {
+        "name": "Claudius",
+        "testament": "New Testament",
+        "category": "Roman emperors",
+        "keywords": "Caesar,Rome,Famine,Expulsion",
+        "description": "Roman emperor who expelled the Jews from Rome and in whose reign Agabus' famine occurred.",
+        "tipnr": "Claudius@Act.11.28-"
+    },
+    {
+        "name": "Cleopas",
+        "testament": "New Testament",
+        "category": "Jesus and his relatives",
+        "keywords": "Clopas,Cleophas,Alphaeus,Emmaus",
+        "description": "Disciple who met the risen Jesus on the road to Emmaus, often identified with Clopas.",
+        "tipnr": "Alphaeus@Mat.10.3-Act"
+    },
+    {
+        "name": "Dan",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Jacob,Bilhah,Laish",
+        "description": "Son of Jacob and Bilhah, ancestor of the tribe of Dan, which later settled in the far north.",
+        "tipnr": "Dan@Gen.30.6-1Ch",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Daniel",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Belteshazzar,Babylon,Lions,Nebuchadnezzar",
+        "description": "Judaean exile in Babylon who interpreted dreams for Nebuchadnezzar and survived the lions' den.",
+        "tipnr": "Daniel@Ezk.14.14-Mrk"
+    },
+    {
+        "name": "Darius III",
+        "testament": "Deuterocanon",
+        "category": "Persian rulers",
+        "keywords": "Darius,Persia,Alexander",
+        "description": "Last king of the Achaemenid Persian Empire, defeated by Alexander the Great."
+    },
+    {
+        "name": "David",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Jesse,Bethlehem,Goliath,Jerusalem,Psalms,Zion",
+        "description": "Shepherd boy who slew Goliath and became king of a united Israel, making Jerusalem his capital; traditional author of many Psalms.",
+        "tipnr": "David@Rut.4.17-Rev"
+    },
+    {
+        "name": "Deborah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Barak,Judges,Sisera",
+        "description": "Prophetess and judge of Israel who, with Barak, led the victory over the Canaanite general Sisera.",
+        "tipnr": "Deborah@Jdg.4.4-"
+    },
+    {
+        "name": "Dionysius the Areopagite",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Dionysius,Areopagus,Athens",
+        "description": "Member of the Areopagus in Athens converted by Paul's preaching.",
+        "tipnr": "Dionysius@Act.17.34"
+    },
+    {
+        "name": "Drusilla",
+        "testament": "New Testament",
+        "category": "Secular rulers",
+        "keywords": "Felix,Agrippa,Caesarea",
+        "description": "Daughter of Herod Agrippa I and wife of Felix, who heard Paul speak of faith in Christ.",
+        "tipnr": "Drusilla@Act.24.24"
+    },
+    {
+        "name": "Eber",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Heber,Hebrews,Peleg",
+        "description": "Great-grandson of Shem, traditionally regarded as the eponymous ancestor of the Hebrews.",
+        "tipnr": "Eber@Gen.10.21-Luk"
+    },
+    {
+        "name": "Elah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Baasha,Israel,Tirzah",
+        "description": "Son of Baasha, killed while drunk in Tirzah by his officer Zimri.",
+        "tipnr": "Elah@1Ki.16.6-"
+    },
+    {
+        "name": "Eldad",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Medad,Moses,Wilderness",
+        "description": "One of the seventy elders who prophesied in the Israelite camp, prompting Moses to wish all the Lord's people were prophets.",
+        "tipnr": "Eldad@Num.11.26-"
+    },
+    {
+        "name": "Eleazar",
+        "testament": "Old Testament",
+        "category": "Priests",
+        "keywords": "Aaron,High Priest,Joshua",
+        "description": "Son of Aaron who succeeded him as High Priest and helped Joshua divide the land of Canaan.",
+        "tipnr": "Eleazar@Exo.6.23-Ezr"
+    },
+    {
+        "name": "Eleazar Avaran",
+        "testament": "Deuterocanon",
+        "category": "Maccabees",
+        "keywords": "Eleazar,Avaran,Elephant,Mattathias",
+        "description": "Son of Mattathias who died at Beth-zechariah beneath a war elephant he had stabbed."
+    },
+    {
+        "name": "Eli",
+        "testament": "Old Testament",
+        "category": "Priests",
+        "keywords": "Heli,Shiloh,Samuel,Hophni,Phinehas",
+        "description": "High Priest at Shiloh who raised the young Samuel.",
+        "tipnr": "Eli@1Sa.1.3-1Ki"
+    },
+    {
+        "name": "Eliezer ben Dodavah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Eliezer,Dodavah,Jehoshaphat,Tarshish",
+        "description": "Prophet who foretold the wreck of the ships Jehoshaphat built with Ahaziah of Israel.",
+        "tipnr": "Eliezer@2Ch.20.37"
+    },
+    {
+        "name": "Elijah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Elias,Tishbite,Carmel,Ahab,Jezebel,Elisha",
+        "description": "Fiery prophet of the northern kingdom who confronted Ahab and the prophets of Baal on Mount Carmel and was taken up to heaven in a whirlwind.",
+        "tipnr": "Elijah@1Ki.17.1-Jas"
+    },
+    {
+        "name": "Elisha",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Eliseus,Elijah,Jordan,Naaman",
+        "description": "Disciple and successor of Elijah, renowned for many miracles including the healing of Naaman the Syrian.",
+        "tipnr": "Elisha@1Ki.19.16-Luk"
+    },
+    {
+        "name": "Elkanah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Hannah,Samuel,Ramah",
+        "description": "Ephraimite husband of Hannah and father of the prophet Samuel.",
+        "tipnr": "Elkanah@1Sa.1.1-1Ch"
+    },
+    {
+        "name": "Enoch",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Henoch,Jared,Methuselah",
+        "description": "Son of Jared who walked with God and was taken up without dying; also venerated as a prophet.",
+        "tipnr": "Enoch@Gen.5.18-Jud"
+    },
+    {
+        "name": "Enos",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Enosh,Seth",
+        "description": "Son of Seth and grandson of Adam, in whose days men began to call upon the name of the Lord.",
+        "tipnr": "Enosh@Gen.4.26-Luk"
+    },
+    {
+        "name": "Epaphras",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Colossae,Paul,Prisoner",
+        "description": "Founder of the church at Colossae and fellow prisoner of Paul.",
+        "tipnr": "Epaphras@Col.1.7-Phm"
+    },
+    {
+        "name": "Ephraim",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Joseph,Samaria,Shiloh",
+        "description": "Younger son of Joseph, blessed above his brother by Jacob, ancestor of the leading tribe of the northern kingdom.",
+        "tipnr": "Ephraim@Gen.41.52-Zec",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Esther",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Hadassah,Mordecai,Ahasuerus,Purim",
+        "description": "Jewish queen of Persia who risked her life to save her people from Haman's decree, commemorated at Purim.",
+        "tipnr": "Esther@Est.2.7-"
+    },
+    {
+        "name": "Ezekiel",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Ezechiel,Buzi,Chebar,Babylon,Exile",
+        "description": "Priest and prophet among the exiles in Babylon, known for his visions of the divine chariot and the valley of dry bones.",
+        "tipnr": "Ezekiel@Ezk.1.3-"
+    },
+    {
+        "name": "Ezra",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Esdras,Scribe,Babylon,Jerusalem,Law",
+        "description": "Priest and scribe who led a return from Babylon and re-established the Law in Jerusalem.",
+        "tipnr": "Ezra@Ezr.7.1-Neh"
+    },
+    {
+        "name": "Felix",
+        "testament": "New Testament",
+        "category": "Secular rulers",
+        "keywords": "Antonius Felix,Caesarea,Drusilla,Paul",
+        "description": "Roman governor of Judaea who heard Paul's case at Caesarea and kept him imprisoned.",
+        "tipnr": "Felix@Act.23.24-"
+    },
+    {
+        "name": "Gad",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Jacob,Zilpah,Gilead",
+        "description": "Son of Jacob and Zilpah, ancestor of the tribe of Gad in Gilead east of the Jordan.",
+        "tipnr": "Gad@Gen.30.11-Rev",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Gad (prophet)",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Gad,Seer,David",
+        "description": "Seer and prophet in the court of King David.",
+        "tipnr": "Gad@1Sa.22.5-2Ch"
+    },
+    {
+        "name": "Gideon",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Jerubbaal,Midian,Judges",
+        "description": "Judge of Israel who, with only three hundred men, defeated the Midianites.",
+        "tipnr": "Gideon@Jdg.6.11-Heb"
+    },
+    {
+        "name": "Habakkuk",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Habacuc,Chaldeans",
+        "description": "Minor prophet who questioned God about injustice and the rise of the Chaldeans.",
+        "tipnr": "Habakkuk@Hab.1.1-"
+    },
+    {
+        "name": "Haggai",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Aggeus,Zerubbabel,Temple",
+        "description": "Post-exilic prophet who urged the returned exiles to rebuild the Temple.",
+        "tipnr": "Haggai@Ezr.5.1-Hag"
+    },
+    {
+        "name": "Hanani",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Seer,Asa,Jehu",
+        "description": "Seer who rebuked King Asa of Judah for relying on Syria rather than the Lord.",
+        "tipnr": "Hanani@1Ki.16.1-2Ch"
+    },
+    {
+        "name": "Hannah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Anna,Elkanah,Samuel,Shiloh",
+        "description": "Mother of Samuel, whose prayer for a child at Shiloh was answered and whose song of thanksgiving is preserved in 1 Samuel.",
+        "tipnr": "Hannah@1Sa.1.2-"
+    },
+    {
+        "name": "Herod Agrippa I",
+        "testament": "New Testament",
+        "category": "Secular rulers",
+        "keywords": "Herod,Agrippa,James,Peter,Caesarea",
+        "description": "King of Judaea who executed James son of Zebedee and imprisoned Peter, dying suddenly at Caesarea.",
+        "tipnr": "Herod@Act.12.1-"
+    },
+    {
+        "name": "Herod Agrippa II",
+        "testament": "New Testament",
+        "category": "Secular rulers",
+        "keywords": "Agrippa,Bernice,Caesarea,Paul",
+        "description": "King before whom Paul made his defence in Acts 26.",
+        "tipnr": "Agrippa@Act.25.13-"
+    },
+    {
+        "name": "Herod Antipas",
+        "testament": "New Testament",
+        "category": "Secular rulers",
+        "keywords": "Herod,Tetrarch,Galilee,Perea,John the Baptist",
+        "description": "Tetrarch of Galilee and Peraea who beheaded John the Baptist and took part in the trial of Jesus.",
+        "tipnr": "Herod@Mat.14.1-Act"
+    },
+    {
+        "name": "Herod the Great",
+        "testament": "New Testament",
+        "category": "Secular rulers",
+        "keywords": "Herod,Judaea,Bethlehem,Temple,Magi",
+        "description": "Client king of Judaea under Rome who rebuilt the Temple and ordered the massacre of the innocents at Bethlehem.",
+        "tipnr": "Herod@Mat.2.1-Act"
+    },
+    {
+        "name": "Herodias",
+        "testament": "New Testament",
+        "category": "Secular rulers",
+        "keywords": "Herod,Antipas,Salome,John the Baptist",
+        "description": "Wife of Herod Antipas who demanded the head of John the Baptist.",
+        "tipnr": "Herodias@Mat.14.3-Luk"
+    },
+    {
+        "name": "Hezekiah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Ezekias,Ahaz,Judah,Sennacherib,Isaiah",
+        "description": "Reforming king of Judah who withstood the Assyrian siege of Jerusalem under Sennacherib.",
+        "tipnr": "Hezekiah@2Ki.16.20-Mat"
+    },
+    {
+        "name": "Hezron",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Esrom,Perez",
+        "description": "Son of Perez and grandson of Judah, in the line of David.",
+        "tipnr": "Hezron@Gen.46.12-Luk"
+    },
+    {
+        "name": "Hosea",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Osee,Beeri,Gomer,Israel",
+        "description": "Minor prophet of the northern kingdom whose marriage to the unfaithful Gomer symbolised Israel's unfaithfulness to God.",
+        "tipnr": "Hosea@Hos.1.1-Rom"
+    },
+    {
+        "name": "Hoshea",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Elah,Israel,Samaria,Assyria",
+        "description": "Last king of Israel, during whose reign Samaria fell to Assyria and the people were carried into exile.",
+        "tipnr": "Hoshea@2Ki.15.30-"
+    },
+    {
+        "name": "Huldah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Josiah,Jerusalem,Prophetess",
+        "description": "Prophetess consulted by King Josiah after the discovery of the Book of the Law in the Temple.",
+        "tipnr": "Huldah@2Ki.22.14-2Ch"
+    },
+    {
+        "name": "Iddo",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Seer,Rehoboam,Abijah",
+        "description": "Seer whose writings on the reigns of Solomon, Rehoboam and Abijah are cited in Chronicles.",
+        "tipnr": "Iddo@2Ch.9.29-"
+    },
+    {
+        "name": "Isaac",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Abraham,Rebekah,Jacob,Esau,Moriah",
+        "description": "Son of Abraham and Sarah, born in their old age and nearly offered as a sacrifice on Mount Moriah; father of Jacob and Esau.",
+        "tipnr": "Isaac@Gen.17.19-Jas"
+    },
+    {
+        "name": "Isaiah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Esaias,Amoz,Hezekiah,Jerusalem,Immanuel",
+        "description": "Major prophet of eighth-century Judah who counselled Hezekiah and foretold the coming of Immanuel and the Suffering Servant.",
+        "tipnr": "Isaiah@2Ki.19.2-Rom"
+    },
+    {
+        "name": "Ish-bosheth",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Ishbosheth,Eshbaal,Saul,Abner",
+        "description": "Son of Saul who briefly ruled the northern tribes after his father's death before being assassinated.",
+        "tipnr": "Ish-bosheth@2Sa.2.8-1Ch"
+    },
+    {
+        "name": "Issachar",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Jacob,Leah,Jezreel",
+        "description": "Fifth son of Jacob and Leah, ancestor of the tribe of Issachar in the Jezreel valley.",
+        "tipnr": "Issachar@Gen.30.18-Rev",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Jacob",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Israel,Isaac,Rachel,Leah,Bethel,Peniel",
+        "description": "Son of Isaac, renamed Israel after wrestling with an angel, whose twelve sons became the ancestors of the Twelve Tribes.",
+        "tipnr": "Israel@Gen.25.26-Rev",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Jahaziel",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Levite,Jehoshaphat",
+        "description": "Levite on whom the Spirit came, assuring Jehoshaphat that the battle against Moab and Ammon was the Lord's.",
+        "tipnr": "Jahaziel@2Ch.20.14"
+    },
+    {
+        "name": "James (brother of Jesus)",
+        "testament": "New Testament",
+        "category": "Jesus and his relatives",
+        "keywords": "James,Jerusalem,Epistle,Just",
+        "description": "Brother of Jesus and leader of the Jerusalem church, traditionally the author of the Epistle of James.",
+        "tipnr": "James@Mat.13.55-Jud"
+    },
+    {
+        "name": "James, son of Alphaeus",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "James,Alphaeus,James the Less",
+        "description": "One of the Twelve, often identified with James the Less.",
+        "tipnr": "James@Mat.10.3-Act"
+    },
+    {
+        "name": "James, son of Zebedee",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "James,Zebedee,Boanerges,John",
+        "description": "Fisherman and one of the inner circle of three, the first apostle to be martyred, under Herod Agrippa.",
+        "tipnr": "James@Mat.4.21-Act"
+    },
+    {
+        "name": "Jared",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Jered,Mahalalel",
+        "description": "Son of Mahalalel and father of Enoch, said to have lived 962 years.",
+        "tipnr": "Jared@Gen.5.15-Luk"
+    },
+    {
+        "name": "Jeconiah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Jehoiachin,Coniah,Jechonias,Judah,Babylon",
+        "description": "King of Judah who reigned three months before being carried into exile in Babylon.",
+        "tipnr": "Jehoiachin@2Ki.24.6-Mat"
+    },
+    {
+        "name": "Jeduthun",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Ethan,Psalms,Levite",
+        "description": "Levite musician and seer appointed by David to lead worship, named in the titles of several Psalms.",
+        "tipnr": "Jeduthun@1Ch.6.44-Psa"
+    },
+    {
+        "name": "Jehoahaz of Israel",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Jehoahaz,Jehu,Israel,Syria",
+        "description": "Son of Jehu whose reign saw Israel oppressed by the Syrians.",
+        "tipnr": "Jehoahaz@2Ki.10.35-2Ch"
+    },
+    {
+        "name": "Jehoahaz of Judah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Jehoahaz,Shallum,Josiah,Judah,Egypt",
+        "description": "Son of Josiah who reigned three months before being deposed by Pharaoh Necho and taken to Egypt.",
+        "tipnr": "Jehoahaz@2Ki.23.30-2Ch"
+    },
+    {
+        "name": "Jehoash of Israel",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Jehoash,Joash,Israel,Elisha",
+        "description": "King of Israel who recovered cities from Syria and defeated Amaziah of Judah.",
+        "tipnr": "Joash@2Ki.13.9-Amo"
+    },
+    {
+        "name": "Jehoash of Judah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Jehoash,Joash,Jehoiada,Judah,Temple",
+        "description": "King of Judah, hidden as an infant from Athaliah, who repaired the Temple under the guidance of Jehoiada.",
+        "tipnr": "Joash@2Ki.11.2-2Ch"
+    },
+    {
+        "name": "Jehoiakim",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Eliakim,Josiah,Judah,Babylon,Jeremiah",
+        "description": "King of Judah who burned Jeremiah's scroll and became a vassal of Nebuchadnezzar.",
+        "tipnr": "Jehoiakim@2Ki.23.34-Dan"
+    },
+    {
+        "name": "Jehoram of Israel",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Jehoram,Joram,Ahab,Israel,Moab",
+        "description": "Son of Ahab who campaigned against Moab and was killed by Jehu.",
+        "tipnr": "Joram@2Ki.1.17-2Ch"
+    },
+    {
+        "name": "Jehoram of Judah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Jehoram,Joram,Jehoshaphat,Judah,Athaliah",
+        "description": "Son of Jehoshaphat who married Athaliah, daughter of Ahab, and led Judah into idolatry.",
+        "tipnr": "Jehoram@1Ki.22.50-Mat"
+    },
+    {
+        "name": "Jehoshaphat",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Josaphat,Asa,Judah,Ahab",
+        "description": "God-fearing king of Judah who allied with Ahab and reformed the administration of justice.",
+        "tipnr": "Jehoshaphat@1Ki.15.24-Mat"
+    },
+    {
+        "name": "Jehu",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Nimshi,Jezreel,Jezebel,Israel",
+        "description": "Army commander anointed king of Israel who overthrew the house of Ahab and destroyed Baal worship.",
+        "tipnr": "Jehu@1Ki.19.16-Hos"
+    },
+    {
+        "name": "Jehu (prophet)",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Jehu,Hanani,Baasha,Jehoshaphat",
+        "description": "Son of Hanani who prophesied against Baasha of Israel and rebuked Jehoshaphat of Judah.",
+        "tipnr": "Jehu@1Ki.16.1-2Ch"
+    },
+    {
+        "name": "Jeremiah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Jeremias,Jeremy,Anathoth,Babylon,Lamentations",
+        "description": "Major prophet who warned Judah of the Babylonian conquest and witnessed the fall of Jerusalem.",
+        "tipnr": "Jeremiah@2Ch.35.25-Mat"
+    },
+    {
+        "name": "Jeroboam I",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Jeroboam,Nebat,Bethel,Dan,Israel,Samaria",
+        "description": "First king of the northern kingdom of Israel, who set up golden calves at Bethel and Dan.",
+        "tipnr": "Jeroboam@1Ki.11.26-2Ch"
+    },
+    {
+        "name": "Jeroboam II",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Jeroboam,Joash,Israel,Samaria",
+        "description": "King of Israel whose long and prosperous reign restored its borders, the setting for Amos and Hosea.",
+        "tipnr": "Jeroboam@2Ki.13.13-Amo"
+    },
+    {
+        "name": "Jesse",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Bethlehem,Obed,David",
+        "description": "Bethlehemite father of King David, whose 'root' became a messianic symbol.",
+        "tipnr": "Jesse@Rut.4.17-Rom"
+    },
+    {
+        "name": "Jesus Christ",
+        "testament": "New Testament",
+        "category": "Jesus and his relatives",
+        "keywords": "Jesus,Christ,Messiah,Nazareth,Bethlehem,Galilee,Jerusalem,Calvary",
+        "description": "Central figure of Christianity, born in Bethlehem and raised in Nazareth, whose ministry, crucifixion and resurrection form the heart of the Gospels.",
+        "tipnr": "Jesus@Isa.7.14-Rev"
+    },
+    {
+        "name": "Jezebel",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Ahab,Sidon,Baal,Elijah,Naboth",
+        "description": "Phoenician princess and queen of Israel who championed Baal worship and persecuted the prophets of the Lord.",
+        "tipnr": "Jezebel@1Ki.16.31-Rev"
+    },
+    {
+        "name": "Joel",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Pethuel,Locusts,Judah",
+        "description": "Minor prophet who described a devastating plague of locusts and foretold the outpouring of the Spirit on all flesh.",
+        "tipnr": "Joel@Jol.1.1-Act"
+    },
+    {
+        "name": "John Gaddi",
+        "testament": "Deuterocanon",
+        "category": "Maccabees",
+        "keywords": "John,Gaddis,Mattathias,Maccabees",
+        "description": "Eldest son of Mattathias, killed by the Jambrites near Medeba."
+    },
+    {
+        "name": "John Hyrcanus",
+        "testament": "Deuterocanon",
+        "category": "Maccabees",
+        "keywords": "Hyrcanus,Simon,Hasmonean",
+        "description": "Son of Simon Thassi, Hasmonean High Priest and ruler who expanded Judaea's territory."
+    },
+    {
+        "name": "John Mark",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Mark,Barnabas,Paul,Jerusalem",
+        "description": "Cousin of Barnabas who accompanied Paul on his first journey, often identified with the Evangelist Mark.",
+        "tipnr": "Mark@Act.12.12-1Pe"
+    },
+    {
+        "name": "John the Apostle",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "John,Zebedee,Boanerges,Beloved Disciple,Ephesus,Patmos",
+        "description": "Son of Zebedee and one of the inner circle, traditionally the Beloved Disciple and author of the Fourth Gospel.",
+        "tipnr": "John@Mat.4.21-Rev"
+    },
+    {
+        "name": "John the Baptist",
+        "testament": "New Testament",
+        "category": "Prophets",
+        "keywords": "John,Baptist,Jordan,Elizabeth,Herod,Wilderness",
+        "description": "Forerunner of Jesus who preached repentance and baptised in the Jordan, later beheaded by Herod Antipas.",
+        "tipnr": "John@Mat.3.1-Act"
+    },
+    {
+        "name": "Jonah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Jonas,Nineveh,Whale,Amittai",
+        "description": "Prophet sent to Nineveh who fled by sea and was swallowed by a great fish before preaching repentance to the city.",
+        "tipnr": "Jonah@2Ki.14.25-Luk"
+    },
+    {
+        "name": "Jonathan Apphus",
+        "testament": "Deuterocanon",
+        "category": "Maccabees",
+        "keywords": "Jonathan,Apphus,Mattathias,High Priest",
+        "description": "Son of Mattathias who succeeded Judas as leader of the revolt and became High Priest."
+    },
+    {
+        "name": "Joseph (husband of Mary)",
+        "testament": "New Testament",
+        "category": "Jesus and his relatives",
+        "keywords": "Joseph,Nazareth,Carpenter,Bethlehem,Egypt",
+        "description": "Carpenter of Nazareth descended from David, husband of Mary and legal father of Jesus.",
+        "tipnr": "Joseph@Mat.1.16-Jhn"
+    },
+    {
+        "name": "Joseph (son of Jacob)",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Joseph,Jacob,Rachel,Egypt,Pharaoh,Ephraim,Manasseh",
+        "description": "Favoured son of Jacob and Rachel, sold into slavery by his brothers, who rose to govern Egypt; his sons founded two tribes.",
+        "tipnr": "Joseph@Gen.30.24-Rev",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Joseph of Arimathea",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Joseph,Arimathea,Sanhedrin,Tomb",
+        "description": "Wealthy council member who provided his own tomb for the burial of Jesus.",
+        "tipnr": "Joseph@Mat.27.57-Jhn"
+    },
+    {
+        "name": "Joses (brother of Jesus)",
+        "testament": "New Testament",
+        "category": "Jesus and his relatives",
+        "keywords": "Joses,Joseph,Nazareth",
+        "description": "One of the brothers of Jesus named in the Gospels of Mark and Matthew.",
+        "tipnr": "Joses@Mat.13.55-Mrk"
+    },
+    {
+        "name": "Joshua",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Jehoshua,Nun,Jericho,Canaan",
+        "description": "Successor of Moses who led the Israelites across the Jordan and into the conquest of Canaan, including the fall of Jericho.",
+        "tipnr": "Joshua@Exo.17.9-Heb"
+    },
+    {
+        "name": "Josiah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Josias,Amon,Judah,Megiddo,Law",
+        "description": "Reforming king of Judah who restored the Law after it was found in the Temple and died at Megiddo.",
+        "tipnr": "Josiah@1Ki.13.2-Mat"
+    },
+    {
+        "name": "Jotham",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Joatham,Uzziah,Judah",
+        "description": "Son of Uzziah who governed Judah during his father's illness and built the upper gate of the Temple.",
+        "tipnr": "Jotham@2Ki.15.5-Mat"
+    },
+    {
+        "name": "Judah",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Judas,Juda,Jacob,Leah,Tamar",
+        "description": "Fourth son of Jacob and Leah, ancestor of the royal tribe of Judah from which David descended.",
+        "tipnr": "Judah@Gen.29.35-Rev",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Judas Iscariot",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "Judas,Iscariot,Betrayal,Gethsemane,Akeldama",
+        "description": "Apostle who betrayed Jesus for thirty pieces of silver.",
+        "tipnr": "Judas@Mat.10.4-Act"
+    },
+    {
+        "name": "Judas Maccabeus",
+        "testament": "Deuterocanon",
+        "category": "Maccabees",
+        "keywords": "Judas,Maccabee,Mattathias,Hanukkah,Temple",
+        "description": "Son of Mattathias who led the revolt against the Seleucids and rededicated the Temple, commemorated at Hanukkah."
+    },
+    {
+        "name": "Jude (brother of Jesus)",
+        "testament": "New Testament",
+        "category": "Jesus and his relatives",
+        "keywords": "Jude,Judas,Epistle",
+        "description": "Brother of Jesus traditionally regarded as the author of the Epistle of Jude.",
+        "tipnr": "Jude@Mat.13.55-Jud"
+    },
+    {
+        "name": "Jude the Apostle",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "Judas,Thaddeus,Lebbaeus,James",
+        "description": "Apostle called Judas son of James, also known as Thaddeus or Lebbaeus.",
+        "tipnr": "Judas@Mat.10.3-Act"
+    },
+    {
+        "name": "Judith",
+        "testament": "Deuterocanon",
+        "category": "Others",
+        "keywords": "Bethulia,Holofernes,Nebuchadnezzar",
+        "description": "Widow of Bethulia who saved her people by beheading the Assyrian general Holofernes."
+    },
+    {
+        "name": "Kenan",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Cainan,Enos",
+        "description": "Son of Enos and one of the antediluvian patriarchs in the line from Adam to Noah.",
+        "tipnr": "Kenan@Gen.5.9-Luk"
+    },
+    {
+        "name": "Lamech (father of Noah)",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Lamech,Methuselah,Noah",
+        "description": "Son of Methuselah and father of Noah, who foretold that his son would bring comfort from the toil of the cursed ground.",
+        "tipnr": "Lamech@Gen.5.25-Luk"
+    },
+    {
+        "name": "Lazarus",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Bethany,Martha,Mary,Resurrection",
+        "description": "Friend of Jesus from Bethany whom Jesus raised from the dead after four days.",
+        "tipnr": "Lazarus@Jhn.11.1-"
+    },
+    {
+        "name": "Levi",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Levites,Jacob,Leah,Priests",
+        "description": "Third son of Jacob and Leah, ancestor of the priestly tribe of Levi.",
+        "tipnr": "Levi@Gen.29.34-Rev",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Luke the Evangelist",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Luke,Lucas,Physician,Paul,Acts,Gospel",
+        "description": "Physician and companion of Paul, traditionally the author of the Gospel of Luke and the Acts of the Apostles.",
+        "tipnr": "Luke@2Co.13.13-Phm"
+    },
+    {
+        "name": "Mahalalel",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Mahalaleel,Maleleel,Kenan",
+        "description": "Son of Kenan and antediluvian patriarch, said to have lived 895 years.",
+        "tipnr": "Mahalalel@Gen.5.12-Luk"
+    },
+    {
+        "name": "Malachi",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Malachias,Elijah,Messenger",
+        "description": "Last of the minor prophets, who foretold the sending of a messenger and the return of Elijah.",
+        "tipnr": "Malachi@Mal.1.1"
+    },
+    {
+        "name": "Manasseh (son of Joseph)",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Manasseh,Manasses,Joseph,Gilead,Bashan",
+        "description": "Elder son of Joseph, ancestor of the tribe of Manasseh settled on both sides of the Jordan.",
+        "tipnr": "Manasseh@Gen.41.51-Rev",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Manasseh of Judah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Manasseh,Manasses,Hezekiah,Judah",
+        "description": "Longest-reigning king of Judah, notorious for idolatry, who later repented in captivity.",
+        "tipnr": "Manasseh@2Ki.20.21-Mat"
+    },
+    {
+        "name": "Mark the Evangelist",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Mark,Marcus,Peter,Gospel,Alexandria",
+        "description": "Companion of Peter, traditionally the author of the Gospel of Mark.",
+        "tipnr": "Mark@Act.12.12-1Pe"
+    },
+    {
+        "name": "Martha",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Bethany,Lazarus,Mary",
+        "description": "Sister of Lazarus and Mary of Bethany who welcomed Jesus into her home.",
+        "tipnr": "Martha@Luk.10.38-Jhn"
+    },
+    {
+        "name": "Mary Magdalene",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "Magdala,Mary,Tomb,Resurrection",
+        "description": "Follower of Jesus from Magdala who witnessed the crucifixion and was first to see the risen Christ.",
+        "tipnr": "Mary_Magdalene@Mat.27.56-Jhn"
+    },
+    {
+        "name": "Mary of Bethany",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Mary,Bethany,Martha,Lazarus,Anointing",
+        "description": "Sister of Martha and Lazarus who sat at Jesus' feet and anointed him with costly ointment.",
+        "tipnr": "Mary@Luk.10.39-Jhn"
+    },
+    {
+        "name": "Mary of Clopas",
+        "testament": "New Testament",
+        "category": "Jesus and his relatives",
+        "keywords": "Mary,Clopas,Cleophas,Cross",
+        "description": "Woman who stood by the cross of Jesus, described as the wife of Clopas.",
+        "tipnr": "Mary@Mat.27.56-Jhn"
+    },
+    {
+        "name": "Mary, mother of Jesus",
+        "testament": "New Testament",
+        "category": "Jesus and his relatives",
+        "keywords": "Mary,Virgin,Nazareth,Bethlehem,Annunciation",
+        "description": "Virgin of Nazareth who conceived Jesus by the Holy Spirit and stood at the foot of the cross.",
+        "tipnr": "Mary@Mat.1.16-Act"
+    },
+    {
+        "name": "Mattathias",
+        "testament": "Deuterocanon",
+        "category": "Maccabees",
+        "keywords": "Modein,Hasmonean,Maccabees,Antiochus",
+        "description": "Priest of Modein whose refusal to offer pagan sacrifice sparked the Maccabean revolt."
+    },
+    {
+        "name": "Matthew",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "Levi,Publican,Tax Collector,Capernaum,Gospel",
+        "description": "Tax collector called by Jesus to be an apostle, traditionally the author of the first Gospel.",
+        "tipnr": "Matthew@Mat.9.9-Act"
+    },
+    {
+        "name": "Matthias",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "Lots,Acts,Judas",
+        "description": "Disciple chosen by lot to replace Judas Iscariot among the Twelve.",
+        "tipnr": "Matthias@Act.1.23-"
+    },
+    {
+        "name": "Medad",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Eldad,Moses,Wilderness",
+        "description": "Elder who prophesied alongside Eldad in the camp during the wilderness journey.",
+        "tipnr": "Medad@Num.11.26-"
+    },
+    {
+        "name": "Menahem",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Gadi,Israel,Assyria,Pul",
+        "description": "King of Israel who paid tribute to the Assyrian king Pul to secure his throne.",
+        "tipnr": "Menahem@2Ki.15.14-"
+    },
+    {
+        "name": "Methuselah",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Mathusala,Enoch,Lamech",
+        "description": "Son of Enoch and grandfather of Noah, the longest-lived person in the Bible at 969 years.",
+        "tipnr": "Methuselah@Gen.5.21-Luk"
+    },
+    {
+        "name": "Micah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Michaeas,Moresheth,Bethlehem",
+        "description": "Minor prophet of Judah who foretold that a ruler would come forth from Bethlehem.",
+        "tipnr": "Micah@Jer.26.18-Mic"
+    },
+    {
+        "name": "Micaiah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Imlah,Ahab,Ramoth-gilead",
+        "description": "Prophet who alone foretold Ahab's defeat and death at Ramoth-gilead.",
+        "tipnr": "Micaiah@1Ki.22.8-2Ch"
+    },
+    {
+        "name": "Miriam",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Moses,Aaron,Exodus",
+        "description": "Sister of Moses and Aaron, a prophetess who led the women in song after the crossing of the Red Sea.",
+        "tipnr": "Miriam@Exo.15.20-Mic"
+    },
+    {
+        "name": "Mordecai",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Mardochaeus,Esther,Shushan,Haman,Purim",
+        "description": "Benjamite at the Persian court in Shushan who, with his cousin Esther, foiled Haman's plot against the Jews.",
+        "tipnr": "Mordecai@Est.2.5-"
+    },
+    {
+        "name": "Moses",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Sinai,Exodus,Egypt,Torah,Law",
+        "description": "Prophet and lawgiver who led the Israelites out of slavery in Egypt and received the Law on Mount Sinai.",
+        "tipnr": "Moses@Exo.2.10-Rev"
+    },
+    {
+        "name": "Nadab of Israel",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Nadab,Jeroboam,Israel",
+        "description": "Son of Jeroboam who reigned two years before being assassinated by Baasha.",
+        "tipnr": "Nadab@1Ki.14.20-"
+    },
+    {
+        "name": "Nahor (son of Serug)",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Nahor,Nachor,Serug,Terah",
+        "description": "Son of Serug and grandfather of Abraham.",
+        "tipnr": "Nahor@Gen.11.22-Luk"
+    },
+    {
+        "name": "Nahshon",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Naashon,Naasson,Amminadab",
+        "description": "Prince of the tribe of Judah during the wilderness wanderings, traditionally the first to enter the Red Sea.",
+        "tipnr": "Nahshon@Exo.6.23-Luk"
+    },
+    {
+        "name": "Nahum",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Naum,Elkosh,Nineveh",
+        "description": "Minor prophet who foretold the fall of Nineveh.",
+        "tipnr": "Nahum@Nam.1.1"
+    },
+    {
+        "name": "Naphtali",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Nephthalim,Jacob,Bilhah,Galilee",
+        "description": "Son of Jacob and Bilhah, ancestor of the tribe of Naphtali in Galilee.",
+        "tipnr": "Naphtali@Gen.30.8-Rev",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Nathan",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "David,Bathsheba,Solomon",
+        "description": "Prophet at David's court who rebuked the king over Bathsheba and helped secure Solomon's succession.",
+        "tipnr": "Nathan@2Sa.7.2-Psa"
+    },
+    {
+        "name": "Nehemiah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Nehemias,Artaxerxes,Jerusalem,Walls",
+        "description": "Cupbearer to Artaxerxes who became governor of Judah and rebuilt the walls of Jerusalem.",
+        "tipnr": "Nehemiah@Neh.1.1-"
+    },
+    {
+        "name": "Nicodemus",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Pharisee,Sanhedrin,Born Again",
+        "description": "Pharisee who came to Jesus by night and later helped bury him.",
+        "tipnr": "Nicodemus@Jhn.3.1-"
+    },
+    {
+        "name": "Noah",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Noe,Ark,Flood,Shem,Ham,Japheth",
+        "description": "Righteous patriarch who built the ark to save his family and the animals from the Great Flood, receiving the covenant of the rainbow.",
+        "tipnr": "Noah@Gen.5.29-2Pe"
+    },
+    {
+        "name": "Obadiah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Abdias,Edom",
+        "description": "Minor prophet whose short book pronounces judgement on Edom.",
+        "tipnr": "Obadiah@Oba.1.1"
+    },
+    {
+        "name": "Obed",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Boaz,Ruth,Jesse",
+        "description": "Son of Boaz and Ruth and grandfather of King David.",
+        "tipnr": "Obed@Rut.4.17-Luk"
+    },
+    {
+        "name": "Oded",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Samaria,Pekah,Captives",
+        "description": "Prophet in Samaria who persuaded the army of Israel to release captives taken from Judah.",
+        "tipnr": "Oded@2Ch.28.9"
+    },
+    {
+        "name": "Omri",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Samaria,Israel,Ahab",
+        "description": "Army commander who became king of Israel, founded Samaria as its capital and established a powerful dynasty.",
+        "tipnr": "Omri@1Ki.16.16-Mic"
+    },
+    {
+        "name": "Onesimus",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Philemon,Colossae,Slave",
+        "description": "Runaway slave of Philemon converted through Paul and sent back as a brother in Christ.",
+        "tipnr": "Onesimus@Col.4.9-Phm"
+    },
+    {
+        "name": "Paul",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "Saul,Tarsus,Damascus,Gentiles,Rome,Epistles",
+        "description": "Pharisee of Tarsus converted on the road to Damascus, Apostle to the Gentiles and author of many New Testament letters.",
+        "tipnr": "Paul@Act.7.58-2Pe"
+    },
+    {
+        "name": "Pekah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Remaliah,Israel,Rezin,Syria",
+        "description": "King of Israel who allied with Rezin of Syria against Judah.",
+        "tipnr": "Pekah@2Ki.15.25-Isa"
+    },
+    {
+        "name": "Pekahiah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Menahem,Israel,Samaria",
+        "description": "Son of Menahem, assassinated by his officer Pekah.",
+        "tipnr": "Pekahiah@2Ki.15.22-"
+    },
+    {
+        "name": "Peleg",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Phalec,Eber,Babel",
+        "description": "Son of Eber, in whose days the earth was divided.",
+        "tipnr": "Peleg@Gen.10.25-Luk"
+    },
+    {
+        "name": "Perez",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Pharez,Phares,Judah,Tamar",
+        "description": "Son of Judah and Tamar, ancestor of King David.",
+        "tipnr": "Perez@Gen.38.29-Luk"
+    },
+    {
+        "name": "Peter",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "Simon,Cephas,Galilee,Capernaum,Rome,Keys",
+        "description": "Galilean fisherman and leader of the Twelve, who denied Jesus three times and became the rock of the early Church.",
+        "tipnr": "Peter@Mat.4.18-2Pe"
+    },
+    {
+        "name": "Philemon",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Colossae,Onesimus,Paul",
+        "description": "Christian of Colossae to whom Paul wrote on behalf of Onesimus.",
+        "tipnr": "Philemon@Phm.1.1-"
+    },
+    {
+        "name": "Philip II of Macedon",
+        "testament": "Deuterocanon",
+        "category": "Greek rulers",
+        "keywords": "Philip,Macedon,Alexander",
+        "description": "King of Macedon and father of Alexander the Great."
+    },
+    {
+        "name": "Philip the Apostle",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "Philip,Bethsaida,Nathanael",
+        "description": "Apostle from Bethsaida who brought Nathanael to Jesus.",
+        "tipnr": "Philip@Mat.10.3-Act"
+    },
+    {
+        "name": "Philip the Tetrarch",
+        "testament": "New Testament",
+        "category": "Secular rulers",
+        "keywords": "Philip,Tetrarch,Ituraea,Caesarea Philippi",
+        "description": "Son of Herod the Great and tetrarch of Ituraea and Trachonitis, founder of Caesarea Philippi.",
+        "tipnr": "Philip@Luk.3.1"
+    },
+    {
+        "name": "Phinehas",
+        "testament": "Old Testament",
+        "category": "Priests",
+        "keywords": "Phinees,Eleazar,Aaron,Peor",
+        "description": "Grandson of Aaron whose zeal at Peor earned a covenant of perpetual priesthood.",
+        "tipnr": "Phinehas@Exo.6.25-Psa"
+    },
+    {
+        "name": "Pontius Pilate",
+        "testament": "New Testament",
+        "category": "Secular rulers",
+        "keywords": "Pilate,Prefect,Judaea,Jerusalem,Crucifixion",
+        "description": "Roman prefect of Judaea who sentenced Jesus to crucifixion.",
+        "tipnr": "Pilate@Mat.27.2-1Ti"
+    },
+    {
+        "name": "Priscilla",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Prisca,Aquila,Corinth,Ephesus,Rome",
+        "description": "Wife of Aquila and fellow worker of Paul, who instructed Apollos.",
+        "tipnr": "Priscilla@Act.18.2-2Ti"
+    },
+    {
+        "name": "Quirinius",
+        "testament": "New Testament",
+        "category": "Secular rulers",
+        "keywords": "Cyrenius,Syria,Census",
+        "description": "Roman governor of Syria associated with the census at the time of Jesus' birth.",
+        "tipnr": "Quirinius@Luk.2.2"
+    },
+    {
+        "name": "Ram",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Aram,Hezron",
+        "description": "Son of Hezron and ancestor of David in the tribe of Judah.",
+        "tipnr": "Ram@Rut.4.19-Luk"
+    },
+    {
+        "name": "Rehoboam",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Roboam,Solomon,Judah,Shechem",
+        "description": "Son of Solomon whose harsh policy caused the northern tribes to secede, leaving him king of Judah alone.",
+        "tipnr": "Rehoboam@1Ki.11.43-Mat"
+    },
+    {
+        "name": "Reu",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Ragau,Peleg",
+        "description": "Son of Peleg and ancestor of Abraham.",
+        "tipnr": "Reu@Gen.11.18-Luk"
+    },
+    {
+        "name": "Reuben",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Ruben,Jacob,Leah",
+        "description": "Firstborn son of Jacob and Leah, ancestor of the tribe of Reuben east of the Jordan.",
+        "tipnr": "Reuben@Gen.29.32-Rev",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Ruth",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Moab,Naomi,Boaz,Bethlehem",
+        "description": "Moabite widow who remained loyal to her mother-in-law Naomi, married Boaz and became great-grandmother of David.",
+        "tipnr": "Ruth@Rut.1.4-Mat"
+    },
+    {
+        "name": "Salmon",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Salma,Nahshon,Rahab,Boaz",
+        "description": "Son of Nahshon and, according to Matthew, husband of Rahab and father of Boaz.",
+        "tipnr": "Salmon@Rut.4.20-Luk"
+    },
+    {
+        "name": "Salome",
+        "testament": "New Testament",
+        "category": "Secular rulers",
+        "keywords": "Herodias,Herod,Dance,John the Baptist",
+        "description": "Daughter of Herodias whose dance before Herod Antipas led to the execution of John the Baptist.",
+        "tipnr": "Salome@Mat.14.6"
+    },
+    {
+        "name": "Samson",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Delilah,Philistines,Nazirite,Judges",
+        "description": "Nazirite judge of Israel of legendary strength, betrayed by Delilah to the Philistines.",
+        "tipnr": "Samson@Jdg.13.24-Heb"
+    },
+    {
+        "name": "Samuel",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Hannah,Eli,Ramah,Saul,David",
+        "description": "Last of the judges and a great prophet, who anointed both Saul and David as kings of Israel.",
+        "tipnr": "Samuel@1Sa.1.20-Heb"
+    },
+    {
+        "name": "Sarah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Sarai,Abraham,Isaac",
+        "description": "Wife of Abraham and mother of Isaac, born to her in old age; first of the matriarchs.",
+        "tipnr": "Sarah@Gen.11.29-1Pe"
+    },
+    {
+        "name": "Saul",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Kish,Benjamin,Gibeah,Gilboa,Samuel",
+        "description": "First king of Israel, anointed by Samuel, whose reign ended in defeat and death on Mount Gilboa.",
+        "tipnr": "Saul@1Sa.9.2-Act"
+    },
+    {
+        "name": "Serug",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Saruch,Reu,Nahor",
+        "description": "Son of Reu and great-grandfather of Abraham.",
+        "tipnr": "Serug@Gen.11.20-Luk"
+    },
+    {
+        "name": "Seth",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Sheth,Adam,Eve",
+        "description": "Third son of Adam and Eve, born after the death of Abel, through whom the line to Noah descends.",
+        "tipnr": "Seth@Gen.4.25-Luk"
+    },
+    {
+        "name": "Shallum",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Jabesh,Israel,Samaria",
+        "description": "Assassin of Zechariah who reigned only one month before being killed by Menahem.",
+        "tipnr": "Shallum@2Ki.15.10-"
+    },
+    {
+        "name": "Shelah",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Salah,Sala,Arphaxad,Eber",
+        "description": "Son of Arphaxad (or Cainan) and father of Eber in the post-Flood genealogy.",
+        "tipnr": "Shelah@Gen.10.24-Luk"
+    },
+    {
+        "name": "Shem",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Sem,Noah,Semites",
+        "description": "Eldest son of Noah, ancestor of the Semitic peoples and of Abraham.",
+        "tipnr": "Shem@Gen.5.32-Luk"
+    },
+    {
+        "name": "Shemaiah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Rehoboam,Judah",
+        "description": "Prophet who warned Rehoboam not to make war against the northern tribes.",
+        "tipnr": "Shemaiah@1Ki.12.22-2Ch"
+    },
+    {
+        "name": "Silas",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Silvanus,Paul,Philippi,Jerusalem",
+        "description": "Leader of the Jerusalem church who accompanied Paul on his second missionary journey.",
+        "tipnr": "Silas@Act.15.22-1Pe"
+    },
+    {
+        "name": "Simeon",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Simon,Jacob,Leah,Shechem",
+        "description": "Second son of Jacob and Leah, ancestor of the tribe of Simeon in southern Judah.",
+        "tipnr": "Simeon@Gen.29.33-Rev",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Simeon (Gospel of Luke)",
+        "testament": "New Testament",
+        "category": "Prophets",
+        "keywords": "Simeon,Temple,Nunc Dimittis",
+        "description": "Devout man of Jerusalem who held the infant Jesus in the Temple and spoke the Nunc Dimittis.",
+        "tipnr": "Simeon@Luk.2.25-"
+    },
+    {
+        "name": "Simon (brother of Jesus)",
+        "testament": "New Testament",
+        "category": "Jesus and his relatives",
+        "keywords": "Simon,Nazareth",
+        "description": "One of the brothers of Jesus, traditionally a later leader of the church in Jerusalem.",
+        "tipnr": "Simon@Mat.13.55-Mrk"
+    },
+    {
+        "name": "Simon Thassi",
+        "testament": "Deuterocanon",
+        "category": "Maccabees",
+        "keywords": "Simon,Thassi,Mattathias,Hasmonean",
+        "description": "Son of Mattathias who became High Priest and ruler of Judaea, founding the Hasmonean dynasty."
+    },
+    {
+        "name": "Simon the Zealot",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "Simon,Zelotes,Canaanite,Zealot",
+        "description": "Apostle called the Zealot or the Canaanite.",
+        "tipnr": "Simon@Mat.10.4-Act"
+    },
+    {
+        "name": "Solomon",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "David,Bathsheba,Temple,Jerusalem,Sheba,Wisdom",
+        "description": "Son of David famed for his wisdom and wealth, who built the First Temple in Jerusalem.",
+        "tipnr": "Solomon@2Sa.5.14-Act"
+    },
+    {
+        "name": "Sopater",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Sosipater,Berea,Pyrrhus,Paul",
+        "description": "Christian of Berea who accompanied Paul to Asia.",
+        "tipnr": "Sopater@Act.20.4-Rom"
+    },
+    {
+        "name": "Stephen",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Deacon,Martyr,Jerusalem,Sanhedrin",
+        "description": "One of the seven deacons and the first Christian martyr, stoned in Jerusalem.",
+        "tipnr": "Stephen@Act.6.5-"
+    },
+    {
+        "name": "Susanna",
+        "testament": "Deuterocanon",
+        "category": "Others",
+        "keywords": "Joakim,Daniel,Babylon,Elders",
+        "description": "Virtuous wife falsely accused by two elders and vindicated by the young Daniel."
+    },
+    {
+        "name": "Terah",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Thara,Ur,Haran,Abraham",
+        "description": "Father of Abraham, Nahor and Haran, who led his family from Ur of the Chaldees towards Canaan before dying in Haran.",
+        "tipnr": "Terah@Gen.11.24-Luk"
+    },
+    {
+        "name": "Thomas",
+        "testament": "New Testament",
+        "category": "Apostles",
+        "keywords": "Didymus,Twin,Doubting Thomas",
+        "description": "Apostle called Didymus who doubted the resurrection until he touched Jesus' wounds.",
+        "tipnr": "Thomas@Mat.10.3-Act"
+    },
+    {
+        "name": "Tiberius",
+        "testament": "New Testament",
+        "category": "Roman emperors",
+        "keywords": "Caesar,Rome,Tribute",
+        "description": "Roman emperor during the ministry and crucifixion of Jesus.",
+        "tipnr": "Tiberius@Mat.22.17-Jhn"
+    },
+    {
+        "name": "Tibni",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Ginath,Omri,Israel",
+        "description": "Rival claimant to the throne of Israel who contested Omri's rule for several years.",
+        "tipnr": "Tibni@1Ki.16.21-"
+    },
+    {
+        "name": "Timothy",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Timotheus,Lystra,Ephesus,Paul",
+        "description": "Young disciple from Lystra and Paul's close companion, recipient of two pastoral letters.",
+        "tipnr": "Timothy@Act.16.1-Heb"
+    },
+    {
+        "name": "Titus",
+        "testament": "New Testament",
+        "category": "Other believers",
+        "keywords": "Crete,Corinth,Paul",
+        "description": "Gentile companion of Paul, left in Crete to organise the church there.",
+        "tipnr": "Titus@2Co.2.13-Tit"
+    },
+    {
+        "name": "Tobit",
+        "testament": "Deuterocanon",
+        "category": "Others",
+        "keywords": "Tobias,Nineveh,Raphael,Naphtali",
+        "description": "Righteous exile in Nineveh struck blind, whose son Tobias journeys with the angel Raphael."
+    },
+    {
+        "name": "Tubal-cain",
+        "testament": "Old Testament",
+        "category": "Ancestors",
+        "keywords": "Tubalcain,Lamech,Cain",
+        "description": "Descendant of Cain and son of Lamech, described as the forger of instruments of bronze and iron.",
+        "tipnr": "Tubal-cain@Gen.4.22"
+    },
+    {
+        "name": "Uriah (prophet)",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Urijah,Shemaiah,Kirjath-jearim,Jehoiakim",
+        "description": "Prophet who prophesied alongside Jeremiah and was executed by King Jehoiakim.",
+        "tipnr": "Uriah@Jer.26.20-"
+    },
+    {
+        "name": "Uzziah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Azariah,Amaziah,Judah,Leprosy",
+        "description": "King of Judah whose long reign brought prosperity, struck with leprosy for burning incense in the Temple.",
+        "tipnr": "Uzziah@2Ki.14.21-Mat"
+    },
+    {
+        "name": "Zebulun",
+        "testament": "Old Testament",
+        "category": "Tribes of Israel",
+        "keywords": "Zabulon,Jacob,Leah,Galilee",
+        "description": "Sixth son of Jacob and Leah, ancestor of the tribe of Zebulun in lower Galilee.",
+        "tipnr": "Zebulun@Gen.30.20-Rev",
+        "tipnr_books": [
+            "GEN"
+        ]
+    },
+    {
+        "name": "Zechariah (father of John the Baptist)",
+        "testament": "New Testament",
+        "category": "Priests",
+        "keywords": "Zacharias,Elizabeth,Temple,Benedictus",
+        "description": "Priest struck mute after doubting Gabriel's announcement of the birth of his son, John the Baptist.",
+        "tipnr": "Zechariah@Luk.1.5-"
+    },
+    {
+        "name": "Zechariah (prophet)",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Zechariah,Zacharias,Berechiah,Iddo,Temple",
+        "description": "Post-exilic prophet whose visions encouraged the rebuilding of the Temple and looked to a humble king riding on a donkey.",
+        "tipnr": "Zechariah@Ezr.5.1-Zec"
+    },
+    {
+        "name": "Zechariah ben Jehoiada",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Zechariah,Jehoiada,Joash,Temple",
+        "description": "Priest and prophet stoned in the Temple court at the command of King Joash.",
+        "tipnr": "Zechariah@2Ch.24.20-Luk"
+    },
+    {
+        "name": "Zechariah of Israel",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Zechariah,Zachariah,Jeroboam,Israel",
+        "description": "Son of Jeroboam II, last of the house of Jehu, assassinated after six months.",
+        "tipnr": "Zechariah@2Ki.14.29-"
+    },
+    {
+        "name": "Zedekiah",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Mattaniah,Sedecias,Judah,Babylon,Jerusalem",
+        "description": "Last king of Judah, whose rebellion against Babylon led to the destruction of Jerusalem in 587 BC.",
+        "tipnr": "Zedekiah@2Ki.24.17-Jer"
+    },
+    {
+        "name": "Zephaniah",
+        "testament": "Old Testament",
+        "category": "Prophets",
+        "keywords": "Sophonias,Josiah,Judah",
+        "description": "Minor prophet in the days of Josiah who proclaimed the coming Day of the Lord.",
+        "tipnr": "Zephaniah@Zep.1.1"
+    },
+    {
+        "name": "Zimri",
+        "testament": "Old Testament",
+        "category": "Kings",
+        "keywords": "Elah,Israel,Tirzah",
+        "description": "Chariot commander who murdered Elah and reigned for only seven days before dying in the burning palace.",
+        "tipnr": "Zimri@1Ki.16.9-2Ki"
+    }
+]

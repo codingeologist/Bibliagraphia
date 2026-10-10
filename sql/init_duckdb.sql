@@ -1,6 +1,6 @@
 -- Bibliagraphia single-file DuckDB graph schema.
 --
--- The graph is heterogeneous (5 node types, 4 edge types), so both tables
+-- The graph is heterogeneous (6 node types, 6 edge types), so both tables
 -- carry a `label`/`type` column. We deliberately do NOT add self-
 -- referencing or cross-table foreign keys: edges are only ever created
 -- between nodes actually present (see load_data.sql / build_db.py).
@@ -9,7 +9,7 @@
 -- form "<label>:<natural-key>" (e.g. "book:GEN", "verse:DRB:GEN:1:1",
 -- "location:Abana:2KI:5:12", "region:Syria"). `label` is the node type.
 -- `attrs` holds the type-specific columns as a JSON blob so a single
--- table can store all five node types. The common query columns
+-- table can store all six node types. The common query columns
 -- (name, book_code, chapter, verse_number, version_code) are also pulled
 -- out as real columns for fast indexed lookup without deserialising JSON.
 CREATE TABLE IF NOT EXISTS nodes (
@@ -24,17 +24,25 @@ CREATE TABLE IF NOT EXISTS nodes (
 );
 
 -- Edges: directed from->to with a relation label. The four relations from
--- the original TypeDB schema become four edge labels:
+-- the original TypeDB schema become four edge labels, plus figure_in_verse:
 --   verse_in_book       book -> verse        (a book contains a verse)
 --   verse_in_version    version -> verse     (a version contains a verse)
 --   location_in_verse   verse -> location     (a verse mentions a location)
 --   location_in_region  region -> location    (a region contains a location)
+--   figure_in_verse     verse -> figure       (a verse mentions a figure)
+--   figure_in_verse     verse -> figure       (a verse mentions a figure)
+--   figure_relative_of  figure -> figure      (kinship from TIPNR genealogy; father /
+--                                              mother / parent edges run parent ->
+--                                              child, sibling / partner edges are
+--                                              stored once per pair in canonical id
+--                                              order; `attrs` holds the relationship)
 -- (direction chosen so that recursive traversals fan out from the
 -- "container" side — book/version/region — toward the leaves.)
 CREATE TABLE IF NOT EXISTS edges (
     from_id   VARCHAR NOT NULL,
     to_id     VARCHAR NOT NULL,
     label     VARCHAR NOT NULL,
+    attrs     JSON,               -- edge-type-specific attributes, NULL for most
     PRIMARY KEY (from_id, to_id, label)
 );
 
