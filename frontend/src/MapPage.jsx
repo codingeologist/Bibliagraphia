@@ -3,6 +3,7 @@ import L from "leaflet";
 import { get } from "./api.js";
 import PlaceSearch from "./PlaceSearch.jsx";
 import { createStarMarker } from "./mapMarkers.js";
+import SiteHeader from "./SiteHeader.jsx";
 
 function MapPage({ initialMap, onMapReady }) {
   const [dark, setDark] = useState(() => {
@@ -204,25 +205,7 @@ function MapPage({ initialMap, onMapReady }) {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <div className="brand">
-          <div className="brand-mark" aria-hidden="true">B</div>
-          <div>
-            <h1>Bibliagraphia</h1>
-            <p>A living map of scripture</p>
-          </div>
-        </div>
-        <div className="header-actions">
-          <nav className="site-nav" aria-label="Main navigation">
-            <a href="/">Explore</a>
-            <a href="/read">Read Bible</a>
-            <a href="/map" aria-current="page">Map</a>
-          </nav>
-          <button className="theme-toggle" type="button" onClick={() => setDark((value) => !value)}>
-            {dark ? "☀️" : "🌙"} <span>{dark ? "Light" : "Dark"}</span>
-          </button>
-        </div>
-      </header>
+      <SiteHeader currentPage="/map" dark={dark} onToggleTheme={() => setDark((value) => !value)} />
 
       <main className="map-page-root">
         <section className="panel map-page-panel" aria-label="Map of biblical places" tabIndex={-1}>

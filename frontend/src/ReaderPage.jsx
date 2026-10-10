@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { get } from "./api.js";
 import { createStarMarker } from "./mapMarkers.js";
+import SiteHeader from "./SiteHeader.jsx";
 
 function PlaceMap({ location, href, onExpand }) {
   const mapElementRef = useRef(null);
@@ -411,25 +412,7 @@ function ReaderPage({ onExpandMap }) {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <div className="brand">
-          <img className="brand-mark" src="/favicon.svg" alt="" aria-hidden="true" />
-          <div>
-            <h1>Bibliagraphia</h1>
-            <p>A living map of scripture</p>
-          </div>
-        </div>
-        <div className="header-actions">
-          <nav className="site-nav" aria-label="Main navigation">
-            <a href="/">Explore</a>
-            <a href="/read" aria-current="page">Read Bible</a>
-            <a href="/map">Map</a>
-          </nav>
-          <button className="theme-toggle" type="button" onClick={() => setDark((value) => !value)}>
-            {dark ? "☀️" : "🌙"} <span>{dark ? "Light" : "Dark"}</span>
-          </button>
-        </div>
-      </header>
+      <SiteHeader currentPage="/read" dark={dark} onToggleTheme={() => setDark((value) => !value)} />
 
       <main>
         <section className="panel reader-panel" aria-label="Bible reader">
