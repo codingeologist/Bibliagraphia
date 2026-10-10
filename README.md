@@ -88,6 +88,8 @@ The graph is heterogeneous, stored in two tables:
 | `verse_in_version`   | version -> verse   | a version contains a verse   |
 | `location_in_verse`  | verse -> location  | a verse mentions a location  |
 | `location_in_region` | region -> location | a region contains a location |
+| `figure_in_verse`    | verse -> figure    | a verse mentions a figure     |
+| `figure_with_figure` | figure -> figure   | two figures share a verse; `weight` = distinct shared verses (deduplicated across versions) |
 
 There are deliberately **no self-referencing foreign keys**: edges are only created between
 nodes actually present (referential integrity), which keeps the graph clean.

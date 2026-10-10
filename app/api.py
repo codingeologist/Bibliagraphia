@@ -77,6 +77,7 @@ def init_db() -> None:
                 from_id   VARCHAR NOT NULL,
                 to_id     VARCHAR NOT NULL,
                 label     VARCHAR NOT NULL,
+                weight    INTEGER,   -- figure_with_figure: distinct shared verses
                 PRIMARY KEY (from_id, to_id, label)
             );
             """
