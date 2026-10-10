@@ -21,7 +21,7 @@ def reader_db(tmp_path, monkeypatch):
         """
     )
     conn.execute(
-        "CREATE TABLE edges (from_id VARCHAR, to_id VARCHAR, label VARCHAR)"
+        "CREATE TABLE edges (from_id VARCHAR, to_id VARCHAR, label VARCHAR, attrs JSON)"
     )
     conn.executemany(
         "INSERT INTO nodes VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -61,7 +61,7 @@ def reader_db(tmp_path, monkeypatch):
         ],
     )
     conn.executemany(
-        "INSERT INTO edges VALUES (?, ?, ?)",
+        "INSERT INTO edges (from_id, to_id, label) VALUES (?, ?, ?)",
         [
             ("verse:KJV:GEN:1:1", "location:Eden:GEN:1:1:1", "location_in_verse"),
             ("region:Canaan", "location:Eden:GEN:1:1:1", "location_in_region"),
@@ -70,6 +70,52 @@ def reader_db(tmp_path, monkeypatch):
     conn.close()
     monkeypatch.setattr(api, "DB_PATH", str(path))
     return path
+
+
+def test_person_relations_return_all_relatives_and_stored_direction(reader_db):
+    conn = duckdb.connect(str(reader_db))
+    people = [
+        ("Parent", "Parent description"),
+        ("Child", "Child description"),
+        ("Sibling", "Sibling description"),
+        ("Partner", "Partner description"),
+        ("Unrelated", "Unrelated description"),
+    ]
+    conn.executemany(
+        "INSERT INTO nodes VALUES (?, 'figure', ?, NULL, NULL, NULL, NULL, ?)",
+        [(f"figure:{name}", name, json.dumps({"description": description}))
+         for name, description in people],
+    )
+    conn.executemany(
+        "INSERT INTO edges VALUES (?, ?, 'figure_relative_of', ?)",
+        [
+            ("figure:Parent", "figure:Child", json.dumps({"relationship": "father"})),
+            ("figure:Child", "figure:Sibling", json.dumps({"relationship": "sibling"})),
+            ("figure:Partner", "figure:Child", json.dumps({"relationship": "partner"})),
+        ],
+    )
+    # Many passage edges must not crowd relatives out of the drawer lookup.
+    conn.executemany(
+        "INSERT INTO nodes VALUES (?, 'verse', 'Genesis', 'KJV', 'GEN', 1, ?, '{}')",
+        [(f"verse:KJV:GEN:1:{number}", number) for number in range(1000, 1250)],
+    )
+    conn.executemany(
+        "INSERT INTO edges VALUES (?, 'figure:Child', 'figure_in_verse', NULL)",
+        [(f"verse:KJV:GEN:1:{number}",) for number in range(1000, 1250)],
+    )
+    conn.close()
+    result = api.person_relations(person_id="figure:Child")
+    assert result["person"]["attrs"]["description"] == "Child description"
+    relatives = {row["person"]["name"]: row for row in result["relationships"]}
+    assert set(relatives) == {"Parent", "Sibling", "Partner"}
+    assert relatives["Parent"]["source"] == "figure:Parent"
+    assert relatives["Parent"]["target"] == "figure:Child"
+    assert relatives["Parent"]["attrs"]["relationship"] == "father"
+    assert relatives["Sibling"]["attrs"]["relationship"] == "sibling"
+    assert relatives["Partner"]["attrs"]["relationship"] == "partner"
+    assert api.person_relations(person_id="figure:Unrelated")["relationships"] == []
+    assert api.person_relations(person_id="figure:Missing") == {"error": "Person not found."}
+    assert api.person_relations(person_id="book:GEN") == {"error": "Person not found."}
 
 
 @pytest.mark.parametrize("label", ["book", "verse", "location", "version", "region"])
@@ -225,7 +271,7 @@ def test_reader_people_follow_exact_translation_and_verse_edges(reader_db):
         "INSERT INTO nodes VALUES ('figure:Naomi', 'figure', 'Naomi', NULL, NULL, NULL, NULL, ?)",
         [json.dumps({"aliases": ["Noemi"]})],
     )
-    conn.executemany("INSERT INTO edges VALUES (?, ?, 'figure_in_verse')", [
+    conn.executemany("INSERT INTO edges (from_id, to_id, label) VALUES (?, ?, 'figure_in_verse')", [
         ("verse:KJV:GEN:1:1", "figure:Naomi"),
         ("verse:DRB:GEN:1:2", "figure:Naomi"),
     ])
@@ -267,7 +313,7 @@ def dense_graph(reader_db):
             ],
         )
         conn.executemany(
-            "INSERT INTO edges VALUES (?, ?, ?)",
+            "INSERT INTO edges (from_id, to_id, label) VALUES (?, ?, ?)",
             [
                 ("region:Canaan", place_id, "location_in_region"),
                 (verse_id, place_id, "location_in_verse"),

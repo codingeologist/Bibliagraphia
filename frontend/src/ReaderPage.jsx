@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { get } from "./api.js";
 import { createCircleMarker } from "./mapMarkers.js";
 import SiteHeader from "./SiteHeader.jsx";
 import PlaceGraphPreview from "./PlaceGraphPreview.jsx";
 import { mentionSegments } from "./readerMentions.js";
-import { relationshipHref } from "./nodeLinks.js";
+import ReaderDetailsDrawer from "./ReaderDetailsDrawer.jsx";
+import { readerPassageNode } from "./nodeLinks.js";
+import { saveReaderState } from "./readerState.js";
 
 function PlaceMap({ location, href, onExpand }) {
   const mapElementRef = useRef(null);
@@ -87,6 +89,8 @@ function ReaderPage({ onExpandMap }) {
   const [chapter, setChapter] = useState(initialParams.get("chapter") || "");
   const [selectedVerse, setSelectedVerse] = useState(initialParams.get("verse") || "");
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedDetail, setSelectedDetail] = useState(null);
+  const closeDetail = useCallback(() => setSelectedDetail(null), []);
   const [placeRelations, setPlaceRelations] = useState(null);
   const [placeRelationsError, setPlaceRelationsError] = useState("");
   const [placeRelationsLoading, setPlaceRelationsLoading] = useState(false);
@@ -99,12 +103,55 @@ function ReaderPage({ onExpandMap }) {
   const [catalogError, setCatalogError] = useState("");
   const [chapterError, setChapterError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [studyOpen, setStudyOpen] = useState(false);
+  const [studyData, setStudyData] = useState(null);
+  const [studyVerse, setStudyVerse] = useState("");
+  const [studyLoading, setStudyLoading] = useState(false);
+  const [studyError, setStudyError] = useState("");
+  const studyRequestIdRef = useRef(0);
+  const studyCloseRef = useRef(null);
+  const studyReturnFocusRef = useRef(null);
   const passageRef = useRef(`${book}:${chapter}`);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
+
+  useEffect(() => {
+    studyRequestIdRef.current += 1;
+    setStudyData(null);
+    setStudyVerse("");
+    setStudyError("");
+    setStudyLoading(false);
+  }, [book, chapter, version]);
+
+  useEffect(() => {
+    if (!studyOpen) return undefined;
+    const previouslyFocused = studyReturnFocusRef.current;
+    studyCloseRef.current?.focus();
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setStudyOpen(false);
+      if (event.key !== "Tab") return;
+      const dialog = document.querySelector(".reader-study-dialog");
+      const focusable = dialog?.querySelectorAll("button, a[href], summary");
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus();
+    };
+  }, [studyOpen]);
 
   useEffect(() => {
     let active = true;
@@ -139,6 +186,7 @@ function ReaderPage({ onExpandMap }) {
     if (passageRef.current !== passage) setSelectedVerse("");
     passageRef.current = passage;
     setSelectedLocation(null);
+    setSelectedDetail(null);
     const params = new URLSearchParams({
       book_code: book,
       chapter,
@@ -188,6 +236,15 @@ function ReaderPage({ onExpandMap }) {
     }
     return () => { active = false; };
   }, [book, chapter, comparisonVersions]);
+
+  useEffect(() => {
+    if (!chapterData?.verses.length || chapterData.book_code !== book.toUpperCase()
+      || chapterData.chapter !== Number(chapter) || chapterData.version !== version.toUpperCase()) return;
+    saveReaderState({
+      book: chapterData.book_code, bookName: chapterData.book_name,
+      chapter: chapterData.chapter, version: chapterData.version, comparisons: comparisonVersions,
+    });
+  }, [chapterData, book, chapter, version, comparisonVersions]);
 
   useEffect(() => {
     if (!book || !chapter) return;
@@ -307,6 +364,33 @@ function ReaderPage({ onExpandMap }) {
     }
   };
 
+  const explainVerse = async (verseNumber, versionCode = version) => {
+    studyReturnFocusRef.current = document.activeElement;
+    const requestId = studyRequestIdRef.current + 1;
+    studyRequestIdRef.current = requestId;
+    setSelectedVerse(String(verseNumber));
+    setStudyVerse(String(verseNumber));
+    setStudyOpen(true);
+    setStudyData(null);
+    setStudyError("");
+    setStudyLoading(true);
+    const params = new URLSearchParams({
+      book_code: book,
+      chapter,
+      verse_number: String(verseNumber),
+      version_code: versionCode,
+    });
+    try {
+      const result = await get(`/explain?${params}`);
+      if (!result.explanation) throw new Error("Study Buddy returned an empty explanation.");
+      if (studyRequestIdRef.current === requestId) setStudyData(result);
+    } catch (error) {
+      if (studyRequestIdRef.current === requestId) setStudyError(error.message);
+    } finally {
+      if (studyRequestIdRef.current === requestId) setStudyLoading(false);
+    }
+  };
+
   const moveChapter = (direction) => {
     if (direction < 0 && chapterIndex > 0) {
       setChapter(String(availableChapters[chapterIndex - 1]));
@@ -394,6 +478,7 @@ function ReaderPage({ onExpandMap }) {
 
       <main>
         <section className="panel reader-panel" aria-label="Bible reader">
+          <div className="reader-content">
           {catalogError && <p className="notice error" role="alert">{catalogError}</p>}
           {catalog && (
             <>
@@ -501,6 +586,13 @@ function ReaderPage({ onExpandMap }) {
                 </button>
               </div>
 
+            </>
+          )}
+          </div>
+
+          {catalog && (
+            <div className="reader-reading-layout">
+              <div className="reader-scripture-column">
               {loading && <div className="reader-loading" role="status">Loading passage…</div>}
               {chapterError && <p className="notice error" role="alert">{chapterError}</p>}
               {!compared && !loading && chapterData && !chapterData.verses.length && (
@@ -516,7 +608,7 @@ function ReaderPage({ onExpandMap }) {
                       <button
                         className="place-drawer-backdrop"
                         type="button"
-                        aria-label="Close place relations"
+                        aria-label="Close place details"
                         onClick={() => setSelectedLocation(null)}
                       />
                       <aside
@@ -528,7 +620,7 @@ function ReaderPage({ onExpandMap }) {
                       >
                         <header className="place-drawer-header">
                           <div>
-                            <p className="eyebrow">Location</p>
+                            <p className="eyebrow">Place</p>
                             <h3 id="place-drawer-title">{selectedLocation.name.replace(/\s+\d+$/, "")}</h3>
                             {selectedLocation.region && <p>{selectedLocation.region}</p>}
                           </div>
@@ -536,7 +628,7 @@ function ReaderPage({ onExpandMap }) {
                             ref={closeDrawerRef}
                             className="place-details-close"
                             type="button"
-                            aria-label="Close place relations"
+                            aria-label="Close place details"
                             onClick={() => setSelectedLocation(null)}
                           >×</button>
                         </header>
@@ -565,7 +657,7 @@ function ReaderPage({ onExpandMap }) {
                             />
                           )}
                           {placeRelationsLoading && (
-                            <p className="reader-loading" role="status">Loading place references…</p>
+                            <p className="reader-loading" role="status">Loading passages about this place…</p>
                           )}
                           {placeRelationsError && <p className="notice error" role="alert">{placeRelationsError}</p>}
                           <PlaceGraphPreview key={`graph-${selectedLocation.id}`} location={selectedLocation} />
@@ -573,7 +665,7 @@ function ReaderPage({ onExpandMap }) {
                             <>
                               <h4>Also mentioned in</h4>
                               {placeRelations.mentions.length === 0 ? (
-                                <p className="empty-result">No other references for this place were found.</p>
+                                <p className="empty-result">No other passages mentioning this place were found.</p>
                               ) : (
                                 <ul className="place-relations">
                                   {mentionsByBook.map((group) => (
@@ -640,6 +732,7 @@ function ReaderPage({ onExpandMap }) {
                       </aside>
                     </>
                   )}
+                  {selectedDetail && <ReaderDetailsDrawer key={selectedDetail.id} item={selectedDetail} onClose={closeDetail} onSelectItem={setSelectedDetail} />}
                   {compared ? (
                     <div className="reader-comparison-scroll max-w-full overflow-x-auto" role="region" aria-label="Side-by-side translations" tabIndex={0}>
                       <table className="reader-comparison-table" style={{ minWidth: `${columns.length * 280}px` }}>
@@ -696,7 +789,18 @@ function ReaderPage({ onExpandMap }) {
                                         selected={selectedVerse === String(number)}
                                         locations={column.data.locations.filter((location) => location.verse_number === number)}
                                         figures={(column.data.figures || []).filter((figure) => figure.verse_number === number)}
-                                        onSelectLocation={(location) => setSelectedLocation({ ...location, version_code: column.code })}
+                                        onSelectLocation={(location) => {
+                                          setSelectedDetail(null);
+                                          setSelectedLocation({ ...location, version_code: column.code });
+                                        }}
+                                        onSelectPerson={(person) => { setSelectedLocation(null); setSelectedDetail(person); }}
+                                        onSelectPassage={() => {
+                                          setSelectedLocation(null);
+                                          setSelectedVerse(String(number));
+                                          setSelectedDetail(readerPassageNode(column.data, verse));
+                                        }}
+                                        onSelectVerse={() => setSelectedVerse(String(number))}
+                                        onExplain={() => explainVerse(number, column.code)}
                                       />
                                     ) : (
                                       <p className={"reader-missing-verse m-0 px-[10px] py-[7px] text-muted [font:12px/1.8_\"DM_Sans\",sans-serif]"}>
@@ -718,12 +822,130 @@ function ReaderPage({ onExpandMap }) {
                       selected={selectedVerse === String(item.number)}
                       locations={chapterData.locations.filter((location) => location.verse_number === item.number)}
                       figures={(chapterData.figures || []).filter((figure) => figure.verse_number === item.number)}
-                      onSelectLocation={setSelectedLocation}
+                      onSelectLocation={(location) => { setSelectedDetail(null); setSelectedLocation(location); }}
+                      onSelectPerson={(person) => { setSelectedLocation(null); setSelectedDetail(person); }}
+                      onSelectPassage={() => {
+                        setSelectedLocation(null);
+                        setSelectedVerse(String(item.number));
+                        setSelectedDetail(readerPassageNode(chapterData, item));
+                      }}
+                      onSelectVerse={() => setSelectedVerse(String(item.number))}
+                      onExplain={() => explainVerse(item.number)}
                     />
                   ))}
                 </article>
               )}
-            </>
+              </div>
+            </div>
+          )}
+
+          {studyOpen && (
+            <div
+              className="reader-study-backdrop"
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget) setStudyOpen(false);
+              }}
+            >
+              <section
+                className="reader-study-dialog"
+                id="reader-study-panel"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="reader-study-title"
+              >
+                <header className="reader-study-header">
+                <div>
+                  <p className="eyebrow">Study Buddy</p>
+                  <h3 id="reader-study-title">Verse explainer</h3>
+                  {studyData?.reference && (
+                    <p>
+                      {studyData.reference.book_name} {studyData.reference.chapter}:{studyData.reference.verse_number}
+                      {" · "}{studyData.reference.version}
+                    </p>
+                  )}
+                </div>
+                <button
+                  ref={studyCloseRef}
+                  className="reader-study-close"
+                  type="button"
+                  aria-label="Close Study Buddy"
+                  onClick={() => setStudyOpen(false)}
+                >×</button>
+                </header>
+                <div className="reader-study-transcript" aria-live="polite">
+                {!studyVerse && (
+                  <p className="reader-study-welcome">Select any verse on the left to see an explanation grounded in the available translations, nearby verses, and linked places.</p>
+                )}
+                {studyLoading && <p className="reader-study-thinking" role="status">Gathering verse context and preparing explanation…</p>}
+                {studyError && <p className="notice error" role="alert">{studyError}</p>}
+                {studyData && (
+                  <div className="reader-explanation">
+                    <blockquote>{studyData.verse.text}</blockquote>
+                    <p>{studyData.explanation}</p>
+                    {studyData.verse.versions.length > 1 && (
+                      <details>
+                        <summary>Available translations ({studyData.verse.versions.length})</summary>
+                        <ul>
+                          {studyData.verse.versions.map((translation) => (
+                            <li key={translation.code}>
+                              <strong>{translation.code}</strong> {translation.text}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+                    {(studyData.context.previous || studyData.context.next) && (
+                      <details>
+                        <summary>Nearby verses</summary>
+                        <ul>
+                          {[studyData.context.previous, studyData.context.next]
+                            .filter(Boolean)
+                            .map((contextVerse) => (
+                              <li key={`${contextVerse.chapter}-${contextVerse.verse_number}`}>
+                                <strong>
+                                  {studyData.reference.book_name} {contextVerse.chapter}:{contextVerse.verse_number}
+                                </strong>{" "}
+                                {contextVerse.text}
+                              </li>
+                            ))}
+                        </ul>
+                      </details>
+                    )}
+                    {studyData.locations.length > 0 && (
+                      <details>
+                        <summary>Places linked in the graph ({studyData.locations.length})</summary>
+                        <ul>
+                          {studyData.locations.map((location, index) => (
+                            <li key={`${location.name}-${index}`}>
+                              <strong>{location.name}</strong>
+                              {location.region ? ` · ${location.region}` : ""}
+                              {location.note ? ` — ${location.note}` : ""}
+                              {location.latitude != null && location.longitude != null
+                                ? ` (${Number(location.latitude).toFixed(2)}, ${Number(location.longitude).toFixed(2)})`
+                                : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+                    {studyData.regions.length > 0 && (
+                      <details>
+                        <summary>Region details ({studyData.regions.length})</summary>
+                        <ul>
+                          {studyData.regions.map((region) => (
+                            <li key={region.name}>
+                              <strong>{region.name}</strong>
+                              {region.description ? ` — ${region.description}` : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+                  </div>
+                )}
+                </div>
+              </section>
+            </div>
           )}
         </section>
       </main>
@@ -731,30 +953,56 @@ function ReaderPage({ onExpandMap }) {
   );
 }
 
-function VerseText({ verse, locations, figures, selected, onSelectLocation, withId = true }) {
+function VerseText({
+  verse, locations, figures, selected, onSelectLocation, onSelectPerson, onSelectPassage,
+  onSelectVerse, onExplain, withId = true,
+}) {
   const segments = mentionSegments(verse.text, locations, figures);
   return (
     <p
       className={`reader-verse${selected ? " selected" : ""}`}
       id={withId ? `reader-verse-${verse.number}` : undefined}
     >
-      <sup>{verse.number}</sup>
+      <sup><button className="passage-number" type="button" aria-label={`See details and connections for verse ${verse.number}`}
+        onClick={() => {
+          onSelectVerse();
+          onSelectPassage();
+        }}>{verse.number}</button></sup>
       {segments.map((segment, index) => segment.locations
         ? (
           <button
             className="place-highlight"
             type="button"
             key={`${segment.text}-${index}`}
-            title={`Location: ${segment.locations.map((item) => item.region ? `${item.name}, ${item.region}` : item.name).join("; ")}`}
-            onClick={() => onSelectLocation(segment.locations[0])}
+            title={`Place: ${segment.locations.map((item) => item.region ? `${item.name}, ${item.region}` : item.name).join("; ")} — see map and passages`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onSelectLocation(segment.locations[0]);
+            }}
           >{segment.text}</button>
         )
         : segment.figures ? (
-          <a className="person-highlight" key={`${segment.text}-${index}`}
-            href={relationshipHref(segment.figures[0])}
-            title={`Person: ${segment.figures[0].name} — explore relationships`}
-          >{segment.text}</a>
-        ) : <span key={`${segment.text}-${index}`}>{segment.text}</span>)}
+          <button className="person-highlight" type="button" key={`${segment.text}-${index}`}
+            onClick={() => onSelectPerson(segment.figures[0])}
+            title={`Person: ${segment.figures[0].name} — see person details`}
+          >{segment.text}</button>
+        ) : !segment.text.trim() ? (
+          <span key={`${segment.text}-${index}`}>{segment.text}</span>
+        ) : (
+          <button
+            className="reader-verse-select"
+            type="button"
+            key={`${segment.text}-${index}`}
+            aria-label={`Explain ${verse.number}: ${segment.text.trim()}`}
+            onClick={onSelectVerse}
+          >{segment.text}</button>
+        ))}
+      <button
+        className="reader-explain-action"
+        type="button"
+        onClick={onExplain}
+        aria-label={`Open explanation for verse ${verse.number}`}
+      >Explain verse</button>
     </p>
   );
 }

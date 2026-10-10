@@ -41,15 +41,15 @@
     animation-delay: 360ms;
   }
 
-  .landing-card-exploring:hover .graph-node, .landing-card-exploring:focus-visible .graph-node {
+  .landing-card-relationships:hover .graph-node, .landing-card-relationships:focus-visible .graph-node {
     animation: graph-node-pulse 1.2s ease-in-out infinite alternate;
   }
 
-  .landing-card-exploring:hover .graph-node-two, .landing-card-exploring:focus-visible .graph-node-two {
+  .landing-card-relationships:hover .graph-node-two, .landing-card-relationships:focus-visible .graph-node-two {
     animation-delay: 150ms;
   }
 
-  .landing-card-exploring:hover .graph-node-three, .landing-card-exploring:focus-visible .graph-node-three {
+  .landing-card-relationships:hover .graph-node-three, .landing-card-relationships:focus-visible .graph-node-three {
     animation-delay: 300ms;
   }
 
@@ -71,6 +71,10 @@
 
   .place-drawer {
     animation: place-drawer-in .2s ease-out;
+  }
+
+  .reader-study-dialog {
+    animation: place-drawer-in .18s ease-out;
   }
 
   .place-map-canvas {
@@ -103,8 +107,12 @@
     .preview-book {
       transition: none;
     }
+    .landing-ambience-artwork, .reader-study-dialog {
+      animation: none !important;
+      transition-duration: .01ms !important;
+    }
     .landing-card-mapping:hover .map-point, .landing-card-mapping:focus-visible .map-point,
-    .landing-card-exploring:hover .graph-node, .landing-card-exploring:focus-visible .graph-node {
+    .landing-card-relationships:hover .graph-node, .landing-card-relationships:focus-visible .graph-node {
       animation: none;
     }
   }
