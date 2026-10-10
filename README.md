@@ -263,7 +263,9 @@ inside the three-dot options control beside the depth selector
 for keyboard navigation. **Fit graph** and fullscreen controls sit at the top
 right; the node-type key sits at the bottom right. **Fit graph** restores the view.
 Node/connection counts and truncation status sit at the bottom left.
-The existing graph does not include people nodes.
+Figures appear as graph nodes. Kinship edges between figures are drawn dashed
+in the figure colour (keyed **Kinship** in the node-type key), and the sidebar
+names the recorded kind — Father of, Mother of, Child of, Sibling of, Partner of.
 Underlined places in the reader open details with a **Graph relationships**
 preview showing the place and up to six directly connected nodes. Its **Expand**
 control opens the full graph centred on that exact place mention. Selecting a graph node preserves its
@@ -325,9 +327,9 @@ no SQL-injection surface.
 |---------------------------------------------------------------|------------------------------------------------|--------------------------------------------------|
 | `GET /health`                                                 | —                                              | `{status, db, empty}`                            |
 | `GET /search?q=&label=`                                       | `q` prefix, optional `label` filter            | autocomplete node list                           |
-| `POST /traverse`                                              | `{start_node, label, edge}`                    | recursive descendants along `edge` + their edges |
-| `POST /path`                                                  | `{source, source_label, target, target_label}` | shortest path (BFS) between two nodes            |
-| `GET /graph?node=&label=&node_id=`                            | node name and label; optional exact node ID     | nearby nodes and relationship edges              |
+| `POST /traverse`                                              | `{start_node, label, edge}`                    | recursive descendants along `edge` + their edges (kinship edges carry their kind in `attrs`) |
+| `POST /path`                                                  | `{source, source_label, target, target_label}` | shortest path (BFS) between two nodes, edges carry `attrs` |
+| `GET /graph?node=&label=&node_id=`                            | node name and label; optional exact node ID     | nearby nodes and relationship edges; kinship edges carry their kind in `attrs` |
 | `GET /map/points?region=&book=&limit=`                        | a region or book code                           | geocoded location mentions for selected scope    |
 | `GET /map/places`                                              | —                                              | unique mappable places with repeated mentions grouped |
 | `GET /verse?book_code=&chapter=&verse_number=`                | verse reference                                | the same verse across all versions               |

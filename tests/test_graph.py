@@ -150,6 +150,81 @@ def test_path_verse_to_region(db_path):
         conn.close()
 
 
+def test_figure_kinship_edges_carry_relationship_kind(db_path):
+    # Kinship edges need the STEP Bible download; skip when the build was offline.
+    conn = duckdb.connect(str(db_path), read_only=True)
+    try:
+        total, named = conn.execute(
+            "SELECT COUNT(*), COUNT(json_extract_string(attrs, 'relationship')) "
+            "FROM edges WHERE label = 'figure_relative_of'"
+        ).fetchone()
+        if total == 0:
+            pytest.skip("no STEP Bible data (offline build)")
+        kinds = {r[0] for r in conn.execute(
+            "SELECT DISTINCT json_extract_string(attrs, 'relationship') "
+            "FROM edges WHERE label = 'figure_relative_of'"
+        ).fetchall()}
+    finally:
+        conn.close()
+    assert total == named  # every kinship edge names its kind
+    assert kinds <= {"father", "mother", "parent", "sibling", "partner"}
+    assert "father" in kinds
+
+
+def test_kinship_attrs_surface_in_api_responses(db_path, monkeypatch):
+    """The /graph, /path, and /traverse responses carry the kinship kind
+    on their edges, so the UI can label figure_relative_of connections
+    ("Father of", "Sibling of", ...) instead of the raw edge label.
+    """
+    conn = duckdb.connect(str(db_path), read_only=True)
+    try:
+        has_kinship = conn.execute(
+            "SELECT COUNT(*) FROM edges WHERE label = 'figure_relative_of'"
+        ).fetchone()[0]
+    finally:
+        conn.close()
+    if has_kinship == 0:
+        pytest.skip("no STEP Bible data (offline build)")
+
+    monkeypatch.setenv("BIBLE_DB_PATH", str(db_path))
+    import importlib
+
+    import app.api as api
+    api = importlib.reload(api)  # re-read BIBLE_DB_PATH from the environment
+    kinds = {"father", "mother", "parent", "sibling", "partner"}
+
+    # /graph: the ego-graph around Salmon carries kinship links with kinds.
+    ego = api.graph(node="Salmon", label="figure", hops=1)
+    kinship = [l for l in ego["links"] if l["label"] == "figure_relative_of"]
+    assert kinship
+    assert all(l["attrs"] and l["attrs"]["relationship"] in kinds for l in kinship)
+    assert any(
+        l["source"] == "figure:Salmon" and l["attrs"]["relationship"] == "father"
+        for l in kinship
+    )  # Salmon -> Boaz runs parent -> child
+
+    # /path: David -> Solomon is a direct father edge.
+    result = api.path(api.PathRequest(
+        source="David", source_label="figure",
+        target="Solomon", target_label="figure",
+    ))
+    assert result["found"] and result["depth"] == 1
+    edge = result["edges"][0]
+    assert edge["label"] == "figure_relative_of"
+    assert edge["attrs"]["relationship"] in ("father", "parent")
+
+    # /traverse: Abraham's family tree along kinship edges, kinds intact.
+    tree = api.traverse(api.TraversalRequest(
+        start_node="Abraham", label="figure", edge="figure_relative_of"
+    ))
+    assert "Isaac" in {n["name"] for n in tree["nodes"]}
+    assert tree["edges"]
+    assert all(
+        e["attrs"] and e["attrs"].get("relationship") in kinds
+        for e in tree["edges"]
+    )
+
+
 def test_figure_in_verse_follows_each_versions_numbering(db_path):
     # Figure edges need the STEP Bible download; skip when the build was offline.
     conn = duckdb.connect(str(db_path), read_only=True)

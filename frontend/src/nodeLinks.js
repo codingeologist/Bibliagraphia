@@ -25,16 +25,42 @@ const relationshipNames = {
   location_in_verse: ["Mentions place", "Mentioned in passage"],
   location_in_region: ["Contains place", "Located in region"],
   figure_in_verse: ["Mentions figure", "Mentioned in passage"],
+  figure_relative_of: ["Relative of", "Relative of"],
 };
 
-export const relationshipDescription = (label, outgoing) =>
-  relationshipNames[label]?.[outgoing ? 0 : 1] || label.replaceAll("_", " ");
+// Kinship edges (figure_relative_of) name their kind in attrs.relationship.
+// father/mother/parent edges are stored parent -> child; sibling and
+// partner edges are symmetric, stored once per pair, so both directions
+// read the same.
+const kinshipNames = {
+  father: ["Father of", "Child of"],
+  mother: ["Mother of", "Child of"],
+  parent: ["Parent of", "Child of"],
+  sibling: ["Sibling of", "Sibling of"],
+  partner: ["Partner of", "Partner of"],
+};
 
-// Path API edges follow the walk, which can run against the stored direction.
-export const pathRelationshipDescription = (label, fromType) => relationshipDescription(label, ({
-  verse_in_book: "book",
-  verse_in_version: "version",
-  location_in_verse: "verse",
-  location_in_region: "region",
-  figure_in_verse: "verse",
-})[label] === fromType);
+export const relationshipDescription = (label, outgoing, attrs) => {
+  const names = label === "figure_relative_of" && attrs?.relationship
+    ? kinshipNames[attrs.relationship] || relationshipNames[label]
+    : relationshipNames[label];
+  return names?.[outgoing ? 0 : 1] || label.replaceAll("_", " ");
+};
+
+// Path API edges follow the walk, which can run against the stored
+// direction. Kinship kinds read off the stored edge: symmetric kinds read
+// the same from either end, and parent kinds run parent -> child, so the
+// stored source is always the parent end.
+export const pathRelationshipDescription = (label, fromType, edge, fromId) => {
+  if (label === "figure_relative_of") {
+    const outgoing = edge && fromId ? edge.source === fromId : true;
+    return relationshipDescription(label, outgoing, edge?.attrs);
+  }
+  return relationshipDescription(label, ({
+    verse_in_book: "book",
+    verse_in_version: "version",
+    location_in_verse: "verse",
+    location_in_region: "region",
+    figure_in_verse: "verse",
+  })[label] === fromType);
+};
