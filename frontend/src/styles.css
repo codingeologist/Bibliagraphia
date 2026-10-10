@@ -75,14 +75,124 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .landing-page {
   position: relative;
   display: grid;
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: calc(100vh - 76px);
+  min-height: calc(100dvh - 76px);
   place-items: center;
   overflow: hidden;
   padding: 48px 24px;
   background:
     radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--panel) 82%, transparent), transparent 60%),
     var(--bg);
+}
+.landing-ambience {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  color: #aaa296;
+  pointer-events: none;
+}
+:root.dark .landing-ambience { color: #817b70; }
+.landing-ambience-artwork {
+  position: absolute;
+  inset: -46% -8% auto;
+  width: 116%;
+  height: 124%;
+  overflow: visible;
+  opacity: 0;
+  transition: opacity 800ms ease;
+}
+.ambience-reading { transform: translate(3%, 12%); }
+.ambience-mapping { transform: translate(2%, 8%) scale(1.02); }
+.ambience-exploring { transform: translateY(2%); }
+.ambience-telescope { transform: translate(0, 1%); }
+.ambience-scripture text {
+  fill: currentColor;
+  stroke: none;
+  font-family: Georgia, serif;
+}
+.ambience-scripture-reference {
+  font: 600 11px "DM Sans", sans-serif !important;
+  letter-spacing: 1.2px;
+  opacity: .7;
+}
+.ambience-scripture-line { font-size: 24px; opacity: .64; }
+.ambience-scripture-highlight { opacity: .95; }
+.ambience-scripture .ambience-verse-number { font-size: 18px; font-weight: 700; opacity: .78; }
+.ambience-scripture .ambience-verse-highlight { fill: color-mix(in srgb, #795a36 86%, currentColor); }
+.ambience-map path, .ambience-graph path, .ambience-telescope-art path,
+.ambience-telescope-orbit {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  opacity: .55;
+}
+.ambience-telescope-art { opacity: .62; }
+.ambience-telescope-art .ambience-telescope-body {
+  fill: color-mix(in srgb, currentColor 4%, var(--bg));
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.ambience-telescope-art .ambience-telescope-detail { stroke-width: 1.6; }
+.ambience-telescope-art .ambience-telescope-orbit { stroke-width: 1; stroke-dasharray: 2 9; opacity: .3; }
+.ambience-telescope-art .ambience-telescope-star { fill: none; stroke: currentColor; stroke-width: 1.2; opacity: .48; }
+.ambience-telescope-art .ambience-telescope-joint { fill: var(--bg); stroke: currentColor; stroke-width: 1.6; }
+.ambience-map .ambience-world-grid { opacity: .18; }
+.ambience-map .ambience-world-land path {
+  fill: color-mix(in srgb, currentColor 3%, var(--bg));
+  stroke: currentColor;
+  stroke-width: 1.15;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: .72;
+}
+.ambience-map .ambience-route {
+  stroke-width: 1.35;
+  stroke-dasharray: 3 10;
+  stroke-linecap: round;
+  opacity: .58;
+}
+.ambience-map circle {
+  fill: color-mix(in srgb, currentColor 8%, var(--bg));
+  stroke: currentColor;
+  stroke-width: 1.25;
+  opacity: .62;
+}
+.ambience-graph .ambience-synapses {
+  stroke-width: 2;
+  stroke-dasharray: 5 6;
+  opacity: .58;
+}
+.ambience-graph .ambience-node {
+  fill: color-mix(in srgb, currentColor 14%, var(--panel));
+  stroke: currentColor;
+  stroke-width: 2.4;
+  opacity: .9;
+}
+.ambience-graph .ambience-node-core { fill: currentColor; stroke: none; opacity: .85; }
+.ambience-map .ambience-world-land { filter: drop-shadow(0 1px 1px rgb(90 82 68 / 8%)); }
+.landing-page:has(.landing-card-reading:hover) .ambience-reading,
+.landing-page:not(:has(.landing-card:hover)):has(.landing-card-reading:focus-visible) .ambience-reading,
+.landing-page:has(.landing-card-mapping:hover) .ambience-mapping,
+.landing-page:not(:has(.landing-card:hover)):has(.landing-card-mapping:focus-visible) .ambience-mapping,
+.landing-page:has(.landing-card-relationships:hover) .ambience-exploring,
+.landing-page:not(:has(.landing-card:hover)):has(.landing-card-relationships:focus-visible) .ambience-exploring,
+.landing-page:has(.landing-card-exploring:hover) .ambience-telescope,
+.landing-page:not(:has(.landing-card:hover)):has(.landing-card-exploring:focus-visible) .ambience-telescope {
+  opacity: .26;
+  animation: landing-ambience-drift 22s ease-in-out infinite alternate;
+}
+.landing-page:has(.landing-card-mapping:hover) .ambience-mapping,
+.landing-page:not(:has(.landing-card:hover)):has(.landing-card-mapping:focus-visible) .ambience-mapping {
+  opacity: .32;
+}
+.landing-page:has(.landing-card-reading:hover) .ambience-reading,
+.landing-page:not(:has(.landing-card:hover)):has(.landing-card-reading:focus-visible) .ambience-reading {
+  opacity: .28;
+}
+@keyframes landing-ambience-drift {
+  from { translate: -1% -1%; }
+  to { translate: 1% 1%; }
 }
 .landing-content {
   position: relative;
@@ -161,7 +271,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   animation: landing-card-arrive 600ms calc(150ms + var(--card-order) * 90ms) both;
 }
 .landing-card-mapping { --card-accent: var(--node-region); }
-.landing-card-exploring { --card-accent: var(--node-version); }
+.landing-card-exploring { --card-accent: #8a806f; }
 .landing-card-relationships { --card-accent: var(--node-region); }
 .landing-card:hover, .landing-card:focus-visible {
   transform: translateY(-5px);
@@ -211,9 +321,14 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .graph-edge { fill: none; stroke: color-mix(in srgb, var(--card-accent) 40%, var(--line)); stroke-width: 1.5; stroke-dasharray: 4 4; }
 .graph-node { fill: var(--panel); stroke: var(--card-accent); stroke-width: 2; transform-box: fill-box; transform-origin: center; }
 .graph-node-one, .graph-node-four { fill: color-mix(in srgb, var(--card-accent) 12%, var(--panel)); }
-.landing-card-exploring:hover .graph-node, .landing-card-exploring:focus-visible .graph-node { animation: graph-node-pulse 1.2s ease-in-out infinite alternate; }
-.landing-card-exploring:hover .graph-node-two, .landing-card-exploring:focus-visible .graph-node-two { animation-delay: 150ms; }
-.landing-card-exploring:hover .graph-node-three, .landing-card-exploring:focus-visible .graph-node-three { animation-delay: 300ms; }
+.landing-card-relationships:hover .graph-node, .landing-card-relationships:focus-visible .graph-node { animation: graph-node-pulse 1.2s ease-in-out infinite alternate; }
+.landing-card-relationships:hover .graph-node-two, .landing-card-relationships:focus-visible .graph-node-two { animation-delay: 150ms; }
+.landing-card-relationships:hover .graph-node-three, .landing-card-relationships:focus-visible .graph-node-three { animation-delay: 300ms; }
+.telescope-icon { fill: none; stroke: var(--card-accent); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.telescope-icon .telescope-tube { fill: color-mix(in srgb, var(--card-accent) 13%, var(--panel)); }
+.telescope-icon .telescope-finder { fill: color-mix(in srgb, var(--card-accent) 8%, var(--panel)); stroke-width: 2; }
+.telescope-icon circle { fill: var(--panel); stroke-width: 2; }
+.landing-card-exploring:hover .telescope-icon, .landing-card-exploring:focus-visible .telescope-icon { transform: translateY(-2px); }
 .landing-card-title { font: 600 18px "Playfair Display", Georgia, serif; }
 .landing-card-description {
   max-width: 250px;
@@ -631,6 +746,11 @@ main { max-width: 1320px; margin: auto; padding: 0 5vw 70px; }
 .verse-card > p { margin: 0 0 5px; color: var(--accent); font-size: 9px; font-weight: 700; letter-spacing: .06em; }
 .verse-card > div { font-family: "Playfair Display", Georgia, serif; font-size: 13px; line-height: 1.6; }
 .reader-panel { margin-top: 24px; padding: 22px 26px; }
+.reader-content { min-width: 0; }
+.reader-reading-layout { min-width: 0; }
+.reader-scripture-column { min-width: 0; }
+.reader-study-backdrop { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 24px; background: rgb(20 22 20 / 48%); }
+.reader-study-dialog { display: flex; flex-direction: column; width: min(560px, 100%); max-height: min(760px, 88dvh); overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); box-shadow: 0 18px 60px rgb(0 0 0 / 24%); color: var(--ink); animation: place-drawer-in .18s ease-out; }
 .reader-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
 .reader-heading h2 { margin: 0; }
 .reader-heading p { margin: 6px 0 0; color: var(--muted); font-size: 11px; }
@@ -689,10 +809,31 @@ main { max-width: 1320px; margin: auto; padding: 0 5vw 70px; }
 .reader-nav span { color: var(--muted); font-size: 11px; }
 .reader-nav button { min-height: 34px; padding: 0 11px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel); color: var(--ink); font-size: 11px; }
 .reader-nav button:disabled { opacity: .45; cursor: default; }
+.reader-study-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 16px; border-bottom: 1px solid var(--line); }
+.reader-study-header .eyebrow { margin: 0 0 5px; font-size: 8px; }
+.reader-study-header h3 { margin: 0; font: 600 19px/1.2 "Playfair Display", Georgia, serif; }
+.reader-study-header p:last-child { margin: 5px 0 0; color: var(--muted); font-size: 10px; }
+.reader-study-close { flex: 0 0 auto; width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--muted); font-size: 19px; line-height: 1; }
+.reader-study-transcript { flex: 1; min-height: 180px; padding: 14px; overflow-y: auto; overscroll-behavior: contain; }
+.reader-study-welcome { margin: 0; padding: 12px; border-radius: 5px; background: var(--bg); color: var(--muted); font-size: 11px; line-height: 1.65; }
+.reader-study-thinking { margin: 0 0 10px; color: var(--muted); font-size: 11px; }
+.reader-study-close:focus-visible, .reader-verse-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.reader-verse-select { display: inline; padding: 0; border: 0; border-radius: 2px; background: transparent; color: inherit; font: inherit; text-align: left; }
+.reader-verse-select:hover { background: var(--accent-bg); }
+.reader-explanation blockquote { margin: 0 0 16px; padding: 11px 13px; border-left: 3px solid var(--accent); background: var(--bg); color: var(--ink); font: 15px/1.7 "Playfair Display", Georgia, serif; }
+.reader-explanation > p { margin: 0; color: var(--ink); font-size: 12px; line-height: 1.8; white-space: pre-wrap; }
+.reader-explanation details { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+.reader-explanation summary { color: var(--accent); cursor: pointer; font-size: 11px; font-weight: 600; }
+.reader-explanation ul { display: grid; gap: 9px; margin: 10px 0 0; padding-left: 17px; color: var(--muted); font-size: 10px; line-height: 1.6; }
+.reader-explanation li strong { color: var(--ink); }
 .reader-text { max-width: 760px; margin: 29px auto 10px; font: 400 18px/1.95 "Playfair Display", Georgia, serif; }
-.reader-verse { margin: 0; padding: 7px 10px; border-radius: 5px; scroll-margin: 20vh; }
+.reader-verse { position: relative; margin: 0; padding: 7px 10px; border-radius: 5px; scroll-margin: 20vh; }
 .reader-verse:target, .reader-verse.selected { background: var(--accent-bg); }
 .reader-verse sup { display: inline-block; min-width: 27px; padding-right: 6px; color: var(--accent); font: 700 10px "DM Sans", sans-serif; text-align: right; }
+.reader-explain-action { position: absolute; top: 5px; right: 6px; z-index: 1; padding: 4px 7px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--accent); font: 600 9px "DM Sans", sans-serif; opacity: 0; visibility: hidden; transition: opacity 140ms ease; }
+.reader-verse:hover .reader-explain-action, .reader-verse:focus-within .reader-explain-action, .reader-verse.selected .reader-explain-action { opacity: 1; visibility: visible; }
+.reader-explain-action:hover { border-color: var(--accent); background: var(--accent-bg); }
+.reader-explain-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .place-highlight { padding: 0; border: 0; border-bottom: 1px dotted var(--node-location); border-radius: 2px; background: color-mix(in srgb, var(--node-location) 9%, transparent); color: inherit; font: inherit; cursor: pointer; }
 .place-highlight:hover, .place-highlight:focus-visible { background: color-mix(in srgb, var(--node-location) 20%, transparent); }
 .place-drawer-backdrop { position: fixed; inset: 0; z-index: 1000; border: 0; background: rgb(20 22 20 / 38%); cursor: default; }
@@ -743,6 +884,7 @@ main { max-width: 1320px; margin: auto; padding: 0 5vw 70px; }
 .place-map-link:hover { text-decoration: underline; }
 @keyframes place-drawer-in { from { transform: translateX(18px); opacity: .7; } to { transform: translateX(0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .place-drawer { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .reader-study-dialog { animation: none; } }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),
@@ -783,7 +925,7 @@ footer {
   .brand > div { display: none; }
 }
 @media (max-width: 620px) {
-  .landing-page { padding: 38px 20px; }
+  .landing-page { min-height: calc(100vh - 66px); min-height: calc(100dvh - 66px); padding: 38px 20px; }
   .landing-brand-mark { margin-bottom: 18px; }
   .landing-description { max-width: 290px; margin-right: auto; margin-left: auto; }
   .landing-destinations { grid-template-columns: 1fr; gap: 10px; width: min(100%, 390px); margin-top: 27px; }
@@ -830,8 +972,12 @@ footer {
   .reader-text { margin-top: 20px; font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .landing-content, .landing-card { animation: none; }
+  .landing-content, .landing-card, .landing-ambience-artwork { animation: none !important; transition-duration: .01ms !important; }
   .landing-card, .landing-card-description, .preview-book { transition: none; }
   .landing-card-mapping:hover .map-point, .landing-card-mapping:focus-visible .map-point,
-  .landing-card-exploring:hover .graph-node, .landing-card-exploring:focus-visible .graph-node { animation: none; }
+  .landing-card-relationships:hover .graph-node, .landing-card-relationships:focus-visible .graph-node { animation: none; }
+}
+@media (max-width: 520px) {
+  .reader-study-backdrop { padding: 12px; }
+  .reader-study-dialog { max-height: 92dvh; }
 }
