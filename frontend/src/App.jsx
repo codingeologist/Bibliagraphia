@@ -9,7 +9,7 @@ import ReaderPage from "./ReaderPage.jsx";
 import SiteHeader from "./SiteHeader.jsx";
 import RelationshipsPage from "./RelationshipsPage.jsx";
 
-const labels = ["book", "verse", "location", "region", "version"];
+const labels = ["book", "verse", "location", "region", "version", "figure"];
 const initialTraversal = { node: "", label: "book", edge: "verse_in_book" };
 const initialPath = {
   source: "",
@@ -93,6 +93,7 @@ function ExplorePage() {
   const [searchMessage, setSearchMessage] = useState("");
   const [searchError, setSearchError] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
+  const [figure, setFigure] = useState(null);
   const [traversal, setTraversal] = useState(initialTraversal);
   const [traverseResult, setTraverseResult] = useState(null);
   const [traverseMessage, setTraverseMessage] = useState("");
@@ -148,6 +149,7 @@ function ExplorePage() {
       if (search.label) params.set("label", search.label);
       const result = await get(`/search?${params}`);
       setSearchResults(result.results);
+      setFigure(null);
       if (!result.results.length) setSearchMessage("No matching nodes. Try another name or code.");
     } catch (error) {
       setSearchError(error.message);
@@ -158,6 +160,14 @@ function ExplorePage() {
   };
 
   const chooseNode = (node) => {
+    // Figures have no traversal or map view: show their details here and
+    // jump to the graph explorer centred on them.
+    setFigure(node.label === "figure" ? node : null);
+    if (node.label === "figure") {
+      setGraphSeed({ node: displayName(node), label: "figure" });
+      document.getElementById("graph-explorer")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     const code = nodeCode(node) || displayName(node);
     if (["book", "region", "version"].includes(node.label)) {
       const edge = node.label === "book" ? "verse_in_book"
@@ -355,6 +365,13 @@ function ExplorePage() {
                     <ResultRow key={node.id} node={node} onClick={chooseNode} />
                   ))}
                 </ul>
+              )}
+              {figure && (
+                <div className="figure-detail" aria-live="polite">
+                  <p className="eyebrow">{[figure.testament, figure.category].filter(Boolean).join(" · ")}</p>
+                  <h3>{displayName(figure)}</h3>
+                  <p>{figure.description}</p>
+                </div>
               )}
             </Panel>
 

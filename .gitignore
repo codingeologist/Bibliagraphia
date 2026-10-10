@@ -11,3 +11,5 @@ frontend/.vite/
 frontend/dist/
 frontend/.env.local
 .venv/
+# STEP Bible data cache (downloaded by scripts/build_db.py; not ours to redistribute)
+data/.stepbible/

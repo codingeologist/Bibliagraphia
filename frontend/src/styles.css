@@ -40,6 +40,7 @@
   --node-region: #3e8277;
   --node-location: #74894b;
   --node-verse: #8c8d87;
+  --node-figure: #a3486b;
   font-optical-sizing: auto;
 }
 
@@ -60,6 +61,7 @@
   --node-region: #70b6a9;
   --node-location: #abc47c;
   --node-verse: #888d85;
+  --node-figure: #d98aa6;
   background: var(--bg);
 }
 
@@ -447,7 +449,8 @@ main { max-width: 1320px; margin: auto; padding: 0 5vw 70px; }
 .badge-region { --badge-color: var(--node-region); }
 .badge-location { --badge-color: var(--node-location); }
 .badge-verse { --badge-color: var(--node-verse); }
-.badge-book, .badge-version, .badge-region, .badge-location, .badge-verse {
+.badge-figure { --badge-color: var(--node-figure); }
+.badge-book, .badge-version, .badge-region, .badge-location, .badge-verse, .badge-figure {
   background: color-mix(in srgb, var(--badge-color) 11%, var(--panel));
   color: var(--badge-color);
 }
@@ -458,6 +461,10 @@ main { max-width: 1320px; margin: auto; padding: 0 5vw 70px; }
   line-height: 1.5;
 }
 .notice:empty { display: none; }
+.figure-detail { margin: 13px 0 0; padding: 10px 12px; border: 1px solid var(--line); border-left: 2px solid var(--node-figure); border-radius: 5px; }
+.figure-detail .eyebrow { margin: 0 0 4px; color: var(--node-figure); }
+.figure-detail h3 { margin: 0 0 6px; }
+.figure-detail p { margin: 0; font-size: 12px; line-height: 1.5; }
 .error { color: #b2483d; }
 .result-summary { color: var(--accent); }
 .compact { max-height: 340px; overflow-y: auto; }

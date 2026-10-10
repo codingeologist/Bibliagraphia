@@ -24,12 +24,8 @@ COPY app/        /app/app/
 COPY scripts/    /app/scripts/
 COPY bibliagraphia/ /app/bibliagraphia/
 COPY sql/        /app/sql/
-COPY data/       /app/data/
-
-# Build the DuckDB graph at image time so the container starts fast and
-# works with no mounted volume. The DB lands at /app/data/bible.db (the
-# REPO_ROOT fallback the API uses when BIBLE_DB_PATH isn't set).
-RUN python /app/scripts/build_db.py
+# Copy pre-built DuckDB database (JSON source files excluded via .dockerignore)
+COPY data/bible.db /app/data/bible.db
 
 EXPOSE 8000
 
