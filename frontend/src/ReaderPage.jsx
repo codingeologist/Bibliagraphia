@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { get } from "./api.js";
 import { createCircleMarker } from "./mapMarkers.js";
@@ -956,35 +956,58 @@ function VerseText({
           onSelectVerse();
           onSelectPassage();
         }}>{verse.number}</button></sup>
-      {segments.map((segment, index) => segment.locations
-        ? (
-          <button
-            className="place-highlight"
-            type="button"
-            key={`${segment.text}-${index}`}
-            title={`Place: ${segment.locations.map((item) => item.region ? `${item.name}, ${item.region}` : item.name).join("; ")} — see map and passages`}
-            onClick={(event) => {
-              event.stopPropagation();
-              onSelectLocation(segment.locations[0]);
-            }}
-          >{segment.text}</button>
-        )
-        : segment.figures ? (
-          <button className="person-highlight" type="button" key={`${segment.text}-${index}`}
-            onClick={() => onSelectPerson(segment.figures[0])}
-            title={`Person: ${segment.figures[0].name} — see person details`}
-          >{segment.text}</button>
-        ) : !segment.text.trim() ? (
-          <span key={`${segment.text}-${index}`}>{segment.text}</span>
-        ) : (
-          <button
-            className="reader-verse-select"
-            type="button"
-            key={`${segment.text}-${index}`}
-            aria-label={`Explain ${verse.number}: ${segment.text.trim()}`}
-            onClick={onSelectVerse}
-          >{segment.text}</button>
-        ))}
+      {segments.map((segment, index) => {
+        // Buttons render as atomic inline boxes, so white space inside them
+        // collapses at their edges. Keep inter-segment spaces outside buttons
+        // as plain text nodes so words never run together.
+        const key = `${segment.text}-${index}`;
+        if (segment.locations) {
+          return (
+            <button
+              className="place-highlight"
+              type="button"
+              key={key}
+              title={`Place: ${segment.locations.map((item) => item.region ? `${item.name}, ${item.region}` : item.name).join("; ")} — see map and passages`}
+              onClick={(event) => {
+                event.stopPropagation();
+                onSelectLocation(segment.locations[0]);
+              }}
+            >{segment.text}</button>
+          );
+        }
+        if (segment.figures) {
+          return (
+            <button
+              className="person-highlight"
+              type="button"
+              key={key}
+              onClick={() => onSelectPerson(segment.figures[0])}
+              title={`Person: ${segment.figures[0].name} — see person details`}
+            >{segment.text}</button>
+          );
+        }
+        if (!segment.text.trim()) {
+          return <span key={key}>{segment.text}</span>;
+        }
+        const withoutLeading = segment.text.trimStart();
+        const core = withoutLeading.trimEnd();
+        const leading = segment.text.slice(0, segment.text.length - withoutLeading.length);
+        const trailing = withoutLeading.slice(core.length);
+        return (
+          <Fragment key={key}>
+            {leading}
+            {core ? (
+              <button
+                className="reader-verse-select"
+                type="button"
+                aria-label={`Explain ${verse.number}: ${core}`}
+                onClick={onSelectVerse}
+              >{core}</button>
+            ) : null}
+            {trailing}
+          </Fragment>
+        );
+      })}
       <button
         className="reader-explain-action"
         type="button"
