@@ -434,6 +434,7 @@ Bibliagraphia/
 │   ├── build_db.py                            # JSON -> data/bible.db (idempotent, bulk-loaded)
 │   └── stepbible.py                           # STEP Bible TIPNR/TVTMS: figure refs + verse numbering
 │   └── mcp_client.py                          # MCP client — handshake handled for you (see “MCP server”)
+│   └── stepbible.py                           # STEP Bible TIPNR/TVTMS: figure refs + verse numbering 
 ├── sql/
 │   ├── init_duckdb.sql                        # schema (reference)
 │   ├── load_data.sql                          # load steps (reference)
