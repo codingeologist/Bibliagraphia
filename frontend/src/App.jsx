@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { get, post } from "./api.js";
 import GraphExplorer from "./GraphExplorer.jsx";
+import LandingPage from "./LandingPage.jsx";
 import MapExplorer from "./MapExplorer.jsx";
 import MapPage from "./MapPage.jsx";
 import ReaderPage from "./ReaderPage.jsx";
@@ -285,7 +286,8 @@ function ExplorePage() {
         </div>
         <div className="header-actions">
           <nav className="site-nav" aria-label="Main navigation">
-            <a href="/" aria-current="page">Explore</a>
+            <a href="/">Home</a>
+            <a href="/explore" aria-current="page">Explore</a>
             <a href="/read">Read Bible</a>
             <a href="/map">Map</a>
           </nav>
@@ -599,6 +601,8 @@ function App() {
   if (route.path === "/map") {
     return <MapPage key={route.key} initialMap={route.initialMap} onMapReady={route.onMapReady} />;
   }
+  if (route.path === "/explore" || window.location.search) return <ExplorePage />;
+  if (route.path === "/") return <LandingPage />;
   return <ExplorePage />;
 }
 
