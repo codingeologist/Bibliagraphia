@@ -903,6 +903,33 @@ def place_relations(location_id: str = Query(..., min_length=1)):
         conn.close()
 
 
+@app.get("/explain")
+def explain(
+    book_code: str = Query(..., min_length=1),
+    chapter: int = Query(..., ge=1),
+    verse_number: int = Query(..., ge=1),
+    version_code: str = Query("KJV", min_length=1),
+):
+    """Explain a verse with the FaithTech-hosted DeepSeek model.
+
+    The backend gathers the graph context first — the selected verse
+    across every translation, the verses immediately above and below,
+    the location mentions linked to the verse, and those places' region
+    descriptions — packs it into a system + user prompt pair, and asks
+    the model for a chat reply on the significance of the passage, the
+    place, and the persons involved. Needs FAITHTECH_API_KEY on the
+    server; see app/explain.py for the FAITHTECH_* configuration.
+    """
+    from app.explain import ExplainError, explain_verse
+
+    try:
+        return explain_verse(book_code, chapter, verse_number, version_code)
+    except ExplainError as exc:
+        return {"error": str(exc)}
+    except Exception as exc:  # noqa: BLE001
+        return {"error": str(exc)}
+
+
 # MCP over streamable HTTP — same process, same port as the JSON API.
 # Mounted at root so the endpoint is exactly /mcp (no trailing-slash redirect);
 # API routes are registered first, so they always win over this catch-all.

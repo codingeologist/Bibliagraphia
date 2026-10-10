@@ -31,6 +31,7 @@ dependencies = [
     "duckdb>=1.1",
     "fastapi>=0.110",
     "fastmcp>=2.3.1",
+    "httpx2>=2.13",
     "uvicorn[standard]>=0.29",
 ]
 
