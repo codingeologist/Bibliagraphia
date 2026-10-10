@@ -110,6 +110,11 @@ function ReaderPage({ onExpandMap }) {
   });
   const [catalog, setCatalog] = useState(null);
   const [version, setVersion] = useState(initialParams.get("version") || "KJV");
+  const [comparisonVersions, setComparisonVersions] = useState(() =>
+    [...new Set(initialParams.getAll("compare"))].filter((code) =>
+      code !== (initialParams.get("version") || "KJV")));
+  const [comparisonData, setComparisonData] = useState({});
+  const translationPickerRef = useRef(null);
   const [book, setBook] = useState(initialParams.get("book") || "");
   const [chapter, setChapter] = useState(initialParams.get("chapter") || "");
   const [selectedVerse, setSelectedVerse] = useState(initialParams.get("verse") || "");
@@ -126,6 +131,7 @@ function ReaderPage({ onExpandMap }) {
   const [catalogError, setCatalogError] = useState("");
   const [chapterError, setChapterError] = useState("");
   const [loading, setLoading] = useState(true);
+  const passageRef = useRef(`${book}:${chapter}`);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -161,7 +167,9 @@ function ReaderPage({ onExpandMap }) {
     setLoading(true);
     setChapterError("");
     setChapterData(null);
-    setSelectedVerse("");
+    const passage = `${book}:${chapter}`;
+    if (passageRef.current !== passage) setSelectedVerse("");
+    passageRef.current = passage;
     setSelectedLocation(null);
     const params = new URLSearchParams({
       book_code: book,
@@ -191,6 +199,42 @@ function ReaderPage({ onExpandMap }) {
       });
     return () => { active = false; };
   }, [book, chapter, version]);
+
+  useEffect(() => {
+    if (!book || !chapter) return undefined;
+    let active = true;
+    setComparisonData({});
+    for (const code of comparisonVersions) {
+      const params = new URLSearchParams({ book_code: book, chapter, version_code: code });
+      get(`/chapter?${params}`)
+        .then((data) => {
+          if (active) setComparisonData((current) => ({
+            ...current, [code]: { data, book, chapter },
+          }));
+        })
+        .catch((error) => {
+          if (active) setComparisonData((current) => ({
+            ...current, [code]: { error: error.message, book, chapter },
+          }));
+        });
+    }
+    return () => { active = false; };
+  }, [book, chapter, comparisonVersions]);
+
+  useEffect(() => {
+    if (!book || !chapter) return;
+    const params = new URLSearchParams(window.location.search);
+    params.set("book", book);
+    params.set("chapter", chapter);
+    params.set("version", version);
+    params.delete("compare");
+    comparisonVersions.forEach((code) => params.append("compare", code));
+    if (selectedVerse) params.set("verse", selectedVerse);
+    else params.delete("verse");
+    if (selectedLocation) params.set("place_id", selectedLocation.id);
+    else params.delete("place_id");
+    window.history.replaceState(null, "", `/read?${params}`);
+  }, [book, chapter, version, comparisonVersions, selectedVerse, selectedLocation]);
 
   useEffect(() => {
     const verseNumber = pendingScrollVerseRef.current;
@@ -258,6 +302,31 @@ function ReaderPage({ onExpandMap }) {
   const atStart = currentIndex === 0 && chapterIndex <= 0;
   const atEnd = currentIndex === availableBooks.length - 1
     && chapterIndex === availableChapters.length - 1;
+  const compared = comparisonVersions.length > 0;
+  const columns = [
+    { code: version, data: chapterData, error: chapterError, loading },
+    ...comparisonVersions.map((code) => {
+      const result = comparisonData[code];
+      const current = result?.book === book && result?.chapter === chapter;
+      return {
+        code,
+        data: current ? result.data : null,
+        error: current ? result.error : "",
+        loading: !current,
+      };
+    }),
+  ];
+  const verseNumbers = [...new Set(columns.flatMap((column) =>
+    column.data?.verses.map((verse) => verse.number) || []))].sort((a, b) => a - b);
+  const locationVersion = selectedLocation?.version_code || version;
+  const translationName = (code) => {
+    const translation = catalog?.versions.find((item) => item.code === code);
+    return translation?.full_name || translation?.name || code;
+  };
+  const changeVersion = (code) => {
+    setComparisonVersions((current) => current.map((item) => item === code ? version : item));
+    setVersion(code);
+  };
 
   const moveChapter = (direction) => {
     if (direction < 0 && chapterIndex > 0) {
@@ -304,7 +373,7 @@ function ReaderPage({ onExpandMap }) {
     setSelectedLocation(null);
     setBook(nextBook);
     setChapter(nextChapter);
-    setVersion(nextVersion);
+    changeVersion(nextVersion);
     if (isCurrentPassage) {
       setSelectedVerse(nextVerse);
       pendingPlaceIdRef.current = "";
@@ -364,6 +433,42 @@ function ReaderPage({ onExpandMap }) {
 
       <main>
         <section className="panel reader-panel" aria-label="Bible reader">
+          <div className="reader-heading">
+            <div>
+              <h2>Read Bible</h2>
+              {compared && <p>Book, chapter and verse stay in sync across translations.</p>}
+            </div>
+            <details className="reader-translation-picker" ref={translationPickerRef}>
+              <summary aria-label="Add translation">+ <span>Add translation</span></summary>
+              <div className="reader-translation-options">
+                <label className="reader-control">
+                  Choose a translation
+                  <select
+                    aria-label="Add translation to comparison"
+                    value=""
+                    disabled={!catalog}
+                    onChange={(event) => {
+                      const code = event.target.value;
+                      if (!code) return;
+                      setComparisonVersions((current) => [...current, code]);
+                      translationPickerRef.current.open = false;
+                      translationPickerRef.current.querySelector("summary").focus();
+                    }}
+                  >
+                    <option value="">Select translation</option>
+                    {catalog?.versions.filter((item) =>
+                      item.code !== version && !comparisonVersions.includes(item.code))
+                      .map((item) => (
+                        <option key={item.code} value={item.code}>{item.full_name || item.name}</option>
+                      ))}
+                  </select>
+                </label>
+                {catalog && comparisonVersions.length >= catalog.versions.length - 1 && (
+                  <p>All available translations are shown.</p>
+                )}
+              </div>
+            </details>
+          </div>
           {catalogError && <p className="notice error" role="alert">{catalogError}</p>}
           {catalog && (
             <>
@@ -408,7 +513,7 @@ function ReaderPage({ onExpandMap }) {
                   <select
                     aria-label="Translation"
                     value={version}
-                    onChange={(event) => setVersion(event.target.value)}
+                    onChange={(event) => changeVersion(event.target.value)}
                   >
                     {catalog.versions.map((item) => (
                       <option key={item.code} value={item.code}>{item.full_name || item.name}</option>
@@ -421,11 +526,11 @@ function ReaderPage({ onExpandMap }) {
                     aria-label="Jump to verse"
                     value={selectedVerse}
                     onChange={(event) => jumpToVerse(event.target.value)}
-                    disabled={!chapterData?.verses.length}
+                    disabled={!verseNumbers.length}
                   >
                     <option value="">Jump to verse</option>
-                    {chapterData?.verses.map((item) => (
-                      <option key={item.number} value={String(item.number)}>Verse {item.number}</option>
+                    {verseNumbers.map((number) => (
+                      <option key={number} value={String(number)}>Verse {number}</option>
                     ))}
                   </select>
                 </label>
@@ -437,7 +542,7 @@ function ReaderPage({ onExpandMap }) {
                 </button>
                 <span>
                   {chapterData
-                    ? `${chapterData.book_name} ${chapterData.chapter} · ${version}`
+                    ? `${chapterData.book_name} ${chapterData.chapter} · ${[version, ...comparisonVersions].join(" / ")}`
                     : "Select a book and chapter"}
                 </span>
                 <button type="button" onClick={() => moveChapter(1)} disabled={!availableBooks.length || atEnd}>
@@ -447,13 +552,13 @@ function ReaderPage({ onExpandMap }) {
 
               {loading && <div className="reader-loading" role="status">Loading passage…</div>}
               {chapterError && <p className="notice error" role="alert">{chapterError}</p>}
-              {!loading && chapterData && !chapterData.verses.length && (
+              {!compared && !loading && chapterData && !chapterData.verses.length && (
                 <p className="empty-result">No text available for this passage in this translation.</p>
               )}
-              {chapterData?.verses.length > 0 && !loading && (
+              {(compared || chapterData?.verses.length > 0) && (
                 <article
-                  className="reader-text"
-                  aria-label={`${chapterData.book_name} chapter ${chapterData.chapter}`}
+                  className={`reader-text${compared ? " reader-comparison" : ""}`}
+                  aria-label={`${chapterData?.book_name || book} chapter ${chapter}`}
                 >
                   {selectedLocation && (
                     <>
@@ -495,13 +600,16 @@ function ReaderPage({ onExpandMap }) {
                                 ...viewport,
                                 place: placeRelations.place,
                                 relations: placeRelations,
-                                readerHref: `/read?${new URLSearchParams({
+                                readerHref: `/read?${new URLSearchParams([
+                                  ...Object.entries({
                                   book,
                                   chapter,
                                   verse: String(selectedLocation.verse_number || selectedVerse),
                                   version,
                                   place_id: selectedLocation.id,
-                                })}`,
+                                  }),
+                                  ...comparisonVersions.map((code) => ["compare", code]),
+                                ])}`,
                               })}
                             />
                           )}
@@ -535,7 +643,7 @@ function ReaderPage({ onExpandMap }) {
                                                 type="button"
                                                 onClick={() => goToReference(
                                                   reference,
-                                                  version,
+                                                  locationVersion,
                                                   reference.location_ids.find((item) =>
                                                     item.id.includes(`:${reference.book_code}:${reference.chapter}:${reference.verse_number}:`),
                                                   )?.id,
@@ -552,13 +660,13 @@ function ReaderPage({ onExpandMap }) {
 
                               <h4 className="also-mentioned-heading">Other translations</h4>
                               {placeRelations.reference.translations.filter(
-                                (translation) => translation.code !== version,
+                                (translation) => translation.code !== locationVersion,
                               ).length === 0 ? (
                                 <p className="empty-result">No other translations are available for this verse.</p>
                               ) : (
                                 <ul className="place-relations">
                                   {placeRelations.reference.translations
-                                    .filter((translation) => translation.code !== version)
+                                    .filter((translation) => translation.code !== locationVersion)
                                     .map((translation) => (
                                       <li key={translation.code}>
                                         <span>{placeRelations.reference.book_name} {placeRelations.reference.chapter}:{placeRelations.reference.verse_number}</span>
@@ -580,7 +688,67 @@ function ReaderPage({ onExpandMap }) {
                       </aside>
                     </>
                   )}
-                  {chapterData.verses.map((item) => (
+                  {compared ? (
+                    <div className="reader-comparison-scroll" role="region" aria-label="Side-by-side translations" tabIndex={0}>
+                      <table className="reader-comparison-table" style={{ minWidth: `${columns.length * 280}px` }}>
+                        <caption>Translations aligned by verse number. Numbering may differ between translations.</caption>
+                        <thead>
+                          <tr>
+                            {columns.map((column) => (
+                              <th key={column.code} scope="col">
+                                <div className="reader-column-heading">
+                                  <span>{translationName(column.code)} <small>{column.code}</small></span>
+                                  <button
+                                    type="button"
+                                    aria-label={`Remove ${translationName(column.code)}`}
+                                    onClick={() => {
+                                      if (column.code === version) {
+                                        setVersion(comparisonVersions[0]);
+                                        setComparisonVersions((current) => current.slice(1));
+                                      } else {
+                                        setComparisonVersions((current) => current.filter((code) => code !== column.code));
+                                      }
+                                    }}
+                                  >×</button>
+                                </div>
+                                {column.loading && <p role="status">Loading passage…</p>}
+                                {column.error && <p className="notice error" role="alert">{column.error}</p>}
+                                {column.data && !column.data.verses.length && (
+                                  <p>No text available for this passage in this translation.</p>
+                                )}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {verseNumbers.map((number) => (
+                            <tr key={number} id={`reader-verse-${number}`}>
+                              {columns.map((column) => {
+                                const verse = column.data?.verses.find((item) => item.number === number);
+                                return (
+                                  <td key={column.code}>
+                                    {verse ? (
+                                      <VerseText
+                                        verse={verse}
+                                        withId={false}
+                                        selected={selectedVerse === String(number)}
+                                        locations={column.data.locations.filter((location) => location.verse_number === number)}
+                                        onSelectLocation={(location) => setSelectedLocation({ ...location, version_code: column.code })}
+                                      />
+                                    ) : (
+                                      <p className="reader-missing-verse">
+                                        {!column.loading && !column.error ? `Verse ${number} is not available.` : "—"}
+                                      </p>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : chapterData?.verses.map((item) => (
                     <VerseText
                       key={item.number}
                       verse={item}
@@ -599,12 +767,12 @@ function ReaderPage({ onExpandMap }) {
   );
 }
 
-function VerseText({ verse, locations, selected, onSelectLocation }) {
+function VerseText({ verse, locations, selected, onSelectLocation, withId = true }) {
   const segments = placeSegments(verse.text, locations);
   return (
     <p
       className={`reader-verse${selected ? " selected" : ""}`}
-      id={`reader-verse-${verse.number}`}
+      id={withId ? `reader-verse-${verse.number}` : undefined}
     >
       <sup>{verse.number}</sup>
       {segments.map((segment, index) => segment.locations
