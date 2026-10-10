@@ -1,0 +1,5 @@
+# Production build context for the frontend Dockerfile (context = ./frontend).
+# Keep host artifacts out of the image build.
+node_modules/
+dist/
+.env.local

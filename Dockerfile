@@ -36,4 +36,5 @@ EXPOSE 8000
 # Serve the API + UI. uvicorn is a runtime dep (uvicorn[standard]).
 # BIBLE_DB_PATH points at the mounted volume when one is supplied via
 # compose; if absent, the image-built /app/data/bible.db is used.
-CMD ["sh", "-c", "BIBLE_DB_PATH=${BIBLE_DB_PATH:-/app/data/bible.db} exec uvicorn app.api:app --host 0.0.0.0 --port 8000"]
+# PORT is injected by Railway (falls back to 8000 for local compose runs).
+CMD ["sh", "-c", "BIBLE_DB_PATH=${BIBLE_DB_PATH:-/app/data/bible.db} exec uvicorn app.api:app --host 0.0.0.0 --port ${PORT:-8000}"]

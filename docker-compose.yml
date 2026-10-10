@@ -30,8 +30,8 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: frontend/Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: bibliagraphia-frontend
     # Single entry point for the app: nginx serves the SPA and proxies API.
     ports:
