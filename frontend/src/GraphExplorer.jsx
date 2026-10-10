@@ -10,6 +10,8 @@ import {
 } from "d3-force";
 import { get } from "./api.js";
 import { NodeIcon, nodeIconPaths } from "./nodeIcons.jsx";
+import GraphNodeSearch from "./GraphNodeSearch.jsx";
+import { saveRelationshipState } from "./relationshipState.js";
 
 const colorVars = {
   book: "--node-book",
@@ -49,7 +51,10 @@ const nodeDescription = (node) => node.label === "verse"
 function GraphExplorer({ seed, fullPage = false }) {
   const [query, setQuery] = useState("");
   const [label, setLabel] = useState("book");
-  const [hops, setHops] = useState(fullPage ? "2" : "1");
+  const [hops, setHops] = useState(fullPage ? seed?.hops || "3" : "1");
+  const [showNames, setShowNames] = useState(seed?.showNames === true);
+  const showNamesRef = useRef(showNames);
+  showNamesRef.current = showNames;
   const [graph, setGraph] = useState(null);
   const [summary, setSummary] = useState("");
   const [error, setError] = useState("");
@@ -67,9 +72,10 @@ function GraphExplorer({ seed, fullPage = false }) {
   const nodeMenuRef = useRef(null);
   const lastRequestRef = useRef("");
   const exactCentreRef = useRef(null);
+  const branchExpansionRef = useRef(1);
   const [controlRevision, setControlRevision] = useState(0);
 
-  const runGraph = useCallback(async (node = query, nodeLabel = label, nodeId = "") => {
+  const runGraph = useCallback(async (node = query, nodeLabel = label, nodeId = "", expansion) => {
     const start = node.trim();
     if (!start) {
       setError("Enter a graph centre.");
@@ -78,6 +84,10 @@ function GraphExplorer({ seed, fullPage = false }) {
       return;
     }
     const requestId = ++requestRef.current;
+    const previousCentre = exactCentreRef.current;
+    branchExpansionRef.current = expansion ?? (
+      nodeId && nodeId === previousCentre?.id ? branchExpansionRef.current : 1
+    );
     lastRequestRef.current = JSON.stringify([start, nodeLabel, hops]);
     exactCentreRef.current = { query: start, label: nodeLabel, id: nodeId };
     setLoading(true);
@@ -85,6 +95,10 @@ function GraphExplorer({ seed, fullPage = false }) {
     setSummary("Loading graph…");
     try {
       const params = new URLSearchParams({ node: start, label: nodeLabel, hops });
+      if (fullPage) {
+        params.set("balanced", "true");
+        params.set("branch_expansion", String(branchExpansionRef.current));
+      }
       if (nodeId) params.set("node_id", nodeId);
       const result = await get(`/graph?${params}`);
       if (requestId !== requestRef.current) return;
@@ -96,12 +110,15 @@ function GraphExplorer({ seed, fullPage = false }) {
       if (fullPage) {
         const urlParams = new URLSearchParams({
           graph_node: start, graph_label: nodeLabel, graph_node_id: result.start_id,
+          graph_hops: hops,
         });
         window.history.replaceState(null, "", `/relationships?${urlParams}`);
+        saveRelationshipState({ node: start, label: nodeLabel, id: result.start_id, hops, showNames: showNamesRef.current });
       }
       setSummary(result.count
         ? `${result.count} nodes · ${result.links.length} connections · ${result.hops} hop${result.hops === 1 ? "" : "s"}`
-          + (result.truncated ? " · outer ring capped at 200" : "")
+          + (result.truncated ? " · capped at 200" : "")
+          + (result.branch_limited ? " · more connections available" : "")
         : "No connected nodes found.");
     } catch (requestError) {
       if (requestId !== requestRef.current) return;
@@ -186,9 +203,8 @@ function GraphExplorer({ seed, fullPage = false }) {
         context.stroke(new Path2D(nodeIconPaths[node.label] || nodeIconPaths.verse));
         context.restore();
       }
-      if (node === hoveredRef.current || node.id === startIdRef.current || view.scale > 1.5) {
-        context.fillStyle = rootStyles.getPropertyValue("--graph-text").trim();
-        context.font = `${10 / view.scale}px sans-serif`;
+      if ((fullPage && showNamesRef.current) || node === hoveredRef.current || node.id === startIdRef.current || view.scale > 1.5) {
+        context.font = `${fullPage ? 11 / view.scale : 10 / view.scale}px sans-serif`;
         context.textAlign = "center";
         let text = nodeName(node);
         if (node.label === "verse" && node.chapter) {
@@ -197,11 +213,49 @@ function GraphExplorer({ seed, fullPage = false }) {
         } else if (node.label === "version" && node.version_code) {
           text = `${node.name || ""} (${node.version_code})`.trim();
         }
-        context.fillText(text, node.x || 0, (node.y || 0) - radius - 4 / view.scale);
+        const textX = node.x || 0;
+        const textY = (node.y || 0) - radius - 4 / view.scale;
+        if (fullPage) {
+          const padding = 6 / view.scale;
+          const width = context.measureText(text).width + padding * 2;
+          const height = 22 / view.scale;
+          const left = textX - width / 2;
+          const top = textY - 15 / view.scale;
+          const corner = 5 / view.scale;
+          context.beginPath();
+          context.moveTo(left + corner, top);
+          context.lineTo(left + width - corner, top);
+          context.quadraticCurveTo(left + width, top, left + width, top + corner);
+          context.lineTo(left + width, top + height - corner);
+          context.quadraticCurveTo(left + width, top + height, left + width - corner, top + height);
+          context.lineTo(left + corner, top + height);
+          context.quadraticCurveTo(left, top + height, left, top + height - corner);
+          context.lineTo(left, top + corner);
+          context.quadraticCurveTo(left, top, left + corner, top);
+          context.closePath();
+          context.fillStyle = rootStyles.getPropertyValue("--panel").trim();
+          context.fill();
+          context.strokeStyle = rootStyles.getPropertyValue(
+            node.id === startIdRef.current || node === hoveredRef.current
+              ? colorVars[node.label] : "--line",
+          ).trim();
+          context.lineWidth = 1 / view.scale;
+          context.stroke();
+        }
+        context.fillStyle = rootStyles.getPropertyValue("--graph-text").trim();
+        context.fillText(text, textX, textY);
       }
     }
     context.restore();
   }, [fullPage]);
+
+  useEffect(() => {
+    draw();
+    const centre = exactCentreRef.current;
+    if (fullPage && centre?.id) {
+      saveRelationshipState({ node: centre.query, label: centre.label, id: centre.id, hops, showNames });
+    }
+  }, [showNames, draw, fullPage, hops]);
 
   useEffect(() => {
     if (!graph?.nodes?.length) {
@@ -392,6 +446,7 @@ function GraphExplorer({ seed, fullPage = false }) {
 
   const legend = [...new Set(graph?.nodes?.map((node) => node.label) || [])];
   const centreNode = graph?.nodes?.find((node) => node.id === graph.start_id);
+  const hiddenCentreConnections = graph?.hidden_connections?.[graph.start_id] || {};
   const readerHref = (node) => `/read?${new URLSearchParams({
     book: node.book_code,
     chapter: String(node.chapter),
@@ -421,6 +476,19 @@ function GraphExplorer({ seed, fullPage = false }) {
     }
   }
 
+  const depthControl = (
+    <select aria-label="Graph depth" value={hops} onChange={(event) => {
+      setHops(event.target.value);
+      setControlRevision((value) => value + 1);
+    }}>
+      {Array.from({ length: fullPage ? 20 : 3 }, (_, index) => [
+        String(index + 1), `${index + 1} hop${index ? "s" : ""}`,
+      ]).map(([value, text]) => (
+        <option key={value} value={value}>{text}</option>
+      ))}
+    </select>
+  );
+
   return (
     <div className={`graph-explorer${fullPage ? " graph-explorer-full" : ""}`}>
       <div className="relationship-toolbar">
@@ -429,7 +497,7 @@ function GraphExplorer({ seed, fullPage = false }) {
         const centre = exactCentreRef.current;
         runGraph(query, label, fullPage && centre?.query === query.trim() && centre?.label === label ? centre.id : "");
       }}>
-        <input
+        {!fullPage && <input
           aria-label="Graph centre"
           value={query}
           onChange={(event) => {
@@ -437,70 +505,22 @@ function GraphExplorer({ seed, fullPage = false }) {
             setControlRevision((value) => value + 1);
           }}
           placeholder="Centre — e.g. JOH"
-        />
-        <select aria-label="Graph node type" value={label} onChange={(event) => {
+        />}
+        {!fullPage && <select aria-label="Graph node type" value={label} onChange={(event) => {
           setLabel(event.target.value);
           setControlRevision((value) => value + 1);
         }}>
           {["book", "version", "region", "location", "verse"].map((item) => (
             <option key={item}>{item}</option>
           ))}
-        </select>
-        <select aria-label="Graph depth" value={hops} onChange={(event) => {
-          setHops(event.target.value);
-          setControlRevision((value) => value + 1);
-        }}>
-          {[["1", "1 hop"], ["2", "2 hops"], ["3", "3 hops"]].map(([value, text]) => (
-            <option key={value} value={value}>{text}</option>
-          ))}
-        </select>
+        </select>}
+        {!fullPage && depthControl}
         {!fullPage && <button className="button button-secondary" disabled={loading}>
           {loading ? "Drawing…" : "Draw graph"}
         </button>}
       </form>
-      {fullPage && graph?.nodes?.length > 0 && (
-        <details className="relationship-node-menu" ref={nodeMenuRef}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              nodeMenuRef.current.open = false;
-              nodeMenuRef.current.querySelector("summary").focus();
-            }
-          }}>
-          <summary aria-label="More graph options">
-            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="5" cy="12" r="2" fill="currentColor" />
-              <circle cx="12" cy="12" r="2" fill="currentColor" />
-              <circle cx="19" cy="12" r="2" fill="currentColor" />
-            </svg>
-          </summary>
-          <div className="relationship-node-menu-panel">
-        <label className="relationship-node-picker">
-          Explore a node
-          <select
-            aria-label="Explore a relationship node"
-            value=""
-            onChange={(event) => {
-              const node = graph.nodes.find((item) => item.id === event.target.value);
-              if (node) {
-                runGraph(graphNodeQuery(node), node.label, node.id);
-                nodeMenuRef.current.open = false;
-                nodeMenuRef.current.querySelector("summary").focus();
-              }
-            }}
-          >
-            <option value="">Choose a node</option>
-            {graph.nodes.map((node) => (
-              <option key={node.id} value={node.id}>
-                {node.label}: {nodeName(node)}{node.chapter ? ` ${node.chapter}:${node.verse_number} (${node.version_code})` : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-          </div>
-        </details>
-      )}
       </div>
-      {summary && <p className="result-summary" role="status">{summary}</p>}
+      {!fullPage && summary && <p className="result-summary" role="status">{summary}</p>}
       {error && <p className="notice error" role="alert">{error}</p>}
       <div className={fullPage ? `relationship-workspace${centreNode ? " has-details" : ""}` : "graph-workspace"}>
       {fullPage && centreNode && (
@@ -535,6 +555,23 @@ function GraphExplorer({ seed, fullPage = false }) {
             {graph.truncated && (
               <p className="relationship-connections-note">Showing connections included in this graph. More may exist beyond its node limit.</p>
             )}
+            {Object.keys(hiddenCentreConnections).length > 0 && (
+              <div className="relationship-hidden-connections">
+                <ul>
+                  {Object.entries(hiddenCentreConnections).map(([type, count]) => (
+                    <li key={type}>{count} more {(nodeTypeNames[type] || type).toLocaleLowerCase()}</li>
+                  ))}
+                </ul>
+                <button type="button" disabled={loading || graph.truncated || graph.branch_expansion >= 20}
+                  onClick={() => runGraph(graphNodeQuery(centreNode), centreNode.label, centreNode.id, graph.branch_expansion + 1)}>
+                  Show more connections
+                </button>
+                {graph.truncated && <p className="relationship-connections-note">Node budget reached. Select a connected node to explore its branch.</p>}
+              </div>
+            )}
+            {graph.branch_limited && !Object.keys(hiddenCentreConnections).length && (
+              <p className="relationship-connections-note">Other branches have more connections. Select a connected node to see its hidden counts and expand it.</p>
+            )}
             {connectedGroups.size === 0 && <p>No direct connections in this graph.</p>}
             {[...connectedGroups].sort(([left], [right]) =>
               (nodeTypeNames[left] || left).localeCompare(nodeTypeNames[right] || right))
@@ -566,6 +603,61 @@ function GraphExplorer({ seed, fullPage = false }) {
         </section>
       )}
       <div className="graph-wrap" ref={wrapperRef}>
+        {fullPage && summary && <p className="result-summary graph-summary-overlay" role="status">{summary}</p>}
+        {fullPage && (
+          <div className="graph-search-overlay">
+            <GraphNodeSearch node={centreNode} fallback={query} onSelect={(node) => {
+              runGraph(graphNodeQuery(node), node.label, node.id);
+            }} />
+            {depthControl}
+            {graph?.nodes?.length > 0 && (
+              <details className="relationship-node-menu" ref={nodeMenuRef}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    nodeMenuRef.current.open = false;
+                    nodeMenuRef.current.querySelector("summary").focus();
+                  }
+                }}>
+                <summary aria-label="More graph options">
+                  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="5" cy="12" r="2" fill="currentColor" />
+                    <circle cx="12" cy="12" r="2" fill="currentColor" />
+                    <circle cx="19" cy="12" r="2" fill="currentColor" />
+                  </svg>
+                </summary>
+                <div className="relationship-node-menu-panel">
+                  <label className="relationship-names-toggle">
+                    <input type="checkbox" checked={showNames}
+                      onChange={(event) => setShowNames(event.target.checked)} />
+                    Show node names
+                  </label>
+                  <label className="relationship-node-picker">
+                    Explore a node
+                    <select
+                      aria-label="Explore a relationship node"
+                      value=""
+                      onChange={(event) => {
+                        const node = graph.nodes.find((item) => item.id === event.target.value);
+                        if (node) {
+                          runGraph(graphNodeQuery(node), node.label, node.id);
+                          nodeMenuRef.current.open = false;
+                          nodeMenuRef.current.querySelector("summary").focus();
+                        }
+                      }}
+                    >
+                      <option value="">Choose a node</option>
+                      {graph.nodes.map((node) => (
+                        <option key={node.id} value={node.id}>
+                          {node.label}: {nodeName(node)}{node.chapter ? ` ${node.chapter}:${node.verse_number} (${node.version_code})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              </details>
+            )}
+          </div>
+        )}
         <button
           type="button"
           className="graph-fullscreen"
@@ -601,7 +693,7 @@ function GraphExplorer({ seed, fullPage = false }) {
         {!graph && !loading && !error && <div className="graph-placeholder">Your graph will appear here</div>}
       </div>
       </div>
-      <p className="graph-tip">Click a node to explore its connections · double-click to refit</p>
+      {!fullPage && <p className="graph-tip">Click a node to explore its connections · double-click to refit</p>}
     </div>
   );
 }

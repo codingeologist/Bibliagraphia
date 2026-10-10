@@ -178,11 +178,11 @@ def health():
 
 @app.get("/search")
 def search(
-    q: str = Query(..., min_length=1),
+    q: str = Query("", description="Search text; empty returns initial suggestions"),
     label: Optional[str] = Query(None, description="restrict to a node label"),
     limit: int = Query(20, le=100),
 ):
-    """Autocomplete: nodes whose name or book/version code starts with `q`.
+    """Autocomplete: match names or codes, or browse when `q` is empty.
 
     Codes are the canonical identifiers, so "JOH" finds John's Gospel even
     though its name ("The Gospel According to John") doesn't start with JOH.
@@ -410,9 +410,11 @@ def path(req: PathRequest):
 def graph(
     node: str = Query(..., min_length=1, description="start node: code or name"),
     label: str = Query(..., description="label of the start node"),
-    hops: int = 1,   # 1–3, neighborhood radius
+    hops: int = 1,   # neighborhood radius; Relationships UI offers 1–20
     limit: int = 200,  # 10–500, max nodes returned
     node_id: Optional[str] = None,
+    balanced: bool = False,
+    branch_expansion: int = 1,
 ):
     """Ego-graph for the force-directed visualisation.
 
@@ -420,8 +422,9 @@ def graph(
     so the UI queries the neighborhood of one node instead: BFS out from
     the start node up to `hops` levels, return every node reached (capped
     at `limit`) plus the edges among them. Level-by-level BFS means the cap
-    cuts the *outermost* ring first — the start node and its immediate
-    neighborhood always survive.
+    cuts the outermost ring first. Balanced mode prioritises passages and
+    limits each branch by neighbour type; branch_expansion widens only the
+    centre's branch. Omitted neighbours are counted separately from the cap.
     """
     from collections import deque
 
@@ -445,6 +448,34 @@ def graph(
             adj.setdefault(f, []).append((t, lbl))
             adj.setdefault(t, []).append((f, lbl))
 
+        node_info = {}
+        branch_limits = {"verse": 10, "location": 5, "book": 5, "version": 5, "region": 5}
+        type_order = {"verse": 0, "book": 1, "version": 2, "location": 3, "region": 4}
+        if balanced:
+            if not 1 <= branch_expansion <= 20:
+                return {"error": "Branch expansion must be between 1 and 20."}
+            node_info = {
+                row[0]: (row[1], row[2] or "", row[0])
+                for row in conn.execute("SELECT id, label, name FROM nodes").fetchall()
+            }
+
+        def neighbours(cur):
+            candidates = list(dict.fromkeys(nbr for nbr, _ in adj.get(cur, [])))
+            if not balanced:
+                return candidates
+            candidates.sort(key=lambda nbr: (
+                type_order.get(node_info[nbr][0], 5), node_info[nbr][1], nbr
+            ))
+            counts = {}
+            selected = []
+            multiplier = branch_expansion if cur == start_id else 1
+            for nbr in candidates:
+                kind = node_info[nbr][0]
+                counts[kind] = counts.get(kind, 0) + 1
+                if counts[kind] <= branch_limits.get(kind, 5) * multiplier:
+                    selected.append(nbr)
+            return selected
+
         # Level-by-level BFS with a node cap.
         included: dict[str, int] = {start_id: 0}  # id -> hop distance
         truncated = False
@@ -452,9 +483,11 @@ def graph(
         for level in range(1, hops + 1):
             if truncated:
                 break
+            if balanced:
+                frontier.sort(key=lambda cur: (type_order.get(node_info[cur][0], 5), cur))
             next_frontier = []
             for cur in frontier:
-                for nbr, lbl in adj.get(cur, []):
+                for nbr in neighbours(cur):
                     if nbr in included:
                         continue
                     if len(included) >= limit:
@@ -467,6 +500,19 @@ def graph(
             frontier = next_frontier
             if not frontier:
                 break
+
+        hidden_connections = {}
+        if balanced:
+            for cur, distance in included.items():
+                if distance >= hops:
+                    continue
+                hidden = {}
+                for nbr in set(nbr for nbr, _ in adj.get(cur, [])):
+                    if nbr not in included:
+                        kind = node_info[nbr][0]
+                        hidden[kind] = hidden.get(kind, 0) + 1
+                if hidden:
+                    hidden_connections[cur] = hidden
 
         # Edges among the included nodes only.
         links = [
@@ -491,6 +537,9 @@ def graph(
             "count": len(nodes),
             "nodes": nodes,
             "links": links,
+            "hidden_connections": hidden_connections,
+            "branch_limited": bool(hidden_connections),
+            "branch_expansion": branch_expansion if balanced else 1,
         }
     except Exception as exc:  # noqa: BLE001
         return {"error": str(exc)}
