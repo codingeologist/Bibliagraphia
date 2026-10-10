@@ -17,8 +17,8 @@ together with locations and regions.
 This is a refactor of the original
 [TypeDB](https://github.com/typedb/typedb) version of Bibliagraphia. The
 graph is now a single-file DuckDB database (one `nodes` table, one `edges`
-table) queried with parameterized recursive SQL, served by a FastAPI app
-with a single-page frontend.
+table) queried with parameterized recursive SQL, served by a FastAPI API
+with a React (Vite) frontend.
 The original TypeDB loader (`bible_loader.py`) and schema
 (`bible_schema.tql`) are kept in the repo for reference.
 
@@ -98,10 +98,12 @@ uv venv venv && source venv/bin/activate && uv pip install -e ".[dev]"
 venv/bin/bibliagraphia-build     # -> data/bible.db
 # (equivalent to: venv/bin/python scripts/build_db.py)
 
-# 2. Run the API + frontend (one process, port 8000):
+# 2. Run the API (port 8000):
 venv/bin/uvicorn app.api:app --reload
 
-# 3. Open http://localhost:8000
+# 3. Run the React frontend (see "Vite + React frontend" below) — or the
+#    full two-container stack with `docker compose up -d --build`, which
+#    serves the app at http://localhost:8080.
 ```
 
 The API auto-builds `data/bible.db` from the JSON on first run if it's
@@ -109,8 +111,8 @@ missing, so step 1 is optional for local play.
 
 ### Vite + React frontend
 
-The standalone React frontend lives in `frontend/` and uses the same API as
-the existing page in `app/static/`. Start the API in one terminal, then run:
+The standalone React frontend lives in `frontend/` and is the sole UI for
+the API. Start the API in one terminal, then run:
 
 ```bash
 cd frontend
@@ -145,7 +147,6 @@ no SQL-injection surface.
 | `GET /verse?book_code=&chapter=&verse_number=`                | verse reference                                | the same verse across all versions               |
 | `GET /reader/catalog?version_code=`                           | optional version code (defaults to `KJV`)      | books, translations, and available chapters      |
 | `GET /chapter?book_code=&chapter=&version_code=`              | passage reference                              | ordered verse text and linked location nodes     |
-| `GET /`                                                       | —                                              | the single-page frontend                         |
 
 Examples:
 
@@ -176,9 +177,8 @@ Bibliagraphia/
 │   ├── load_data.sql                          # load steps (reference)
 │   └── queries.sql                            # recursive CTEs (reference)
 ├── app/
-│   ├── api.py                                 # FastAPI /search /traverse /path /verse /health
-│   └── static/                                # single-page frontend (index.html, app.js, style.css)
-├── frontend/                                  # Vite + React frontend
+│   └── api.py                                 # FastAPI /search /traverse /path /verse /reader /chapter /health
+├── frontend/                                  # Vite + React frontend (the UI; built + served by frontend/Dockerfile)
 ├── tests/
 │   └── test_graph.py                          # build + counts + traverse + path + verse
 ├── bible_loader.py                            # legacy TypeDB loader (kept for reference)
@@ -207,8 +207,9 @@ Key choices:
   bounded BFS for shortest path. The edges table is heterogeneous, so
   traversal filters on `label`.
 - **`app/api.py`** — FastAPI exposing `/traverse`, `/path`, `/search`,
-  `/health` plus a `/verse` cross-version endpoint, serving a single-page
-  frontend from the same process.
+  `/health`, `/verse`, `/reader/catalog` and `/chapter` endpoints. The UI
+  is the separate React frontend in `frontend/` (nginx proxies its API
+  calls to this service).
 - **No self-referencing foreign keys** — edges only ever connect nodes we
   have (referential integrity), which keeps partial views clean.
 

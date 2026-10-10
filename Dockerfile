@@ -1,9 +1,9 @@
-# Bibliagraphia API + UI.
+# Bibliagraphia API.
 #
-# A single FastAPI app serves both the JSON API (app/api.py) and the
-# single-page frontend (app/static/), so the whole thing is one container on
-# port 8000. The DuckDB graph is built from the bundled JSON at image build
-# time and also auto-rebuilt on first run if the volume is empty.
+# The FastAPI JSON API (app/api.py) only. The UI is the standalone
+# React frontend built from frontend/Dockerfile (nginx serving the SPA,
+# proxying the JSON routes to this service). The DuckDB graph is built
+# from the bundled JSON at image build time.
 FROM python:3.12-slim
 
 # Keep the image lean.
@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copy the repo in its real layout so REPO_ROOT (resolved from __file__ in
 # app/api.py and scripts/build_db.py) points at /app and the relative
-# paths (data/, app/static/, scripts/) all resolve.
+# paths (data/, scripts/) all resolve.
 COPY app/        /app/app/
 COPY scripts/    /app/scripts/
 COPY bibliagraphia/ /app/bibliagraphia/
