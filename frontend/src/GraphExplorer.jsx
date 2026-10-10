@@ -280,6 +280,11 @@ function GraphExplorer({ seed, fullPage = false }) {
       && !nodeHidden(link.source, hiddenTypesRef.current, hiddenVersionsRef.current)
       && !nodeHidden(link.target, hiddenTypesRef.current, hiddenVersionsRef.current);
 
+    const isJesusNode = (node) => {
+      const name = node.name || node.id || "";
+      return name.includes("Jesus") || name === "Jesus Christ" || name === "Jesus";
+    };
+
     context.strokeStyle = rootStyles.getPropertyValue("--edge").trim();
     context.lineWidth = 1 / view.scale;
     context.beginPath();
@@ -296,14 +301,39 @@ function GraphExplorer({ seed, fullPage = false }) {
       && link.label === "figure_relative_of");
     if (kinship.length) {
       context.save();
-      context.strokeStyle = rootStyles.getPropertyValue("--node-figure").trim();
       context.setLineDash([5 / view.scale, 4 / view.scale]);
-      context.beginPath();
-      for (const link of kinship) {
-        context.moveTo(link.source.x, link.source.y);
-        context.lineTo(link.target.x, link.target.y);
+      
+      // Draw Jesus kinship edges in gold
+      const jesusKinship = kinship.filter(link => {
+        const sourceNode = nodesRef.current.find(n => n.id === link.source.id);
+        const targetNode = nodesRef.current.find(n => n.id === link.target.id);
+        return isJesusNode(sourceNode) || isJesusNode(targetNode);
+      });
+      if (jesusKinship.length) {
+        context.strokeStyle = "#FFD700";
+        context.beginPath();
+        for (const link of jesusKinship) {
+          context.moveTo(link.source.x, link.source.y);
+          context.lineTo(link.target.x, link.target.y);
+        }
+        context.stroke();
       }
-      context.stroke();
+      
+      // Draw regular kinship edges in figure color
+      const regularKinship = kinship.filter(link => {
+        const sourceNode = nodesRef.current.find(n => n.id === link.source.id);
+        const targetNode = nodesRef.current.find(n => n.id === link.target.id);
+        return !isJesusNode(sourceNode) && !isJesusNode(targetNode);
+      });
+      if (regularKinship.length) {
+        context.strokeStyle = rootStyles.getPropertyValue("--node-figure").trim();
+        context.beginPath();
+        for (const link of regularKinship) {
+          context.moveTo(link.source.x, link.source.y);
+          context.lineTo(link.target.x, link.target.y);
+        }
+        context.stroke();
+      }
       context.restore();
     }
 
@@ -313,13 +343,14 @@ function GraphExplorer({ seed, fullPage = false }) {
         : node.id === startIdRef.current ? 9 : node.label === "verse" ? 3 : 5.5;
       context.beginPath();
       context.arc(node.x || 0, node.y || 0, radius / (node === hoveredRef.current ? 0.78 : 1), 0, Math.PI * 2);
-      context.fillStyle = rootStyles.getPropertyValue(colorVars[node.label]).trim() || "#888";
+      const isJesus = isJesusNode(node);
+      context.fillStyle = isJesus ? "#FFD700" : (rootStyles.getPropertyValue(colorVars[node.label]).trim() || "#888");
       context.fill();
       if (fullPage) {
         context.save();
         context.translate((node.x || 0) - 9, (node.y || 0) - 9);
         context.scale(0.75, 0.75);
-        context.strokeStyle = rootStyles.getPropertyValue("--panel").trim();
+        context.strokeStyle = isJesus ? "#FFD700" : rootStyles.getPropertyValue("--panel").trim();
         context.lineWidth = 1.8;
         context.lineCap = "round";
         context.lineJoin = "round";
@@ -358,7 +389,7 @@ function GraphExplorer({ seed, fullPage = false }) {
           context.closePath();
           context.fillStyle = rootStyles.getPropertyValue("--panel").trim();
           context.fill();
-          context.strokeStyle = rootStyles.getPropertyValue(
+          context.strokeStyle = isJesus ? "#FFD700" : rootStyles.getPropertyValue(
             node.id === startIdRef.current || node === hoveredRef.current
               ? colorVars[node.label] : "--line",
           ).trim();

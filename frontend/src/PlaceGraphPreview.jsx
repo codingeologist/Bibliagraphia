@@ -29,6 +29,11 @@ function PlaceGraphPreview({ location }) {
   const neighbours = graph?.nodes.filter((node) => neighbourIds.has(node.id)) || [];
   const shown = neighbours.slice(0, 6);
   const name = location.name.replace(/\s+\d+$/, "");
+  
+  const isJesusNode = (node) => {
+    const nodeName = node.name || node.id || "";
+    return nodeName.includes("Jesus") || nodeName === "Jesus Christ" || nodeName === "Jesus";
+  };
   const href = `/relationships?${new URLSearchParams({
     graph_node: location.name, graph_label: "location", graph_node_id: location.id,
   })}`;
@@ -58,19 +63,25 @@ function PlaceGraphPreview({ location }) {
             role="group"
             aria-label={`${name} connected to ${shown.length ? shown.map(describeNode).join("; ") : "no other nodes"}`}
           >
-            {nodes.slice(1).map(({ node, x, y }) => (
-              <line key={node.id} x1="160" y1="130" x2={x} y2={y} stroke="var(--edge)" />
-            ))}
+            {nodes.slice(1).map(({ node, x, y }) => {
+              const sourceNode = nodes[0]?.node;
+              const isJesusEdge = sourceNode && (isJesusNode(sourceNode) || isJesusNode(node));
+              return (
+                <line key={node.id} x1="160" y1="130" x2={x} y2={y} stroke={isJesusEdge ? "#FFD700" : "var(--edge)"} />
+              );
+            })}
             {nodes.map(({ node, x, y }, index) => {
               const text = node.label === "verse"
                 ? `${node.book_code} ${node.chapter}:${node.verse_number}`
                 : describeNode(node);
+              const isJesus = isJesusNode(node);
+              const nodeColor = isJesus ? "#FFD700" : `var(--node-${node.label})`;
               return (
                 <a key={node.id} href={relationshipHref(node)} aria-label={`Explore relationships for ${describeNode(node)}`}>
                 <g transform={`translate(${x} ${y})`}>
                   <title>{describeNode(node)}</title>
-                  <circle r={index === 0 ? 22 : 17} fill="var(--panel)" stroke={`var(--node-${node.label})`} strokeWidth={index === 0 ? 2.5 : 1.5} />
-                  <path d={nodeIconPaths[node.label] || nodeIconPaths.verse} transform="translate(-10 -10) scale(.83)" fill="none" stroke={`var(--node-${node.label})`} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle r={index === 0 ? 22 : 17} fill="var(--panel)" stroke={nodeColor} strokeWidth={index === 0 ? 2.5 : 1.5} />
+                  <path d={nodeIconPaths[node.label] || nodeIconPaths.verse} transform="translate(-10 -10) scale(.83)" fill="none" stroke={nodeColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                   <text y={index === 0 ? 36 : 30} textAnchor="middle">{text.length > 20 ? `${text.slice(0, 19)}…` : text}</text>
                   {node.label === "verse" && <text y="43" textAnchor="middle" className="place-graph-version">{node.version_code}</text>}
                 </g>
