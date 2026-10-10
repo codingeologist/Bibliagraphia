@@ -75,7 +75,7 @@ function MapExplorer({ seed }) {
     setSummary("Loading places…");
     try {
       const params = new URLSearchParams({ [requestedScope]: value });
-      const result = await get(`/map?${params}`);
+      const result = await get(`/map/points?${params}`);
       markersRef.current.clearLayers();
       const bounds = [];
       for (const point of result.points) {

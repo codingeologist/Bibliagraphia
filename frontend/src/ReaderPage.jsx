@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { get } from "./api.js";
 
-function PlaceMap({ location }) {
+function PlaceMap({ location, href, onExpand }) {
   const mapElementRef = useRef(null);
+  const mapRef = useRef(null);
 
   useEffect(() => {
     const latitude = Number(location.attrs?.latitude);
@@ -14,7 +15,8 @@ function PlaceMap({ location }) {
       zoomControl: true,
       scrollWheelZoom: false,
       dragging: true,
-    }).setView([latitude, longitude], 8);
+    }).setView([latitude, longitude], 5);
+    mapRef.current = map;
     L.tileLayer(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       {
@@ -35,6 +37,7 @@ function PlaceMap({ location }) {
     return () => {
       window.cancelAnimationFrame(frame);
       map.remove();
+      mapRef.current = null;
     };
   }, [location]);
 
@@ -44,12 +47,24 @@ function PlaceMap({ location }) {
   }
 
   return (
-    <div
-      className="place-map-canvas"
-      ref={mapElementRef}
-      role="img"
-      aria-label={`Map showing ${location.name.replace(/\s+\d+$/, "")}`}
-    />
+    <div className="place-map-preview">
+      <div
+        className="place-map-canvas"
+        ref={mapElementRef}
+        role="img"
+        aria-label={`Map showing ${location.name.replace(/\s+\d+$/, "")}`}
+      />
+      <a
+        className="place-map-preview-link"
+        href={href}
+        aria-label={`Expand map to ${location.name.replace(/\s+\d+$/, "")}`}
+        title="Open on full map"
+        onClick={(event) => onExpand?.(event, {
+          center: mapRef.current.getCenter(),
+          zoom: mapRef.current.getZoom(),
+        })}
+      >⛶</a>
+    </div>
   );
 }
 
@@ -89,22 +104,26 @@ function placeSegments(text, locations) {
   return segments;
 }
 
-function ReaderPage() {
+function ReaderPage({ onExpandMap }) {
+  const initialParams = new URLSearchParams(window.location.search);
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     return saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
   const [catalog, setCatalog] = useState(null);
-  const [version, setVersion] = useState("KJV");
-  const [book, setBook] = useState("");
-  const [chapter, setChapter] = useState("");
-  const [selectedVerse, setSelectedVerse] = useState("");
+  const [version, setVersion] = useState(initialParams.get("version") || "KJV");
+  const [book, setBook] = useState(initialParams.get("book") || "");
+  const [chapter, setChapter] = useState(initialParams.get("chapter") || "");
+  const [selectedVerse, setSelectedVerse] = useState(initialParams.get("verse") || "");
   const [selectedLocation, setSelectedLocation] = useState(null);
-  const [placeGraph, setPlaceGraph] = useState(null);
-  const [placeGraphError, setPlaceGraphError] = useState("");
-  const [placeGraphLoading, setPlaceGraphLoading] = useState(false);
+  const [placeRelations, setPlaceRelations] = useState(null);
+  const [placeRelationsError, setPlaceRelationsError] = useState("");
+  const [placeRelationsLoading, setPlaceRelationsLoading] = useState(false);
   const closeDrawerRef = useRef(null);
   const placeDrawerRef = useRef(null);
+  const pendingVerseRef = useRef(initialParams.get("verse") || "");
+  const pendingScrollVerseRef = useRef(initialParams.get("verse") || "");
+  const pendingPlaceIdRef = useRef(initialParams.get("place_id") || "");
   const [chapterData, setChapterData] = useState(null);
   const [catalogError, setCatalogError] = useState("");
   const [chapterError, setChapterError] = useState("");
@@ -155,6 +174,16 @@ function ReaderPage() {
       .then((result) => {
         if (!active) return;
         setChapterData(result);
+        if (pendingVerseRef.current) {
+          setSelectedVerse(pendingVerseRef.current);
+          pendingVerseRef.current = "";
+        }
+        if (pendingPlaceIdRef.current) {
+          setSelectedLocation(
+            result.locations.find((location) => location.id === pendingPlaceIdRef.current) || null,
+          );
+          pendingPlaceIdRef.current = "";
+        }
         setLoading(false);
       })
       .catch((error) => {
@@ -166,25 +195,33 @@ function ReaderPage() {
   }, [book, chapter, version]);
 
   useEffect(() => {
+    const verseNumber = pendingScrollVerseRef.current;
+    if (!chapterData || !verseNumber || selectedVerse !== verseNumber) return;
+
+    pendingScrollVerseRef.current = "";
+    document.getElementById(`reader-verse-${verseNumber}`)?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }, [chapterData, selectedVerse]);
+
+  useEffect(() => {
     if (!selectedLocation) return undefined;
     let active = true;
     const previouslyFocused = document.activeElement;
-    setPlaceGraph(null);
-    setPlaceGraphError("");
-    setPlaceGraphLoading(true);
-    get(`/graph?${new URLSearchParams({
-      node: selectedLocation.name,
-      label: "location",
-      hops: "1",
-      node_id: selectedLocation.id,
+    setPlaceRelations(null);
+    setPlaceRelationsError("");
+    setPlaceRelationsLoading(true);
+    get(`/place/relations?${new URLSearchParams({
+      location_id: selectedLocation.id,
     })}`)
       .then((result) => {
         if (!active) return;
-        setPlaceGraph(result);
-        setPlaceGraphError(result.error || "");
+        setPlaceRelations(result);
+        setPlaceRelationsError(result.error || "");
       })
-      .catch((error) => active && setPlaceGraphError(error.message))
-      .finally(() => active && setPlaceGraphLoading(false));
+      .catch((error) => active && setPlaceRelationsError(error.message))
+      .finally(() => active && setPlaceRelationsLoading(false));
 
     const handleKeyDown = (event) => {
       if (event.key === "Escape") setSelectedLocation(null);
@@ -250,14 +287,60 @@ function ReaderPage() {
     }
   };
 
+  const goToReference = (reference, translation, locationId) => {
+    const nextBook = reference.book_code;
+    const nextChapter = String(reference.chapter);
+    const nextVerse = String(reference.verse_number);
+    const nextVersion = translation || version;
+    const isCurrentPassage = book === nextBook
+      && chapter === nextChapter
+      && version === nextVersion;
+    const params = new URLSearchParams({
+      book: nextBook,
+      chapter: nextChapter,
+      verse: nextVerse,
+      version: nextVersion,
+    });
+    if (locationId) params.set("place_id", locationId);
+    window.history.replaceState(null, "", `/read?${params}`);
+    setSelectedLocation(null);
+    setBook(nextBook);
+    setChapter(nextChapter);
+    setVersion(nextVersion);
+    if (isCurrentPassage) {
+      setSelectedVerse(nextVerse);
+      pendingPlaceIdRef.current = "";
+      window.requestAnimationFrame(() => {
+        document.getElementById(`reader-verse-${nextVerse}`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      });
+    } else {
+      pendingVerseRef.current = nextVerse;
+      pendingScrollVerseRef.current = nextVerse;
+      pendingPlaceIdRef.current = locationId || "";
+    }
+  };
+
   const getMapHref = (location) => {
-    const params = new URLSearchParams();
-    if (location.region) params.set("map_region", location.region);
-    else params.set("map_book", book);
-    return `/?${params}#map-explorer`;
+    return `/map?${new URLSearchParams({ location_id: location.id })}`;
   };
 
   const testamentBooks = (testament) => availableBooks.filter((item) => item.testament === testament);
+  const mentionsByBook = useMemo(() => {
+    const groups = new Map();
+    for (const reference of placeRelations?.mentions || []) {
+      const group = groups.get(reference.book_code) || {
+        bookCode: reference.book_code,
+        bookName: reference.book_name,
+        references: [],
+      };
+      group.references.push(reference);
+      groups.set(reference.book_code, group);
+    }
+    return [...groups.values()];
+  }, [placeRelations]);
 
   return (
     <div className="app-shell">
@@ -273,6 +356,7 @@ function ReaderPage() {
           <nav className="site-nav" aria-label="Main navigation">
             <a href="/">Explore</a>
             <a href="/read" aria-current="page">Read Bible</a>
+            <a href="/map">Map</a>
           </nav>
           <button className="theme-toggle" type="button" onClick={() => setDark((value) => !value)}>
             {dark ? "☀️" : "🌙"} <span>{dark ? "Light" : "Dark"}</span>
@@ -281,14 +365,6 @@ function ReaderPage() {
       </header>
 
       <main>
-        <section className="reader-heading">
-          <div>
-            <p className="eyebrow">Scripture reader</p>
-            <h2>Read the Bible</h2>
-            <p>Choose a passage. Underlined place names open their graph and map links.</p>
-          </div>
-        </section>
-
         <section className="panel reader-panel" aria-label="Bible reader">
           {catalogError && <p className="notice error" role="alert">{catalogError}</p>}
           {catalog && (
@@ -380,10 +456,6 @@ function ReaderPage() {
                 <article
                   className="reader-text"
                   aria-label={`${chapterData.book_name} chapter ${chapterData.chapter}`}
-                  onClick={(event) => {
-                    if (event.target.closest(".place-highlight")) return;
-                    setSelectedLocation(null);
-                  }}
                 >
                   {selectedLocation && (
                     <>
@@ -402,7 +474,7 @@ function ReaderPage() {
                       >
                         <header className="place-drawer-header">
                           <div>
-                            <p className="eyebrow">Graph location</p>
+                            <p className="eyebrow">Location</p>
                             <h3 id="place-drawer-title">{selectedLocation.name.replace(/\s+\d+$/, "")}</h3>
                             {selectedLocation.region && <p>{selectedLocation.region}</p>}
                           </div>
@@ -416,48 +488,96 @@ function ReaderPage() {
                         </header>
                         <div className="place-drawer-content">
                           <h4>Place on the map</h4>
-                          {!placeGraphLoading && !placeGraphError && placeGraph && (
+                          {!placeRelationsLoading && !placeRelationsError && placeRelations && (
                             <PlaceMap
                               key={selectedLocation.id}
-                              location={placeGraph.nodes.find((node) => node.id === selectedLocation.id)
-                                || selectedLocation}
+                              location={placeRelations.place}
+                              href={getMapHref(selectedLocation)}
+                              onExpand={(event, viewport) => onExpandMap?.(event, {
+                                ...viewport,
+                                place: placeRelations.place,
+                                relations: placeRelations,
+                                readerHref: `/read?${new URLSearchParams({
+                                  book,
+                                  chapter,
+                                  verse: String(selectedLocation.verse_number || selectedVerse),
+                                  version,
+                                  place_id: selectedLocation.id,
+                                })}`,
+                              })}
                             />
                           )}
-                          <h4>Connected nodes</h4>
-                          {placeGraphLoading && <p className="reader-loading" role="status">Loading graph relations…</p>}
-                          {placeGraphError && <p className="notice error" role="alert">{placeGraphError}</p>}
-                          {!placeGraphLoading && !placeGraphError && placeGraph?.links.length === 0 && (
-                            <p className="empty-result">No connected graph nodes found.</p>
+                          {placeRelationsLoading && (
+                            <p className="reader-loading" role="status">Loading place references…</p>
                           )}
-                          {!placeGraphLoading && placeGraph?.links.length > 0 && (
-                            <ul className="place-relations">
-                              {placeGraph.links.map((link) => {
-                                const relatedId = link.source === selectedLocation.id ? link.target : link.source;
-                                const node = placeGraph.nodes.find((item) => item.id === relatedId);
-                                if (!node) return null;
-                                const relation = link.label === "location_in_region"
-                                  ? "Located in"
-                                  : link.label === "location_in_verse" ? "Mentioned in" : link.label;
-                                const details = node.label === "verse"
-                                  ? `${node.name || node.book_code} ${node.chapter}:${node.verse_number}`
-                                    + (node.version_code ? ` · ${node.version_code}` : "")
-                                  : node.name || node.id;
-                                return (
-                                  <li key={`${link.label}-${node.id}`}>
-                                    <span>{relation}</span>
-                                    <strong>{details}</strong>
-                                    <small>{link.label}</small>
-                                  </li>
-                                );
-                              })}
-                            </ul>
+                          {placeRelationsError && <p className="notice error" role="alert">{placeRelationsError}</p>}
+                          {!placeRelationsLoading && !placeRelationsError && placeRelations && (
+                            <>
+                              <h4>Also mentioned in</h4>
+                              {placeRelations.mentions.length === 0 ? (
+                                <p className="empty-result">No other references for this place were found.</p>
+                              ) : (
+                                <ul className="place-relations">
+                                  {mentionsByBook.map((group) => (
+                                    <li className="mention-book-group" key={group.bookCode}>
+                                      <details>
+                                        <summary>
+                                          <strong>{group.bookName}</strong>
+                                          <span>
+                                            {group.references.length} {group.references.length === 1
+                                              ? "passage"
+                                              : "passages"}
+                                          </span>
+                                        </summary>
+                                        <ul className="mention-passage-list">
+                                          {group.references.map((reference) => (
+                                            <li key={`${reference.book_code}-${reference.chapter}-${reference.verse_number}`}>
+                                              <strong>{reference.book_name} {reference.chapter}:{reference.verse_number}</strong>
+                                              <button
+                                                type="button"
+                                                onClick={() => goToReference(
+                                                  reference,
+                                                  version,
+                                                  reference.location_ids.find((item) =>
+                                                    item.id.includes(`:${reference.book_code}:${reference.chapter}:${reference.verse_number}:`),
+                                                  )?.id,
+                                                )}
+                                              >Go to passage →</button>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </details>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+
+                              <h4 className="also-mentioned-heading">Other translations</h4>
+                              {placeRelations.reference.translations.filter(
+                                (translation) => translation.code !== version,
+                              ).length === 0 ? (
+                                <p className="empty-result">No other translations are available for this verse.</p>
+                              ) : (
+                                <ul className="place-relations">
+                                  {placeRelations.reference.translations
+                                    .filter((translation) => translation.code !== version)
+                                    .map((translation) => (
+                                      <li key={translation.code}>
+                                        <span>{placeRelations.reference.book_name} {placeRelations.reference.chapter}:{placeRelations.reference.verse_number}</span>
+                                        <button
+                                          type="button"
+                                          onClick={() => goToReference(
+                                            placeRelations.reference,
+                                            translation.code,
+                                            selectedLocation.id,
+                                          )}
+                                        >Read in {translation.code} →</button>
+                                      </li>
+                                    ))}
+                                </ul>
+                              )}
+                            </>
                           )}
-                          <a
-                            className="place-map-link"
-                            href={getMapHref(selectedLocation)}
-                            target="_blank"
-                            rel="noreferrer"
-                          >View this place on the map ↗</a>
                         </div>
                       </aside>
                     </>
@@ -495,7 +615,7 @@ function VerseText({ verse, locations, selected, onSelectLocation }) {
             className="place-highlight"
             type="button"
             key={`${segment.text}-${index}`}
-            title={`Graph location: ${segment.locations.map((item) => item.region ? `${item.name}, ${item.region}` : item.name).join("; ")}`}
+            title={`Location: ${segment.locations.map((item) => item.region ? `${item.name}, ${item.region}` : item.name).join("; ")}`}
             onClick={() => onSelectLocation(segment.locations[0])}
           >{segment.text}</button>
         )

@@ -22,13 +22,18 @@ with patch("duckdb.connect", return_value=connection):
     from app.api import app
 
 schema = app.openapi()
-for route, names in (("/search", ("label",)), ("/map", ("region", "book"))):
+for route, names in (
+    ("/search", ("label",)),
+    ("/map/points", ("region", "book")),
+    ("/map/places", ()),
+):
     parameters = {
         parameter["name"]: parameter
         for parameter in schema["paths"][route]["get"]["parameters"]
-    }
+    } if names else {}
     for name in names:
         assert parameters[name]["required"] is False
+assert "/map/places" in schema["paths"]
 """,
             ],
             cwd=Path(__file__).resolve().parent.parent,
