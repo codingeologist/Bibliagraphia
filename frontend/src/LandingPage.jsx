@@ -124,7 +124,7 @@ export default function LandingPage() {
           ))}
         </nav>
         <section className="landing-start" aria-labelledby="landing-start-title">
-          <h2 id="landing-start-title">Try it with {suggestion.verse ? suggestedReference : suggestion.name}</h2>
+          <h2 id="landing-start-title">Try it with {suggestion.chapter ? suggestedReference : suggestion.name}</h2>
           <p>Read a chapter, discover its people and places, and compare translations.</p>
           <a href={readerStateHref({ book: suggestion.book, chapter: suggestedChapter, verse: suggestion.verse, version: "KJV", comparisons: ["DRB"] })}>
             Explore {suggestedReference} <span aria-hidden="true">→</span>

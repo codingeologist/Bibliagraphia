@@ -13,6 +13,11 @@ test("Joshua suggestion opens chapter 3 at verse 16", () => {
     { book: "JOS", name: "Joshua", chapter: 3, verse: 16 });
 });
 
+test("Matthew suggestion opens chapter 7 after Jonah", () => {
+  assert.deepEqual(nextSuggestedBook("JON"),
+    { book: "MAT", name: "Matthew", chapter: 7 });
+});
+
 test("suggestions rotate through each book without consecutive repeats and wrap around", () => {
   let previous = null;
   const seen = new Set();

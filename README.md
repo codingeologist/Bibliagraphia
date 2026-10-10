@@ -206,9 +206,9 @@ icon) to switch between light and dark mode; the choice is saved across pages.
 Main navigation is ordered **Home, Read, Map, Relationships, Explore, MCP, About**, with
 decorative icons alongside each label. It scrolls horizontally on small screens.
 Home offers a **Try it with…** suggestion rotating through Ruth, Genesis, Jonah,
-Matthew, Exodus, Luke and Joshua 3:16 on each homepage visit. The previous suggestion is saved
-in browser storage to avoid consecutive repeats. Links open chapter 1, or Joshua
-chapter 3 with verse 16 selected, in KJV and DRB side by side,
+Matthew 7, Exodus, Luke and Joshua 3:16 on each homepage visit. The previous suggestion is saved
+in browser storage to avoid consecutive repeats. Links open chapter 1, Matthew
+chapter 7, or Joshua chapter 3 with verse 16 selected, in KJV and DRB side by side,
 plus links to About, AI assistant setup and GitHub. After a chapter with text
 loads successfully, its book, chapter, translation and comparison choices are
 saved locally in the browser. The home Read card then offers **Continue reading**;
