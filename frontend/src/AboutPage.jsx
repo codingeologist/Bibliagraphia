@@ -51,7 +51,10 @@ export default function AboutPage() {
           <h2>About Bibliagraphia</h2>
           <p className="panel-copy">A living map of scripture. Bibliagraphia connects Bible passages, people, translations, places and regions so you can read, compare and discover how they fit together.</p>
           <p className="panel-copy">Read a chapter, select a highlighted person or place, or explore the connections behind a passage.</p>
-          <a className="text-accent text-[13px]" href="https://github.com/codingeologist/Bibliagraphia" target="_blank" rel="noreferrer">Explore the project on GitHub</a>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <a className="text-accent text-[13px]" href="https://github.com/codingeologist/Bibliagraphia" target="_blank" rel="noreferrer">Explore the project on GitHub</a>
+            <a className="text-accent text-[13px]" href="https://discord.gg/xH8wxysD5" target="_blank" rel="noreferrer">Join our community on Discord</a>
+          </div>
         </section>
 
         <section className="panel" aria-labelledby="about-team">
