@@ -160,14 +160,38 @@ used directly in the JSX components under `frontend/src/`.
 The header logo links to the home page. Open the settings menu (three-line
 icon) to switch between light and dark mode; the choice is saved across pages.
 Open `/relationships` for a full-viewport relationship graph. It starts at
-Genesis; choose a centre and depth to explore another neighbourhood. Changes
-redraw automatically after a short pause; no Draw graph button is needed on this
-page. Node
+Genesis by default. The centre selector and depth control sit together at the
+graph's top left. Click the selector to search across books, passages,
+places, translations and regions, with up to three suggestions per type.
+Choosing a suggestion automatically sets its type and exact node ID.
+The three-dot menu includes **Show node names** to display all graph labels.
+This preference is saved in the browser; hover and zoom labels still work when
+the toggle is off. Graph labels use rounded, theme-aware backgrounds, with a
+node-coloured border for the centre and hovered node.
+Depth offers 1–20 hops and defaults to 3. The selected node, type and depth are
+saved in browser storage and restored when returning to Relationships.
+The URL includes depth as well as node identity for refreshes and sharing;
+explicit URL values take priority over saved selections. The 200-node cap still
+applies, so larger depths may show a truncated neighbourhood.
+Relationships uses passage-first, branch-limited expansion: each branch initially
+explores up to 10 verse nodes, 5 place nodes and 5 nodes of each other type.
+The sidebar lists hidden direct connections; **Show more connections** widens
+the selected centre's branch while retaining the total 200-node budget.
+Select another node to explore its branch. Hidden counts are distinct neighbours
+not loaded in this graph, not a total count of all paths or passages.
+Verse translations and repeated place mentions remain separate exact-ID nodes.
+The embedded Explore graph retains its original expansion behaviour.
+
+Choose a centre and depth to explore another neighbourhood. Selecting a node
+redraws immediately; depth changes redraw after a short pause. No Draw graph
+button is needed on this page. Node
 symbols identify books, verses, translations, places and regions. Drag to pan,
 scroll to zoom, click a node to explore its neighbours, or use the node picker
-inside the graph toolbar's three-dot options control
-for keyboard navigation. **Fit graph** restores the view. The existing graph
-does not include people nodes.
+inside the three-dot options control beside the depth selector
+for keyboard navigation. **Fit graph** and fullscreen controls sit at the top
+right; the node-type key sits at the bottom right. **Fit graph** restores the view.
+Node/connection counts and truncation status sit at the bottom left.
+The existing graph does not include people nodes.
 Underlined places in the reader open details with a **Graph relationships**
 preview showing the place and up to six directly connected nodes. Its **Expand**
 control opens the full graph centred on that exact place mention. Selecting a graph node preserves its
