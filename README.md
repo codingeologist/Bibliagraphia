@@ -124,7 +124,14 @@ The frontend uses Vite, React, and Tailwind CSS. Tailwind utility classes can be
 used directly in the JSX components under `frontend/src/`.
 Open `/read` in the Vite app to read a Bible book. Choose a book, chapter,
 translation, or jump directly to a verse; previous/next controls move between
-chapters. Underlined place mentions that match graph locations open place
+chapters.
+Use **+ Add translation** beside the reader title to compare translations
+side by side. Shared book, chapter and verse controls keep columns in sync;
+verses align by number (numbering can differ between translations). Unavailable
+text is labelled rather than replaced with another passage. Remove columns
+with their **×** buttons; comparison selections are preserved in the reader URL.
+On narrow screens, scroll the comparison horizontally.
+Underlined place mentions in every column open place
 details with links to the graph and map. Open `/map` to browse all mappable
 places; select a marker to read the passages that mention it.
 Use the map's search box to find places by name or alternative name. Choose an
