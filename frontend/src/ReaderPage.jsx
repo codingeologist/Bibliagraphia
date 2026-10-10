@@ -936,6 +936,22 @@ function ReaderPage({ onExpandMap }) {
             </div>
           )}
         </section>
+        {catalog && availableBooks.length > 0 && (
+          // Phones: chapter navigation stays at hand while reading; the middle
+          // button returns to the book / chapter / translation controls.
+          <nav className="reader-mobile-bar" aria-label="Chapter navigation">
+            <button type="button" onClick={() => moveChapter(-1)} disabled={atStart} aria-label="Previous chapter">←</button>
+            <button type="button" className="reader-mobile-bar-title"
+              onClick={() => {
+                const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+                document.querySelector(".reader-book-trigger")?.focus({ preventScroll: true });
+              }}>
+              {chapterData?.book_name || book} {chapter} <span aria-hidden="true">▴</span>
+            </button>
+            <button type="button" onClick={() => moveChapter(1)} disabled={atEnd} aria-label="Next chapter">→</button>
+          </nav>
+        )}
       </main>
     </div>
   );
@@ -977,13 +993,14 @@ function VerseText({
         ) : !segment.text.trim() ? (
           <span key={`${segment.text}-${index}`}>{segment.text}</span>
         ) : (
-          <button
+          // Plain text stays a span: a <button> never wraps across lines, so a
+          // long verse would jump below its number. Keyboard users select the
+          // verse with the number button and open "Explain verse" directly.
+          <span
             className="reader-verse-select"
-            type="button"
             key={`${segment.text}-${index}`}
-            aria-label={`Explain ${verse.number}: ${segment.text.trim()}`}
             onClick={onSelectVerse}
-          >{segment.text}</button>
+          >{segment.text}</span>
         ))}
       <button
         className="reader-explain-action"

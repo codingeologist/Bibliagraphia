@@ -209,6 +209,10 @@
   }
 
   @media (max-width: 620px) {
+    /* iOS Safari zooms the page when a field under 16px gets focus. */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
+      font-size: 16px !important;
+    }
     .panel {
       @apply p-[16px];
     }

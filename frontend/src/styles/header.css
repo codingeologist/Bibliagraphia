@@ -56,6 +56,10 @@
     @apply absolute [inset-inline-end:0] [top:calc(100%_+_8px)] z-[1100] w-[200px] [max-width:calc(100vw_-_36px)] p-[8px] [border:1px_solid_var(--line)] rounded-[6px] bg-panel [box-shadow:0_5px_18px_rgb(0_0_0_/_12%)];
   }
 
+  .site-menu-nav {
+    @apply hidden;
+  }
+
   .site-menu-panel .theme-toggle {
     @apply w-full min-h-[40px] text-start;
   }
@@ -64,7 +68,33 @@
     @apply gap-[7px] [padding:7px_10px] [border:1px_solid_var(--line)] rounded-[6px] bg-panel text-ink text-[12px];
   }
 
-  @media (max-width: 620px) {
+  /* Seven labelled links don't fit beside the brand below ~760px: move them into the menu. */
+  @media (max-width: 760px) {
+    .header-actions > .site-nav {
+      @apply hidden;
+    }
+    .site-menu-nav {
+      @apply grid gap-[2px] mb-[8px] pb-[8px] [border-bottom:1px_solid_var(--line)];
+    }
+    .site-menu-nav a {
+      @apply flex items-center gap-[10px] min-h-[44px] [padding:0_10px] rounded-[6px] text-ink no-underline text-[14px];
+    }
+    .site-menu-nav a:hover, .site-menu-nav a:focus-visible {
+      @apply bg-canvas;
+    }
+    .site-menu-nav a[aria-current="page"] {
+      @apply bg-accent-soft text-accent font-semibold;
+    }
+    .site-menu-panel {
+      @apply w-[240px];
+    }
+    .menu-toggle {
+      @apply w-[44px] h-[44px];
+    }
+  }
+
+  /* Narrow screens, and phones held sideways, get the compact header. */
+  @media (max-width: 620px), (max-height: 500px) {
     .header-actions {
       @apply min-w-0 gap-[11px];
     }
@@ -86,7 +116,8 @@
   }
 
   @media (max-width: 440px) {
-    .brand > div {
+    /* With the nav in the menu there is room for the name, not the tagline. */
+    .brand p {
       @apply hidden;
     }
   }

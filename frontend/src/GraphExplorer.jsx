@@ -158,6 +158,11 @@ function GraphExplorer({ seed, fullPage = false }) {
   const viewRef = useRef({ x: 0, y: 0, scale: 1 });
   const startIdRef = useRef("");
   const dragRef = useRef(null);
+  const pointersRef = useRef(new Map()); // active pointers, for pinch zoom
+  const pinchRef = useRef(null);
+  // Phones: the type / translation filters cover much of the graph, so they
+  // start folded behind a "Filters" button (CSS ignores this on wider screens).
+  const [legendOpen, setLegendOpen] = useState(false);
   const hoveredRef = useRef(null);
   const runRef = useRef(null);
   const requestRef = useRef(0);
@@ -521,11 +526,54 @@ function GraphExplorer({ seed, fullPage = false }) {
         : node.id === startIdRef.current ? 9 : node.label === "verse" ? 3 : 5.5;
       const dx = point.x - node.x;
       const dy = point.y - node.y;
-      return dx * dx + dy * dy < (radius + 5 / viewRef.current.scale) ** 2;
+      // Fingers are imprecise: give touch a larger hit area than the mouse.
+      const slop = event.pointerType === "touch" ? 14 : 5;
+      return dx * dx + dy * dy < (radius + slop / viewRef.current.scale) ** 2;
     });
   };
 
+  // Zoom by `factor` about a point in canvas pixels, keeping that point still.
+  const zoomAt = (x, y, factor) => {
+    const view = viewRef.current;
+    const scale = Math.max(0.15, Math.min(5, view.scale * factor));
+    const applied = scale / view.scale;
+    view.x = x - (x - view.x) * applied;
+    view.y = y - (y - view.y) * applied;
+    view.scale = scale;
+  };
+
+  // Ends a node drag without treating it as a click (also used when a second
+  // finger turns the gesture into a pinch).
+  const endDrag = (drag) => {
+    if (!drag?.node) return;
+    for (const item of [drag.node, ...drag.group]) {
+      item.fx = null;
+      item.fy = null;
+    }
+    if (drag.heated) simulationRef.current?.force("dragPull", null).alphaTarget(0);
+  };
+
+  const pinchInfo = () => {
+    const [a, b] = [...pointersRef.current.values()];
+    const rect = canvasRef.current.getBoundingClientRect();
+    return {
+      distance: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+      x: (a.x + b.x) / 2 - rect.left,
+      y: (a.y + b.y) / 2 - rect.top,
+    };
+  };
+
   const onPointerDown = (event) => {
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    event.currentTarget.setPointerCapture(event.pointerId);
+    if (pointersRef.current.size === 2) {
+      // Two fingers: pinch to zoom and pan; abandon any drag the first finger began.
+      endDrag(dragRef.current);
+      dragRef.current = null;
+      pinchRef.current = pinchInfo();
+      return;
+    }
+    if (pointersRef.current.size > 2 || pinchRef.current) return;
     const node = nodeAt(event);
     // Dragging a node carries its subtree; Shift-drag moves the node alone.
     const byId = new Map(nodesRef.current.map((item) => [item.id, item]));
@@ -542,10 +590,22 @@ function GraphExplorer({ seed, fullPage = false }) {
       moved: false,
       pointerId: event.pointerId,
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onPointerMove = (event) => {
+    if (pointersRef.current.has(event.pointerId)) {
+      pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
+    if (pinchRef.current && pointersRef.current.size >= 2) {
+      const previous = pinchRef.current;
+      const next = pinchInfo();
+      viewRef.current.x += next.x - previous.x;
+      viewRef.current.y += next.y - previous.y;
+      zoomAt(next.x, next.y, next.distance / previous.distance);
+      pinchRef.current = next;
+      draw();
+      return;
+    }
     const drag = dragRef.current;
     if (!drag) {
       hoveredRef.current = nodeAt(event) || null;
@@ -600,6 +660,15 @@ function GraphExplorer({ seed, fullPage = false }) {
   };
 
   const onPointerUp = (event) => {
+    pointersRef.current.delete(event.pointerId);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (pinchRef.current) {
+      // Wait for every finger to lift before a new gesture can start.
+      if (pointersRef.current.size === 0) pinchRef.current = null;
+      return;
+    }
     const drag = dragRef.current;
     if (!drag) return;
     if (!drag.moved && drag.node?.label === "verse") {
@@ -611,29 +680,14 @@ function GraphExplorer({ seed, fullPage = false }) {
       hoveredRef.current = drag.node;
       runRef.current?.(graphNodeQuery(drag.node), drag.node.label, drag.node.id);
     }
-    if (drag.node) {
-      for (const item of [drag.node, ...drag.group]) {
-        item.fx = null;
-        item.fy = null;
-      }
-      if (drag.heated) simulationRef.current?.force("dragPull", null).alphaTarget(0);
-    }
+    endDrag(drag);
     dragRef.current = null;
-    if (event.currentTarget.hasPointerCapture(drag.pointerId)) {
-      event.currentTarget.releasePointerCapture(drag.pointerId);
-    }
   };
 
   const onWheel = (event) => {
     event.preventDefault();
     const rect = canvasRef.current.getBoundingClientRect();
-    const view = viewRef.current;
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
-    view.x = x - (x - view.x) * factor;
-    view.y = y - (y - view.y) * factor;
-    view.scale = Math.max(0.15, Math.min(5, view.scale * factor));
+    zoomAt(event.clientX - rect.left, event.clientY - rect.top, event.deltaY < 0 ? 1.12 : 1 / 1.12);
     draw();
   };
 
@@ -971,8 +1025,15 @@ function GraphExplorer({ seed, fullPage = false }) {
             }
           }}
         />
+        {fullPage && legend.length > 0 && (
+          <button type="button" className="graph-legend-toggle" aria-expanded={legendOpen}
+            aria-controls="graph-legend" onClick={() => setLegendOpen((open) => !open)}>
+            {legendOpen ? "Hide filters" : "Filters"}
+          </button>
+        )}
         {legend.length > 0 && (
-          <div className="graph-legend" role={fullPage ? "group" : undefined} aria-label="Show or hide kinds of items">
+          <div id="graph-legend" className={`graph-legend${legendOpen ? "" : " is-collapsed"}`}
+            role={fullPage ? "group" : undefined} aria-label="Show or hide kinds of items">
             {legend.map((item) => fullPage ? (
               <label key={item} className="graph-type-toggle">
                 <input type="checkbox" checked={!hiddenTypes.has(item)}
