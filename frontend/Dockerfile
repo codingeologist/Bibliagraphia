@@ -51,10 +51,16 @@ COPY nginx.conf /etc/nginx/templates/default.conf.template
 # The built SPA.
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Pull the container's nameserver out of /etc/resolv.conf (it differs per
-# platform: Docker uses 127.0.0.11, Railway its own resolver) so nginx can
-# resolve the upstream at request time, then hand off to the official
-# entrypoint (which runs the envsubst step and then starts nginx).
-CMD ["sh", "-c", "export DNS_RESOLVER=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf); DNS_RESOLVER=${DNS_RESOLVER:-127.0.0.11}; exec docker-entrypoint.sh nginx -g 'daemon off;'"]
+# Entrypoint wrapper: exports DNS_RESOLVER (read from /etc/resolv.conf) so
+# the official entrypoint's envsubst step can substitute it into the nginx
+# template, then delegates to the original /docker-entrypoint.sh with the
+# original CMD arguments. A wrapper is required because the envsubst step
+# runs as part of the image ENTRYPOINT — an export inside CMD would run too
+# late.
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+ENTRYPOINT ["/start.sh"]
+CMD ["nginx", "-g", "daemon off;"]
 
 EXPOSE 80
