@@ -30,7 +30,7 @@ export default function ReaderDetailsDrawer({ item, onClose, onSelectItem }) {
     setGraph(null);
     setError("");
     get(`/graph?${new URLSearchParams({
-      node: item.name, label: item.label, node_id: item.id, hops: "1",
+      node: item.name, label: item.label, node_id: item.id, hops: "1", balanced: "true",
     })}`).then((result) => {
       if (!active) return;
       if (result.error) setError(result.error);

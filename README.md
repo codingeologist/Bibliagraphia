@@ -319,6 +319,11 @@ relationships are invented. Places retain their dotted highlight and drawer.
 Selecting a verse number opens passage text and related items in the same
 details drawer, retaining the exact translation of that comparison column.
 Preview items and **Explore all connections** link to Relationships.
+Reader previews include at least one item of every directly connected type
+available, then fill remaining spaces up to six. Balanced graph loading prevents
+passages from crowding out other types. The **+ See more** control and each item's
+plus-marked link open Relationships centred on its exact ID. The full view retains
+its normal limits and **Show more connections** controls; missing types are not invented.
 People highlights use recorded STEP Bible verse links and canonical names or
 explicit spelling aliases, never general search keywords. Only names present
 in the people dataset are highlighted; pronouns are not. Each comparison
