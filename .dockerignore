@@ -14,9 +14,11 @@ __pycache__/
 *.egg-info/
 
 # Built databases and generic build output
-data/bible.db
 build/
 dist/
+
+# Source JSON files (pre-compiled into bible.db)
+data/*.json
 
 # Repo/VCS and OS junk
 .git/
