@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { get, post } from "./api.js";
 import GraphExplorer from "./GraphExplorer.jsx";
+import LandingPage from "./LandingPage.jsx";
 import MapExplorer from "./MapExplorer.jsx";
 import MapPage from "./MapPage.jsx";
 import ReaderPage from "./ReaderPage.jsx";
@@ -276,7 +277,7 @@ function ExplorePage() {
 
   return (
     <div className="app-shell">
-      <SiteHeader currentPage="/" dark={dark} onToggleTheme={() => setDark((value) => !value)} />
+      <SiteHeader currentPage="/explore" dark={dark} onToggleTheme={() => setDark((value) => !value)} />
 
       <main>
         <Notice error={health.status === "offline"}>
@@ -572,6 +573,8 @@ function App() {
   if (route.path === "/map") {
     return <MapPage key={route.key} initialMap={route.initialMap} onMapReady={route.onMapReady} />;
   }
+  if (route.path === "/explore" || window.location.search) return <ExplorePage />;
+  if (route.path === "/") return <LandingPage />;
   return <ExplorePage />;
 }
 

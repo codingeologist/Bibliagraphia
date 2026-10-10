@@ -5,6 +5,8 @@
         "vulgate": "Genesis",
         "rheims": "Genesis",
         "kjv": "Genesis",
+        "statresgnt": null,
+        "leb": "Genesis",
         "note": ""
     },
     {
@@ -13,6 +15,8 @@
         "vulgate": "Exodus",
         "rheims": "Exodus",
         "kjv": "Exodus",
+        "statresgnt": null,
+        "leb": "Exodus",
         "note": ""
     },
     {
@@ -21,6 +25,8 @@
         "vulgate": "Leviticus",
         "rheims": "Leviticus",
         "kjv": "Leviticus",
+        "statresgnt": null,
+        "leb": "Leviticus",
         "note": ""
     },
     {
@@ -29,6 +35,8 @@
         "vulgate": "Numeri",
         "rheims": "Numbers",
         "kjv": "Numbers",
+        "statresgnt": null,
+        "leb": "Numbers",
         "note": ""
     },
     {
@@ -37,6 +45,8 @@
         "vulgate": "Deuteronomium",
         "rheims": "Deuteronomy",
         "kjv": "Deuteronomy",
+        "statresgnt": null,
+        "leb": "Deuteronomy",
         "note": ""
     },
     {
@@ -45,6 +55,8 @@
         "vulgate": "Josue",
         "rheims": "Josue",
         "kjv": "Joshua",
+        "statresgnt": null,
+        "leb": "Joshua",
         "note": ""
     },
     {
@@ -53,6 +65,8 @@
         "vulgate": "Judices",
         "rheims": "Judges",
         "kjv": "Judges",
+        "statresgnt": null,
+        "leb": "Judges",
         "note": ""
     },
     {
@@ -61,6 +75,8 @@
         "vulgate": "Ruth",
         "rheims": "Ruth",
         "kjv": "Ruth",
+        "statresgnt": null,
+        "leb": "Ruth",
         "note": ""
     },
     {
@@ -69,6 +85,8 @@
         "vulgate": "1 Samuelis / 1 Regum",
         "rheims": "1 Kings",
         "kjv": "1 Samuel",
+        "statresgnt": null,
+        "leb": "1 Samuel",
         "note": ""
     },
     {
@@ -77,6 +95,8 @@
         "vulgate": "2 Samuelis / 2 Regum",
         "rheims": "2 Kings",
         "kjv": "2 Samuel",
+        "statresgnt": null,
+        "leb": "2 Samuel",
         "note": ""
     },
     {
@@ -85,6 +105,8 @@
         "vulgate": "3 Regum",
         "rheims": "3 Kings",
         "kjv": "1 Kings",
+        "statresgnt": null,
+        "leb": "1 Kings",
         "note": ""
     },
     {
@@ -93,6 +115,8 @@
         "vulgate": "4 Regum",
         "rheims": "4 Kings",
         "kjv": "2 Kings",
+        "statresgnt": null,
+        "leb": "2 Kings",
         "note": ""
     },
     {
@@ -101,6 +125,8 @@
         "vulgate": "1 Paralipomenon",
         "rheims": "1 Paralipomenon",
         "kjv": "1 Chronicles",
+        "statresgnt": null,
+        "leb": "1 Chronicles",
         "note": ""
     },
     {
@@ -109,6 +135,8 @@
         "vulgate": "2 Paralipomenon",
         "rheims": "2 Paralipomenon",
         "kjv": "2 Chronicles",
+        "statresgnt": null,
+        "leb": "2 Chronicles",
         "note": ""
     },
     {
@@ -117,6 +145,8 @@
         "vulgate": "1 Esdræ",
         "rheims": "1 Esdras",
         "kjv": "Ezra",
+        "statresgnt": null,
+        "leb": "Ezra",
         "note": ""
     },
     {
@@ -125,6 +155,8 @@
         "vulgate": "Nehemiæ / 2 Esdræ",
         "rheims": "Nehemias / 2 Esdras",
         "kjv": "Nehemiah",
+        "statresgnt": null,
+        "leb": "Nehemiah",
         "note": ""
     },
     {
@@ -133,6 +165,8 @@
         "vulgate": "Esther",
         "rheims": "Esther",
         "kjv": "Esther",
+        "statresgnt": null,
+        "leb": "Esther",
         "note": ""
     },
     {
@@ -141,6 +175,8 @@
         "vulgate": "Job",
         "rheims": "Job",
         "kjv": "Job",
+        "statresgnt": null,
+        "leb": "Job",
         "note": ""
     },
     {
@@ -149,6 +185,8 @@
         "vulgate": "Psalmi",
         "rheims": "Psalms",
         "kjv": "Psalms",
+        "statresgnt": null,
+        "leb": "Psalms",
         "note": ""
     },
     {
@@ -157,6 +195,8 @@
         "vulgate": "Proverbia",
         "rheims": "Proverbs / Sentences",
         "kjv": "Proverbs",
+        "statresgnt": null,
+        "leb": "Proverbs",
         "note": ""
     },
     {
@@ -165,6 +205,8 @@
         "vulgate": "Ecclesiastes",
         "rheims": "Ecclesiastes",
         "kjv": "Ecclesiastes",
+        "statresgnt": null,
+        "leb": "Ecclesiastes",
         "note": ""
     },
     {
@@ -173,6 +215,8 @@
         "vulgate": "Cantum Canticorum",
         "rheims": "Canticle of Canticles",
         "kjv": "Song of Solomon",
+        "statresgnt": null,
+        "leb": "Song of Solomon",
         "note": ""
     },
     {
@@ -181,6 +225,8 @@
         "vulgate": "Isaiæ",
         "rheims": "Isaias",
         "kjv": "Isaiah",
+        "statresgnt": null,
+        "leb": "Isaiah",
         "note": ""
     },
     {
@@ -189,6 +235,8 @@
         "vulgate": "Jeremiæ",
         "rheims": "Jeremias",
         "kjv": "Jeremiah",
+        "statresgnt": null,
+        "leb": "Jeremiah",
         "note": ""
     },
     {
@@ -197,6 +245,8 @@
         "vulgate": "Lamentationes",
         "rheims": "Lamentations",
         "kjv": "Lamentations",
+        "statresgnt": null,
+        "leb": "Lamentations",
         "note": ""
     },
     {
@@ -205,6 +255,8 @@
         "vulgate": "Ezechielis",
         "rheims": "Ezechiel",
         "kjv": "Ezekiel",
+        "statresgnt": null,
+        "leb": "Ezekiel",
         "note": ""
     },
     {
@@ -213,6 +265,8 @@
         "vulgate": "Danielis",
         "rheims": "Daniel",
         "kjv": "Daniel / Song of the Three Children / Story of Susanna / The Idol Bel and the Dragon",
+        "statresgnt": null,
+        "leb": "Daniel / Song of the Three Children / Story of Susanna / The Idol Bel and the Dragon",
         "note": ""
     },
     {
@@ -221,6 +275,8 @@
         "vulgate": "Osee",
         "rheims": "Osee",
         "kjv": "Hosea",
+        "statresgnt": null,
+        "leb": "Hosea",
         "note": ""
     },
     {
@@ -229,6 +285,8 @@
         "vulgate": "Joel",
         "rheims": "Joel",
         "kjv": "Joel",
+        "statresgnt": null,
+        "leb": "Joel",
         "note": ""
     },
     {
@@ -237,6 +295,8 @@
         "vulgate": "Amos",
         "rheims": "Amos",
         "kjv": "Amos",
+        "statresgnt": null,
+        "leb": "Amos",
         "note": ""
     },
     {
@@ -245,6 +305,8 @@
         "vulgate": "Abdiæ",
         "rheims": "Abdias",
         "kjv": "Obadiah",
+        "statresgnt": null,
+        "leb": "Obadiah",
         "note": ""
     },
     {
@@ -253,6 +315,8 @@
         "vulgate": "Jonæ",
         "rheims": "Jonas",
         "kjv": "Jonah",
+        "statresgnt": null,
+        "leb": "Jonah",
         "note": ""
     },
     {
@@ -261,6 +325,8 @@
         "vulgate": "Michææ",
         "rheims": "Micheas",
         "kjv": "Micah",
+        "statresgnt": null,
+        "leb": "Micah",
         "note": ""
     },
     {
@@ -269,6 +335,8 @@
         "vulgate": "Nahum",
         "rheims": "Nahum",
         "kjv": "Nahum",
+        "statresgnt": null,
+        "leb": "Nahum",
         "note": ""
     },
     {
@@ -277,6 +345,8 @@
         "vulgate": "Habacuc",
         "rheims": "Habacuc",
         "kjv": "Habakkuk",
+        "statresgnt": null,
+        "leb": "Habakkuk",
         "note": ""
     },
     {
@@ -285,6 +355,8 @@
         "vulgate": "Sophoniæ",
         "rheims": "Sophonias",
         "kjv": "Zephaniah",
+        "statresgnt": null,
+        "leb": "Zephaniah",
         "note": ""
     },
     {
@@ -293,6 +365,8 @@
         "vulgate": "Aggæi",
         "rheims": "Aggæus",
         "kjv": "Haggai",
+        "statresgnt": null,
+        "leb": "Haggai",
         "note": ""
     },
     {
@@ -301,6 +375,8 @@
         "vulgate": "Zachariæ",
         "rheims": "Zacharias",
         "kjv": "Zechariah",
+        "statresgnt": null,
+        "leb": "Zechariah",
         "note": ""
     },
     {
@@ -309,6 +385,8 @@
         "vulgate": "Malachiæ",
         "rheims": "Malachias",
         "kjv": "Malachi",
+        "statresgnt": null,
+        "leb": "Malachi",
         "note": ""
     },
     {
@@ -317,6 +395,8 @@
         "vulgate": "Tobiæ",
         "rheims": "Tobias",
         "kjv": "Tobit",
+        "statresgnt": null,
+        "leb": null,
         "note": "Missing in the Protestant Bibles"
     },
     {
@@ -325,6 +405,8 @@
         "vulgate": "Judith",
         "rheims": "Judith",
         "kjv": "Judith",
+        "statresgnt": null,
+        "leb": null,
         "note": "Missing in the Protestant Bibles"
     },
     {
@@ -333,6 +415,8 @@
         "vulgate": "Sapientiæ",
         "rheims": "Wisdom",
         "kjv": "Wisdom",
+        "statresgnt": null,
+        "leb": null,
         "note": "Missing in the Protestant Bibles"
     },
     {
@@ -341,6 +425,8 @@
         "vulgate": "Ecclesiasticus / Book of Sirach",
         "rheims": "Ecclesiasticus / Book of Sirach",
         "kjv": "Ecclesiasticus / Book of Sirach",
+        "statresgnt": null,
+        "leb": null,
         "note": "Missing in the Protestant Bibles"
     },
     {
@@ -349,6 +435,8 @@
         "vulgate": "Baruch",
         "rheims": "Baruch",
         "kjv": "Baruch / The Epistle of Jeremy",
+        "statresgnt": null,
+        "leb": null,
         "note": "Missing in the Protestant Bibles"
     },
     {
@@ -357,6 +445,8 @@
         "vulgate": "1 Machabæorum",
         "rheims": "1 Machabees",
         "kjv": "1 Maccabees",
+        "statresgnt": null,
+        "leb": null,
         "note": "Missing in the Protestant Bibles"
     },
     {
@@ -365,6 +455,8 @@
         "vulgate": "2 Machabæorum",
         "rheims": "2 Machabees",
         "kjv": "2 Maccabees",
+        "statresgnt": null,
+        "leb": null,
         "note": "Missing in the Protestant Bibles"
     },
     {
@@ -373,6 +465,8 @@
         "vulgate": "Evangelium Secundum Matthæum",
         "rheims": "The Gospel According to Matthew",
         "kjv": "The Gospel According to Matthew",
+        "statresgnt": "The Gospel According to Matthew",
+        "leb": "The Gospel According to Matthew",
         "note": ""
     },
     {
@@ -381,6 +475,8 @@
         "vulgate": "Evangelium Secundum Marcum",
         "rheims": "The Gospel According to Mark",
         "kjv": "The Gospel According to Mark",
+        "statresgnt": "The Gospel According to Mark",
+        "leb": "The Gospel According to Mark",
         "note": ""
     },
     {
@@ -389,6 +485,8 @@
         "vulgate": "Evangelium Secundum Lucam",
         "rheims": "The Gospel According to Luke",
         "kjv": "The Gospel According to Luke",
+        "statresgnt": "The Gospel According to Luke",
+        "leb": "The Gospel According to Luke",
         "note": ""
     },
     {
@@ -397,6 +495,8 @@
         "vulgate": "Evangelium Secundum Ioannem",
         "rheims": "The Gospel According to John",
         "kjv": "The Gospel According to John",
+        "statresgnt": "The Gospel According to John",
+        "leb": "The Gospel According to John",
         "note": ""
     },
     {
@@ -405,6 +505,8 @@
         "vulgate": "Actus",
         "rheims": "Acts",
         "kjv": "Acts",
+        "statresgnt": "Acts",
+        "leb": "Acts",
         "note": ""
     },
     {
@@ -413,6 +515,8 @@
         "vulgate": "ad Romanos",
         "rheims": "Romans",
         "kjv": "Romans",
+        "statresgnt": "Romans",
+        "leb": "Romans",
         "note": ""
     },
     {
@@ -421,6 +525,8 @@
         "vulgate": "1 ad Corinthios",
         "rheims": "1 Corinthians",
         "kjv": "1 Corinthians",
+        "statresgnt": "1 Corinthians",
+        "leb": "1 Corinthians",
         "note": ""
     },
     {
@@ -429,6 +535,8 @@
         "vulgate": "2 ad Corinthios",
         "rheims": "2 Corinthians",
         "kjv": "2 Corinthians",
+        "statresgnt": "2 Corinthians",
+        "leb": "2 Corinthians",
         "note": ""
     },
     {
@@ -437,6 +545,8 @@
         "vulgate": "ad Galatas",
         "rheims": "Galatians",
         "kjv": "Galatians",
+        "statresgnt": "Galatians",
+        "leb": "Galatians",
         "note": ""
     },
     {
@@ -445,6 +555,8 @@
         "vulgate": "ad Ephesios",
         "rheims": "Ephesians",
         "kjv": "Ephesians",
+        "statresgnt": "Ephesians",
+        "leb": "Ephesians",
         "note": ""
     },
     {
@@ -453,6 +565,8 @@
         "vulgate": "ad Philippenses",
         "rheims": "Philippianss",
         "kjv": "Philippians",
+        "statresgnt": "Philippians",
+        "leb": "Philippians",
         "note": ""
     },
     {
@@ -461,6 +575,8 @@
         "vulgate": "ad Colossenses",
         "rheims": "Colossians",
         "kjv": "Colossians",
+        "statresgnt": "Colossians",
+        "leb": "Colossians",
         "note": ""
     },
     {
@@ -469,6 +585,8 @@
         "vulgate": "1 ad Thessalonicenses",
         "rheims": "1 Thessalonians",
         "kjv": "1 Thessalonians",
+        "statresgnt": "1 Thessalonians",
+        "leb": "1 Thessalonians",
         "note": ""
     },
     {
@@ -477,6 +595,8 @@
         "vulgate": "2 ad Thessalonicenses",
         "rheims": "2 Thessalonians",
         "kjv": "2 Thessalonians",
+        "statresgnt": "2 Thessalonians",
+        "leb": "2 Thessalonians",
         "note": ""
     },
     {
@@ -485,6 +605,8 @@
         "vulgate": "1 ad Timotheum",
         "rheims": "1 Timothy",
         "kjv": "1 Timothy",
+        "statresgnt": "1 Timothy",
+        "leb": "1 Timothy",
         "note": ""
     },
     {
@@ -493,6 +615,8 @@
         "vulgate": "2 ad Timotheum",
         "rheims": "2 Timothy",
         "kjv": "2 Timothy",
+        "statresgnt": "2 Timothy",
+        "leb": "2 Timothy",
         "note": ""
     },
     {
@@ -501,6 +625,8 @@
         "vulgate": "ad Titum",
         "rheims": "Titus",
         "kjv": "Titus",
+        "statresgnt": "Titus",
+        "leb": "Titus",
         "note": ""
     },
     {
@@ -509,6 +635,8 @@
         "vulgate": "ad Philemonem",
         "rheims": "Philemon",
         "kjv": "Philemon",
+        "statresgnt": "Philemon",
+        "leb": "Philemon",
         "note": ""
     },
     {
@@ -517,6 +645,8 @@
         "vulgate": "ad Hebræos",
         "rheims": "Hebrews",
         "kjv": "Hebrews",
+        "statresgnt": "Hebrews",
+        "leb": "Hebrews",
         "note": ""
     },
     {
@@ -525,6 +655,8 @@
         "vulgate": "Iacobi",
         "rheims": "James",
         "kjv": "James",
+        "statresgnt": "James",
+        "leb": "James",
         "note": ""
     },
     {
@@ -533,6 +665,8 @@
         "vulgate": "1 Petri",
         "rheims": "1 Peter",
         "kjv": "1 Peter",
+        "statresgnt": "1 Peter",
+        "leb": "1 Peter",
         "note": ""
     },
     {
@@ -541,6 +675,8 @@
         "vulgate": "2 Petri",
         "rheims": "2 Peter",
         "kjv": "2 Peter",
+        "statresgnt": "2 Peter",
+        "leb": "2 Peter",
         "note": ""
     },
     {
@@ -549,6 +685,8 @@
         "vulgate": "1 Ioannis",
         "rheims": "1 John",
         "kjv": "1 John",
+        "statresgnt": "1 John",
+        "leb": "1 John",
         "note": ""
     },
     {
@@ -557,6 +695,8 @@
         "vulgate": "2 Ioannis",
         "rheims": "2 John",
         "kjv": "2 John",
+        "statresgnt": "2 John",
+        "leb": "2 John",
         "note": ""
     },
     {
@@ -565,6 +705,8 @@
         "vulgate": "3 Ioannis",
         "rheims": "3 John",
         "kjv": "3 John",
+        "statresgnt": "3 John",
+        "leb": "3 John",
         "note": ""
     },
     {
@@ -573,6 +715,8 @@
         "vulgate": "Iudæ",
         "rheims": "Jude",
         "kjv": "Jude",
+        "statresgnt": "Jude",
+        "leb": "Jude",
         "note": ""
     },
     {
@@ -581,6 +725,8 @@
         "vulgate": "Apocalypsis",
         "rheims": "Apocalypse",
         "kjv": "Revelation",
+        "statresgnt": "Revelation",
+        "leb": "Revelation",
         "note": ""
     }
 ]

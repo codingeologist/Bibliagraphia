@@ -18,5 +18,10 @@
         "code": "SRG",
         "name": "statresgnt",
         "full_name": "Statistical Restoration Greek New Testament"
+    },
+    {
+        "code": "LEB",
+        "name": "leb",
+        "full_name": "Lexham English Bible"
     }
 ]
