@@ -677,7 +677,6 @@ function ReaderPage({ onExpandMap }) {
                   {compared ? (
                     <div className="reader-comparison-scroll max-w-full overflow-x-auto" role="region" aria-label="Side-by-side translations" tabIndex={0}>
                       <table className="reader-comparison-table" style={{ minWidth: `${columns.length * 280}px` }}>
-                        <caption>Translations aligned by verse number. Numbering may differ between translations.</caption>
                         <thead>
                           <tr>
                             {columns.map((column) => (

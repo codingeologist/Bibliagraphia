@@ -7,6 +7,7 @@ export const navigationItems = [
   { href: "/relationships", label: "Relationships", icon: "relationships" },
   { href: "/explore", label: "Explore", icon: "search" },
   { href: "/connect-mcp", label: "MCP", icon: "plug" },
+  { href: "/about", label: "About", icon: "info" },
 ];
 
 export function NavigationIcon({ type }) {
@@ -15,6 +16,7 @@ export function NavigationIcon({ type }) {
     relationships: "M8 7l8 3M8 9l8 7M18 12v3M8 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm13 3a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm0 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
     search: "M16 16l5 5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0",
     plug: "M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8Zm6 9v4",
+    info: "M12 11v6M12 7h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0",
   };
   if (!paths[type]) return <NodeIcon type={type} />;
   return (

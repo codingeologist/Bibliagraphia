@@ -9,6 +9,7 @@ import SiteHeader from "./SiteHeader.jsx";
 import RelationshipsPage from "./RelationshipsPage.jsx";
 import GraphNodeSearch from "./GraphNodeSearch.jsx";
 import McpPage from "./McpPage.jsx";
+import AboutPage from "./AboutPage.jsx";
 import { describeNode, nodeTypeName, pathNode, pathRelationshipDescription, relationshipHref } from "./nodeLinks.js";
 
 const labels = ["book", "verse", "location", "region", "version"];
@@ -442,6 +443,7 @@ function App() {
   if (route.path === "/explore/connections") return <ExploreTools key={`${route.path}-${route.key}`} mode="connections" />;
   if (route.path === "/explore") return <ExploreDashboard key={route.key} />;
   if (route.path === "/connect-mcp") return <McpPage key={route.key} />;
+  if (route.path === "/about") return <AboutPage key={route.key} />;
   if (route.path === "/") return <LandingPage />;
   return <ExploreDashboard key={route.key} />;
 }

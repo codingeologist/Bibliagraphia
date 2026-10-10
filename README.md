@@ -188,8 +188,11 @@ shorthand and longhand declarations in separate `@apply` statements when their
 order matters (for example `font` followed by `font-size`).
 The header logo links to the home page. Open the settings menu (three-line
 icon) to switch between light and dark mode; the choice is saved across pages.
-Main navigation is ordered **Home, Read, Map, Relationships, Explore, MCP**, with
+Main navigation is ordered **Home, Read, Map, Relationships, Explore, MCP, About**, with
 decorative icons alongside each label. It scrolls horizontally on small screens.
+Open `/about` for the team (Ally, Jonah, Elle, Sidd and Jonathon), playful
+team icons, canonical data sources and project/map/software acknowledgements.
+Dataset counts are explicitly labelled as the README baseline, not live totals.
 
 Open `/explore` for a fixed dashboard of live preview widgets. Book suggestions,
 Genesis 1:1 translations, a Genesis relationship graph, mapped place mentions
