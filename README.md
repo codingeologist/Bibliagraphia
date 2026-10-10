@@ -347,8 +347,31 @@ Claude Desktop / Claude Code (`claude_desktop_config.json` or
 Cursor, or any streamable-HTTP client, uses the same URL. Locally:
 `http://localhost:8000/mcp`.
 
+### Scripted client (no handshake juggling)
+
+FastMCP ships a client that performs the whole streamable-HTTP dance
+automatically — `initialize`, session-id capture, `notifications/initialized`,
+session echo. `scripts/mcp_client.py` wraps it:
+
+```bash
+# list the tools the server exposes
+python scripts/mcp_client.py tools
+
+# call one tool (args as JSON)
+python scripts/mcp_client.py call get_verse \
+    --args '{"book_code": "JOH", "chapter": 3, "verse_number": 16}'
+
+# ad-hoc REPL: one tool call per line, q to quit
+python scripts/mcp_client.py interactive
+```
+
+Endpoint defaults to `http://localhost:8000/mcp`; override with `--url` or the
+`BIBLIAGRAPHIA_MCP_URL` environment variable (e.g.
+`https://api.bibliographia.com/mcp`).
+
 ### Raw handshake (curl)
 
+For debugging the transport itself, the manual version:
 Streamable HTTP is session-based: `initialize` returns an `mcp-session-id`
 response header that later requests echo back.
 
@@ -398,7 +421,8 @@ Bibliagraphia/
 │   ├── location_regions.json  regions.json
 │   └── bible.db                               # generated — do not edit
 ├── scripts/
-│   └── build_db.py                            # JSON -> data/bible.db (idempotent, bulk-loaded)
+│   ├── build_db.py                            # JSON -> data/bible.db (idempotent, bulk-loaded)
+│   └── mcp_client.py                          # MCP client — handshake handled for you (see “MCP server”)
 ├── sql/
 │   ├── init_duckdb.sql                        # schema (reference)
 │   ├── load_data.sql                          # load steps (reference)
