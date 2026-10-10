@@ -261,8 +261,12 @@ Map markers are circles across the map, explorer and reader previews.
 Open `/read` in the Vite app to read a Bible book. Choose a book, chapter,
 translation, or jump directly to a verse; previous/next controls move between
 chapters.
-Use **+ Add translation** beside the reader title to compare translations
-side by side. Shared book, chapter and verse controls keep columns in sync;
+Book, chapter, verse and translation controls sit between Previous and Next
+in one navigation bar, with grouped rows on mobile. Use the **+** button
+(Compare translations) beside the translation selector
+to compare versions side by side. In comparison mode, each column has its own
+translation selector; selecting an already displayed version swaps columns
+without duplicates. Shared book, chapter and verse controls keep columns in sync;
 verses align by number (numbering can differ between translations). Unavailable
 text is labelled rather than replaced with another passage. Remove columns
 with their **×** buttons; comparison selections are preserved in the reader URL.

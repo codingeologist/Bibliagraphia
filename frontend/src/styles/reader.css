@@ -12,16 +12,8 @@
     @apply mt-[24px] [padding:22px_26px];
   }
 
-  .reader-heading h2 {
-    @apply m-0;
-  }
-
-  .reader-heading p {
-    @apply [margin:6px_0_0] text-muted text-[11px];
-  }
-
   .reader-translation-picker summary {
-    @apply list-none cursor-pointer [padding:10px_12px] [border:1px_solid_var(--line)] rounded-[5px] text-accent text-[12px] font-semibold;
+    @apply flex items-center justify-center w-[41px] h-[41px] list-none cursor-pointer [border:1px_solid_var(--line)] rounded-[5px] text-accent text-[22px] font-semibold;
   }
 
   .reader-translation-picker summary::-webkit-details-marker {
@@ -77,7 +69,19 @@
   }
 
   .reader-controls {
-    @apply grid [grid-template-columns:minmax(180px,_1.6fr)_repeat(3,_minmax(105px,_1fr))] gap-[12px];
+    @apply flex flex-wrap items-end justify-between gap-3 flex-1 min-w-0;
+  }
+
+  .reader-passage-controls {
+    @apply grid [grid-template-columns:minmax(130px,_1.5fr)_minmax(70px,_.5fr)_minmax(100px,_1fr)] gap-3 flex-1 min-w-0;
+  }
+
+  .reader-version-controls {
+    @apply flex items-end gap-3 min-w-0;
+  }
+
+  .reader-version-controls > .reader-control {
+    @apply min-w-0 max-w-[260px] flex-1;
   }
 
   .reader-control {
@@ -89,15 +93,11 @@
   }
 
   .reader-nav {
-    @apply flex items-center justify-between gap-[12px] mt-[18px] pt-[15px] [border-top:1px_solid_var(--line)];
-  }
-
-  .reader-nav span {
-    @apply text-muted text-[11px];
+    @apply flex items-end justify-between gap-[12px];
   }
 
   .reader-nav button {
-    @apply min-h-[34px] [padding:0_11px] [border:1px_solid_var(--line)] rounded-[5px] bg-panel text-ink text-[11px];
+    @apply min-h-[41px] [padding:0_11px] [border:1px_solid_var(--line)] rounded-[5px] bg-panel text-ink text-[11px];
   }
 
   .reader-nav button:disabled {
@@ -294,11 +294,23 @@
     .reader-panel {
       @apply p-[16px];
     }
-    .reader-controls {
+    .reader-passage-controls {
       @apply [grid-template-columns:repeat(2,_minmax(0,_1fr))];
     }
-    .reader-control:first-child {
+    .reader-passage-controls > .reader-control:first-child {
       @apply [grid-column:1_/_-1];
+    }
+    .reader-passage-controls, .reader-version-controls {
+      @apply w-full flex-none;
+    }
+    .reader-nav {
+      @apply flex-wrap;
+    }
+    .reader-nav > .reader-controls {
+      @apply order-first w-full flex-none;
+    }
+    .reader-version-controls > .reader-control {
+      @apply max-w-none;
     }
     .reader-text {
       @apply mt-[20px] text-[16px];
