@@ -6,6 +6,7 @@ import LandingPage from "./LandingPage.jsx";
 import MapExplorer from "./MapExplorer.jsx";
 import MapPage from "./MapPage.jsx";
 import ReaderPage from "./ReaderPage.jsx";
+import SiteHeader from "./SiteHeader.jsx";
 
 const labels = ["book", "verse", "location", "region", "version"];
 const initialTraversal = { node: "", label: "book", edge: "verse_in_book" };
@@ -276,34 +277,13 @@ function ExplorePage() {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <div className="brand">
-          <img className="brand-mark" src="/favicon.svg" alt="" aria-hidden="true" />
-          <div>
-            <h1>Bibliagraphia</h1>
-            <p>A living map of scripture</p>
-          </div>
-        </div>
-        <div className="header-actions">
-          <nav className="site-nav" aria-label="Main navigation">
-            <a href="/">Home</a>
-            <a href="/explore" aria-current="page">Explore</a>
-            <a href="/read">Read Bible</a>
-            <a href="/map">Map</a>
-          </nav>
-          <span className={`connection connection-${health.status}`}>
-            <span className="connection-dot" />
-            {health.status === "connected" ? "API connected"
-              : health.status === "empty" ? "Database empty"
-                : health.status === "offline" ? "API unreachable" : "Connecting"}
-          </span>
-          <button className="theme-toggle" type="button" onClick={() => setDark((value) => !value)}>
-            {dark ? "☀️" : "🌙"} <span>{dark ? "Light" : "Dark"}</span>
-          </button>
-        </div>
-      </header>
+      <SiteHeader currentPage="/explore" dark={dark} onToggleTheme={() => setDark((value) => !value)} />
 
       <main>
+        <Notice error={health.status === "offline"}>
+          {health.status === "offline" ? "Could not reach the API"
+            : health.status === "empty" ? "No Bible data is available." : ""}
+        </Notice>
         <section className="intro">
           <div>
             <p className="eyebrow">A Bible graph in DuckDB</p>
@@ -535,14 +515,6 @@ function ExplorePage() {
         </div>
       </main>
 
-      <footer>
-        <span className={`footer-dot connection-${health.status}`} />
-        {health.status === "connected"
-          ? "API connected · database ready"
-          : health.status === "empty" ? "API connected · database is empty"
-            : health.status === "offline" ? "Could not reach the API"
-              : "Checking API connection…"}
-      </footer>
     </div>
   );
 }

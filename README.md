@@ -111,6 +111,41 @@ missing, so step 1 is optional for local play.
 
 ### Vite + React frontend
 
+#### Local Docker hot reload
+
+Use the explicit development override to run Vite instead of nginx at
+`http://127.0.0.1:8080` (Docker Compose v2+):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+```
+
+Frontend source, public assets, HTML and Vite configuration are bind-mounted.
+React edits update the browser automatically using Hot Module Replacement;
+Vite configuration changes restart the dev server automatically. Polling
+supports file changes through Docker Desktop mounts. Dependencies stay inside
+the image, separate from host `node_modules`. After changing either dependency
+manifest, rebuild only the frontend:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --no-deps frontend
+```
+
+The API container and its image-built Bible database are unchanged. Vite
+proxies API requests to `http://api:8000` in this mode; normal host development
+still uses `http://127.0.0.1:8000`. Python edits are not hot-reloaded.
+
+Switch back to the production-style nginx frontend with:
+
+```bash
+docker compose -f docker-compose.yml up -d --build --no-deps frontend
+```
+
+Railway continues building the final nginx stage of the same Dockerfile.
+It does not use the development override, source mounts or file watchers.
+
+#### Host development
+
 The standalone React frontend lives in `frontend/` and is the sole UI for
 the API. Start the API in one terminal, then run:
 
@@ -122,6 +157,8 @@ npm run dev
 
 The frontend uses Vite, React, and Tailwind CSS. Tailwind utility classes can be
 used directly in the JSX components under `frontend/src/`.
+The header logo links to the home page. Open the settings menu (three-line
+icon) to switch between light and dark mode; the choice is saved across pages.
 Open `/read` in the Vite app to read a Bible book. Choose a book, chapter,
 translation, or jump directly to a verse; previous/next controls move between
 chapters.

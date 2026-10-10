@@ -18,14 +18,23 @@
 #   docker compose up --build
 #   open http://localhost:8080
 
-# ---- Stage 1: build the Vite app -------------------------------------------
-FROM node:20-alpine AS build
+# ---- Shared Node dependencies ---------------------------------------------
+FROM node:20-alpine AS dependencies
 
 WORKDIR /app
 
 # Install deps from the lockfile for reproducible builds.
 COPY package.json package-lock.json ./
 RUN npm ci
+
+# ---- Local development only (selected by docker-compose.dev.yml) -----------
+FROM dependencies AS development
+COPY . ./
+EXPOSE 80
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "80", "--strictPort"]
+
+# ---- Stage 1: build the Vite app -------------------------------------------
+FROM dependencies AS build
 
 # Copy the source and build. Output lands in /app/dist.
 COPY . ./
