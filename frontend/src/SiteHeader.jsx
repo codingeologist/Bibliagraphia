@@ -50,7 +50,7 @@ function SiteHeader({ currentPage, dark, onToggleTheme }) {
             ref={triggerRef}
             className="menu-toggle"
             type="button"
-            aria-label="Settings"
+            aria-label="Menu"
             aria-expanded={open}
             aria-controls="site-settings"
             onClick={() => setOpen((value) => !value)}
@@ -61,6 +61,15 @@ function SiteHeader({ currentPage, dark, onToggleTheme }) {
           </button>
           {open && (
             <div className="site-menu-panel" id="site-settings">
+              {/* Small screens: the inline nav is hidden, so the menu carries it. */}
+              <nav className="site-menu-nav" aria-label="Main navigation">
+                {navigationItems.map(({ href, label, icon }) => (
+                  <a key={href} href={href} aria-current={currentPage === href ? "page" : undefined}>
+                    <NavigationIcon type={icon} />
+                    <span>{label}</span>
+                  </a>
+                ))}
+              </nav>
               <button
                 className="theme-toggle"
                 type="button"

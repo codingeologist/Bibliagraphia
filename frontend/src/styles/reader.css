@@ -141,6 +141,9 @@
   .reader-nav {
     @apply flex items-end justify-between gap-[12px];
   }
+  .reader-mobile-bar {
+    @apply hidden;
+  }
 
   .reader-nav button {
     @apply min-h-[41px] [padding:0_11px] [border:1px_solid_var(--line)] rounded-[5px] bg-panel text-ink text-[11px];
@@ -156,6 +159,7 @@
 
   .reader-verse {
     @apply relative m-0 [padding:7px_10px] rounded-[5px] [scroll-margin:20vh];
+    white-space: pre-wrap;
   }
 
   .reader-verse-select {
@@ -461,7 +465,72 @@
       @apply max-w-none;
     }
     .reader-text {
-      @apply mt-[20px] text-[16px];
+      @apply mt-[16px] text-[17px] [line-height:1.85];
+    }
+    /* Edge-to-edge reading surface: the card frame costs ~60px of line width. */
+    .reader-panel {
+      @apply [margin:12px_-15px_0] [padding:14px_14px_88px] rounded-none [border-left:0] [border-right:0];
+    }
+    .reader-passage-controls, .reader-version-controls {
+      @apply gap-[8px];
+    }
+    .reader-controls {
+      @apply gap-[8px];
+    }
+    .reader-control {
+      @apply gap-[3px] text-[9px];
+    }
+    .reader-control select, .reader-book-panel input {
+      @apply h-[44px] text-[14px];
+    }
+    .reader-translation-picker summary {
+      @apply w-[44px] h-[44px];
+    }
+    /* Previous / Next move to the fixed bottom bar. */
+    .reader-nav > button {
+      @apply hidden;
+    }
+    .reader-mobile-bar {
+      @apply fixed z-[900] flex items-center gap-[6px] p-[6px] [border:1px_solid_var(--line)] rounded-[12px] bg-panel [box-shadow:0_6px_24px_rgb(0_0_0_/_16%)];
+      left: 12px;
+      right: 12px;
+      bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+    .reader-mobile-bar button {
+      @apply min-h-[44px] min-w-[52px] [border:0] rounded-[8px] bg-canvas text-ink text-[18px];
+    }
+    .reader-mobile-bar button:disabled {
+      @apply opacity-[.4];
+    }
+    .reader-mobile-bar .reader-mobile-bar-title {
+      @apply flex-1 truncate [padding:0_10px] bg-transparent text-[14px] font-semibold [font-family:"Playfair_Display",_Georgia,_serif];
+    }
+    .reader-mobile-bar .reader-mobile-bar-title span {
+      @apply ml-[4px] text-muted text-[11px];
+    }
+    .reader-verse {
+      @apply [padding:6px_6px];
+    }
+    .reader-verse sup {
+      @apply min-w-[20px] pr-[4px];
+    }
+    /* Touch has no hover: the button shows once a verse is tapped, so make it a real target. */
+    .reader-explain-action {
+      @apply [padding:7px_11px] text-[11px];
+      top: auto;
+      bottom: -14px;
+    }
+    .reader-verse.selected {
+      @apply mb-[18px];
+    }
+    .reader-comparison-table th, .reader-comparison-table td {
+      @apply min-w-[230px];
+    }
+    .place-drawer {
+      @apply w-full;
+    }
+    .place-details-close, .reader-study-close, .reader-column-heading button {
+      @apply w-[40px] h-[40px] [flex-basis:40px];
     }
 
     @media (max-width: 520px) {
