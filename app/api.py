@@ -1090,15 +1090,15 @@ def explain(
     verse_number: int = Query(..., ge=1),
     version_code: str = Query("KJV", min_length=1),
 ):
-    """Explain a verse with the FaithTech-hosted DeepSeek model.
+    """Explain a verse with the Mistral model.
 
     The backend gathers the graph context first — the selected verse
     across every translation, the verses immediately above and below,
     the location mentions linked to the verse, and those places' region
     descriptions — packs it into a system + user prompt pair, and asks
     the model for a chat reply on the significance of the passage, the
-    place, and the persons involved. Needs FAITHTECH_API_KEY on the
-    server; see app/explain.py for the FAITHTECH_* configuration.
+    place, and the persons involved. Needs MISTRAL_API_KEY on the
+    server; see app/explain.py for the MISTRAL_* configuration.
     """
     from app.explain import ExplainError, explain_verse
 

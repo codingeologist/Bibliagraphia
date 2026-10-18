@@ -17,7 +17,7 @@ from app import explain as explain_service
 
 @pytest.fixture
 def explain_db(tmp_path, monkeypatch):
-    monkeypatch.delenv("FAITHTECH_API_KEY", raising=False)
+    monkeypatch.delenv("MISTRAL_API_KEY", raising=False)
     path = tmp_path / "explain.db"
     conn = duckdb.connect(str(path))
     conn.execute(
@@ -132,11 +132,11 @@ def test_explain_endpoint_requires_api_key(explain_db):
     result = api.explain("GEN", 1, 2, version_code="KJV")
 
     assert "error" in result
-    assert "FAITHTECH_API_KEY" in result["error"]
+    assert "MISTRAL_API_KEY" in result["error"]
 
 
 def test_explain_endpoint_returns_context_and_chat_reply(explain_db, monkeypatch):
-    monkeypatch.setenv("FAITHTECH_API_KEY", "test-token")
+    monkeypatch.setenv("MISTRAL_API_KEY", "test-token")
     calls = {}
 
     def fake_post(url, headers=None, json=None, timeout=None):  # noqa: A002
@@ -161,7 +161,7 @@ def test_explain_endpoint_returns_context_and_chat_reply(explain_db, monkeypatch
     )
     # The prompt pair carries the system prompt and the graph facts.
     assert calls["url"] == (
-        "https://mq2yi3izzu14g5-8000.proxy.runpod.net/v1/chat/completions"
+        "https://api.mistral.ai/v1/chat/completions"
     )
     assert calls["headers"]["Authorization"] == "Bearer test-token"
     system, user = calls["payload"]["messages"]
@@ -181,7 +181,7 @@ def test_explain_endpoint_returns_context_and_chat_reply(explain_db, monkeypatch
 
 
 def test_explain_endpoint_surfaces_upstream_api_failures(explain_db, monkeypatch):
-    monkeypatch.setenv("FAITHTECH_API_KEY", "test-token")
+    monkeypatch.setenv("MISTRAL_API_KEY", "test-token")
 
     def fake_post(url, headers=None, json=None, timeout=None):  # noqa: A002
         return _FakeResponse(status_code=401, text='{"error": "invalid key"}')
@@ -196,7 +196,7 @@ def test_explain_endpoint_surfaces_upstream_api_failures(explain_db, monkeypatch
 
 
 def test_chat_completion_strips_the_models_planning_block(monkeypatch):
-    monkeypatch.setenv("FAITHTECH_API_KEY", "test-token")
+    monkeypatch.setenv("MISTRAL_API_KEY", "test-token")
     thinking = (
         "<_thinking>The user wants an explanation of the verse. Let me plan."
         " Passage, place, person. Done.<_end>\n\n"
@@ -214,7 +214,7 @@ def test_chat_completion_strips_the_models_planning_block(monkeypatch):
 def test_chat_completion_keeps_reply_after_last_end_tag(monkeypatch):
     """Planning sometimes arrives as loose notes followed by a tagged
     block; the reply is always whatever follows the final <_end>."""
-    monkeypatch.setenv("FAITHTECH_API_KEY", "test-token")
+    monkeypatch.setenv("MISTRAL_API_KEY", "test-token")
     content = (
         "The user wants an explanation. Cover passage, place, person.\n"
         "<_thinking>Also: keep it brief, no headings.<_end>\n\n"
@@ -232,7 +232,7 @@ def test_chat_completion_keeps_reply_after_last_end_tag(monkeypatch):
 
 
 def test_chat_completion_flags_truncated_planning(monkeypatch):
-    monkeypatch.setenv("FAITHTECH_API_KEY", "test-token")
+    monkeypatch.setenv("MISTRAL_API_KEY", "test-token")
     calls = {"n": 0}
 
     def fake_post(url, headers=None, json=None, timeout=None):  # noqa: A002
@@ -247,7 +247,7 @@ def test_chat_completion_flags_truncated_planning(monkeypatch):
 
 
 def test_chat_completion_flags_finish_reason_length(monkeypatch):
-    monkeypatch.setenv("FAITHTECH_API_KEY", "test-token")
+    monkeypatch.setenv("MISTRAL_API_KEY", "test-token")
 
     def fake_post(url, headers=None, json=None, timeout=None):  # noqa: A002
         return _FakeResponse(payload={
@@ -264,7 +264,7 @@ def test_chat_completion_flags_finish_reason_length(monkeypatch):
 
 
 def test_explain_endpoint_reports_missing_verse(explain_db, monkeypatch):
-    monkeypatch.setenv("FAITHTECH_API_KEY", "test-token")
+    monkeypatch.setenv("MISTRAL_API_KEY", "test-token")
 
     result = api.explain("REV", 9, 9)
 

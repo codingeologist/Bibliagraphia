@@ -1,4 +1,4 @@
-"""Verse explanation service — graph context plus a FaithTech DeepSeek chat.
+"""Verse explanation service — graph context plus a Mistral chat.
 
 Both the REST endpoint (`GET /explain` in app/api.py) and the MCP tool
 (`explain_verse` in app/mcp.py) funnel through explain_verse() here. The
@@ -12,17 +12,15 @@ flow is deliberately two-stage:
        region and geographic coordinates,
      - the descriptions of those regions.
 2. The gathered context is packed into a system + user prompt pair and sent
-   to the DeepSeek model served for FaithTech on an OpenAI-compatible
-   endpoint (model: BreezeSeekVision). The model writes a chat reply
-   explaining what the passage is and the significance of the place and
-   the persons involved.
+   to the Mistral API (OpenAI-compatible endpoint, model mistral-large-latest
+   by default). The model writes a chat reply explaining what the passage is
+   and the significance of the place and the persons involved.
 
 Configuration (environment variables; all optional except the key):
-    FAITHTECH_API_KEY    bearer token for the FaithTech API (required)
-    FAITHTECH_API_BASE   base URL, default
-                         https://mq2yi3izzu14g5-8000.proxy.runpod.net/v1
-    FAITHTECH_MODEL      model name, default BreezeSeekVision
-    FAITHTECH_TIMEOUT    request timeout in seconds, default 60
+    MISTRAL_API_KEY      bearer token for the Mistral API (required)
+    MISTRAL_API_BASE     base URL, default https://api.mistral.ai/v1
+    MISTRAL_MODEL        model name, default mistral-large-latest
+    MISTRAL_TIMEOUT      request timeout in seconds, default 60
 """
 from __future__ import annotations
 
@@ -32,8 +30,8 @@ import re
 import duckdb
 import httpx2 as httpx  # API-compatible fork of httpx (already a fastmcp dependency)
 
-DEFAULT_API_BASE = "https://mq2yi3izzu14g5-8000.proxy.runpod.net/v1"
-DEFAULT_MODEL = "BreezeSeekVision"
+DEFAULT_API_BASE = "https://api.mistral.ai/v1"
+DEFAULT_MODEL = "mistral-large-latest"
 DEFAULT_TIMEOUT = 60.0
 
 # Sampling: explanations should be faithful and steady, so a low-ish
@@ -42,10 +40,9 @@ DEFAULT_TIMEOUT = 60.0
 TEMPERATURE = 0.4
 MAX_TOKENS = 6000
 
-# BreezeSeekVision is a reasoning model that plans before it writes. It is
-# told to confine planning to one <_thinking>...<_end> block at the start
-# of the reply; this strips that block so the reader only ever sees the
-# explanation itself.
+# The system prompt invites the model to confine any planning to one
+# <_thinking>...<_end> block at the start of the reply; this strips that
+# block so the reader only ever sees the explanation itself.
 _THINKING_BLOCK = re.compile(r"^\s*<_thinking>.*?<_end>\s*", re.DOTALL)
 
 SYSTEM_PROMPT = """\
@@ -325,7 +322,7 @@ def build_messages(context: dict) -> list[dict]:
 def _max_tokens() -> int:
     """Token budget for the model reply (planning block included)."""
     try:
-        return int(os.environ.get("FAITHTECH_MAX_TOKENS") or MAX_TOKENS)
+        return int(os.environ.get("MISTRAL_MAX_TOKENS") or MAX_TOKENS)
     except ValueError:
         return MAX_TOKENS
 
@@ -348,12 +345,12 @@ def _request_chat(messages: list[dict], base: str, model: str, api_key: str,
         )
     except httpx.HTTPError as exc:
         raise ExplainError(
-            f"Could not reach the FaithTech API ({base}): {exc}"
+            f"Could not reach the Mistral API ({base}): {exc}"
         ) from exc
 
     if response.status_code != 200:
         raise ExplainError(
-            f"FaithTech API returned {response.status_code}: "
+            f"Mistral API returned {response.status_code}: "
             f"{response.text[:300]}"
         )
     try:
@@ -361,32 +358,32 @@ def _request_chat(messages: list[dict], base: str, model: str, api_key: str,
         return choice["message"]["content"], choice.get("finish_reason")
     except (KeyError, IndexError, ValueError) as exc:
         raise ExplainError(
-            f"Unexpected response shape from the FaithTech API: {exc}"
+            f"Unexpected response shape from the Mistral API: {exc}"
         ) from exc
 
 
 def chat_completion(messages: list[dict]) -> str:
-    """Send the prompt pair to the FaithTech-hosted DeepSeek model
-    (OpenAI-compatible) and return the reader-facing reply text.
+    """Send the prompt pair to the Mistral API (OpenAI-compatible) and
+    return the reader-facing reply text.
 
-    BreezeSeekVision is a reasoning model: it plans before it writes, in
-    varying shapes (a <_thinking>...<_end> block, untagged notes before
-    the block, or none at all). The reader-facing reply is whatever
-    follows the *last* <_end> tag — a deterministic cut regardless of how
-    the planning was shaped. An attempt that was cut off mid-planning
-    (unclosed block, or finish_reason == "length") is retried once.
+    The model may plan before it writes, in varying shapes (a
+    <_thinking>...<_end> block, untagged notes before the block, or none
+    at all). The reader-facing reply is whatever follows the *last* <_end>
+    tag — a deterministic cut regardless of how the planning was shaped.
+    An attempt that was cut off mid-planning (unclosed block, or
+    finish_reason == "length") is retried once.
     """
-    api_key = os.environ.get("FAITHTECH_API_KEY", "").strip()
+    api_key = os.environ.get("MISTRAL_API_KEY", "").strip()
     if not api_key:
         raise ExplainError(
-            "FAITHTECH_API_KEY is not set — the explain feature calls the "
-            "FaithTech DeepSeek API and needs a bearer token. Set the "
-            "environment variable on the API server and retry."
+            "MISTRAL_API_KEY is not set — the explain feature calls the "
+            "Mistral API and needs a bearer token. Set the environment "
+            "variable on the API server and retry."
         )
-    base = (os.environ.get("FAITHTECH_API_BASE") or DEFAULT_API_BASE).rstrip("/")
-    model = os.environ.get("FAITHTECH_MODEL") or DEFAULT_MODEL
+    base = (os.environ.get("MISTRAL_API_BASE") or DEFAULT_API_BASE).rstrip("/")
+    model = os.environ.get("MISTRAL_MODEL") or DEFAULT_MODEL
     try:
-        timeout = float(os.environ.get("FAITHTECH_TIMEOUT") or DEFAULT_TIMEOUT)
+        timeout = float(os.environ.get("MISTRAL_TIMEOUT") or DEFAULT_TIMEOUT)
     except ValueError:
         timeout = DEFAULT_TIMEOUT
 
@@ -405,7 +402,7 @@ def chat_completion(messages: list[dict]) -> str:
             raise ExplainError(
                 "The model exhausted its token budget while planning and "
                 "never wrote the explanation. Retry, or raise "
-                "FAITHTECH_TIMEOUT / FAITHTECH_MAX_TOKENS."
+                "MISTRAL_TIMEOUT / MISTRAL_MAX_TOKENS."
             )
         # The reply is whatever follows the final <_end> tag; with no
         # planning tags at all, the whole content is the reply.

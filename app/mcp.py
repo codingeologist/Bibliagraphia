@@ -204,12 +204,12 @@ def explain_verse(
     """Explain a Bible verse: gather the graph context — the verse across
     all translations, the verses immediately above and below for reading
     context, the places the graph links to the verse, and those places'
-    region descriptions — then ask the FaithTech-hosted DeepSeek model to
+    region descriptions — then ask the Mistral model to
     write a chat reply explaining what the passage is and the significance
     of the place and the persons involved.
 
-    Requires the FAITHTECH_API_KEY environment variable on the server
-    (plus optional FAITHTECH_API_BASE, FAITHTECH_MODEL, FAITHTECH_TIMEOUT).
+    Requires the MISTRAL_API_KEY environment variable on the server
+    (plus optional MISTRAL_API_BASE, MISTRAL_MODEL, MISTRAL_TIMEOUT).
 
     Args:
         book_code: Book code (e.g. GEN, JOH — use search_nodes to find
