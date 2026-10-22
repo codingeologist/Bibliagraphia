@@ -10,8 +10,10 @@ const escape = (s) => String(s ?? "")
   .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
   .replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 
-const catalogRes = await fetch(`${API}/reader/catalog?version_code=KJV`);
+for (const version of VERSIONS) {
+	const catalogRes = await fetch(`${API}/reader/catalog?version_code={version}`);
 const catalog = await catalogRes.json();
+}
 
 const sitemapUrls = [`${SITE}/`, `${SITE}/read`, `${SITE}/about`];
 let count = 0;
