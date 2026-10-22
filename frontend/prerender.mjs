@@ -4,30 +4,37 @@ import path from "node:path";
 
 const API = process.env.PRERENDER_API_BASE || "https://api.bibliagraphia.com";
 const SITE = "https://bibliagraphia.com";
-const VERSIONS = (process.env.PRERENDER_VERSIONS || "KJV").split(","); // expand later
+const VERSIONS = (process.env.PRERENDER_VERSIONS || "KJV")
+  .split(",")
+  .map((v) => v.trim().toUpperCase())
+  .filter(Boolean);
 
 const escape = (s) => String(s ?? "")
   .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
   .replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 
-for (const version of VERSIONS) {
-	const catalogRes = await fetch(`${API}/reader/catalog?version_code={version}`);
-const catalog = await catalogRes.json();
-}
-
 const sitemapUrls = [`${SITE}/`, `${SITE}/read`, `${SITE}/about`];
 let count = 0;
 
 for (const version of VERSIONS) {
+  const catalogRes = await fetch(`${API}/reader/catalog?version_code=${version}`);
+  const catalog = await catalogRes.json();
   const chaptersByBook = catalog.chapters || {};
+
   for (const book of catalog.books) {
     for (const chapter of chaptersByBook[book.code] || []) {
       const res = await fetch(`${API}/chapter?${new URLSearchParams({
         book_code: book.code, chapter, version_code: version,
       })}`);
-      if (!res.ok) continue;
+      if (!res.ok) {
+        console.warn(`skipped ${book.code} ${chapter} ${version}: HTTP ${res.status}`);
+        continue;
+      }
       const data = await res.json();
-      if (!data.verses?.length) continue;
+      if (!data.verses?.length) {
+        console.warn(`skipped ${book.code} ${chapter} ${version}: no verses`);
+        continue;
+      }
 
       const canonical = `${SITE}/read?book=${book.code}&chapter=${chapter}&version=${version}`;
       const versesHtml = data.verses.map((v) =>
@@ -52,7 +59,6 @@ for (const version of VERSIONS) {
   <script type="module" src="/assets/main.js"></script>
 </body>
 </html>`;
-      // NOTE: the script src must match vite's hashed output — see step 3.
       const file = path.join("dist", "prerender",
         `${book.code}-${chapter}-${version}.html`);
       await mkdir(path.dirname(file), { recursive: true });
