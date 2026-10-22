@@ -10,6 +10,16 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss()],
+    build: {
+      // The prerendered chapter HTML (prerender.mjs) references the entry
+      // script at a fixed path, so keep the entry filename stable. Chunks
+      // and other assets keep their content hashes.
+      rollupOptions: {
+        output: {
+          entryFileNames: "assets/main.js",
+        },
+      },
+    },
     server: {
       watch: {
         usePolling: env.VITE_USE_POLLING === "true",
