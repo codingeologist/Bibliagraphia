@@ -1,5 +1,5 @@
 // frontend/prerender.mjs
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const API = process.env.PRERENDER_API_BASE || "https://api.bibliagraphia.com";
@@ -8,6 +8,13 @@ const VERSIONS = (process.env.PRERENDER_VERSIONS || "KJV")
   .split(",")
   .map((v) => v.trim().toUpperCase())
   .filter(Boolean);
+
+// CSS stylesheet link Vite generated for index.html, hashed filename and all
+const indexHtml = await readFile("dist/index.html", "utf8");
+const cssMatch = indexHtml.match(/<link[^>]*rel="stylesheet"[^>]*>/i);
+if (!cssMatch) throw new Error("No stylesheet link found in dist/index.html");
+const cssLink = cssMatch[0];
+console.log(`Using CSS: ${cssLink}`);
 
 const escape = (s) => String(s ?? "")
   .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
