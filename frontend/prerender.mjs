@@ -76,9 +76,19 @@ for (const version of VERSIONS) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escape(data.book_name)} ${chapter} (${version}) — Biblia Graphia</title>
-  <meta name="description" content="Read ${escape(data.book_name)} ${chapter} in the ${version}. Places, people and cross-references, mapped in a graph." />
+  <meta name="description" content="An Immersive Bible reading experience: The Holy Bible Places, People, and Passages mapped onto a graph" />
   <link rel="canonical" href="${canonical}" />
   <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml" />
+  ${cssLink}
+  <style>
+    body { margin: 0; background: #faf9f6; color: #1a1a1a;
+           font-family: Georgia, 'Times New Roman', serif; }
+    #ssr-content { max-width: 46rem; margin: 0 auto; padding: 2rem 1.25rem; }
+    #ssr-content h1 { font-size: 1.6rem; margin: 0 0 1.5rem; }
+    .ssr-verse { line-height: 1.75; margin: 0 0 0.9rem; font-size: 1.05rem; }
+    .ssr-verse sup { color: #8a7f6a; margin-right: 0.4em; font-size: 0.75em; }
+    #ssr-content a { color: #6b5b3f; }
+  </style>
 </head>
 <body>
   <div id="ssr-content">
