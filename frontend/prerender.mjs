@@ -2,7 +2,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const API = process.env.PRERENDER_API_BASE || "https://api.bibliagraphia.com";
+const API = process.env.PRERENDER_API_BASE || "https://api.bibliographia.com";
 const SITE = "https://bibliagraphia.com";
 const VERSIONS = (process.env.PRERENDER_VERSIONS || "KJV")
   .split(",")
@@ -13,33 +13,57 @@ const escape = (s) => String(s ?? "")
   .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
   .replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 
+// Fetch JSON with retries and a timeout; returns null on final failure
+// instead of throwing, so one bad chapter can never crash the whole build.
+async function fetchJson(url, { retries = 3, timeoutMs = 15000 } = {}) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      if (attempt === retries) {
+        console.warn(`giving up: ${url}: ${err.message}`);
+        return null;
+      }
+      await new Promise((r) => setTimeout(r, 500 * attempt)); // 0.5s, 1s backoff
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  return null;
+}
+
 const sitemapUrls = [`${SITE}/`, `${SITE}/read`, `${SITE}/about`];
 let count = 0;
+let skipped = 0;
 
 for (const version of VERSIONS) {
-  const catalogRes = await fetch(`${API}/reader/catalog?version_code=${version}`);
-  const catalog = await catalogRes.json();
+  const catalog = await fetchJson(`${API}/reader/catalog?version_code=${version}`);
+  if (!catalog?.books) {
+    console.warn(`no catalog for ${version}, skipping version`);
+    continue;
+  }
   const chaptersByBook = catalog.chapters || {};
 
   for (const book of catalog.books) {
     for (const chapter of chaptersByBook[book.code] || []) {
-      const res = await fetch(`${API}/chapter?${new URLSearchParams({
+      const data = await fetchJson(`${API}/chapter?${new URLSearchParams({
         book_code: book.code, chapter, version_code: version,
       })}`);
-      if (!res.ok) {
-        console.warn(`skipped ${book.code} ${chapter} ${version}: HTTP ${res.status}`);
-        continue;
-      }
-      const data = await res.json();
-      if (!data.verses?.length) {
-        console.warn(`skipped ${book.code} ${chapter} ${version}: no verses`);
+      if (!data?.verses?.length) {
+        console.warn(`skipped ${book.code} ${chapter} ${version}: no data`);
+        skipped++;
         continue;
       }
 
-      const canonical = `${SITE}/read?book=${book.code}&chapter=${chapter}&version=${version}`;
-      const versesHtml = data.verses.map((v) =>
-        `<p class="ssr-verse"><sup>${v.number}</sup> ${escape(v.text)}</p>`).join("\n");
-      const html = `<!doctype html>
+      try {
+        const canonical = `${SITE}/read?book=${book.code}&chapter=${chapter}&version=${version}`;
+        const versesHtml = data.verses.map((v) =>
+          `<p class="ssr-verse"><sup>${v.number}</sup> ${escape(v.text)}</p>`).join("\n");
+        const html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -59,13 +83,17 @@ for (const version of VERSIONS) {
   <script type="module" src="/assets/main.js"></script>
 </body>
 </html>`;
-      const file = path.join("dist", "prerender",
-        `${book.code}-${chapter}-${version}.html`);
-      await mkdir(path.dirname(file), { recursive: true });
-      await writeFile(file, html);
-      sitemapUrls.push(canonical);
-      count++;
-      if (count % 200 === 0) console.log(`prerendered ${count}...`);
+        const file = path.join("dist", "prerender",
+          `${book.code}-${chapter}-${version}.html`);
+        await mkdir(path.dirname(file), { recursive: true });
+        await writeFile(file, html);
+        sitemapUrls.push(canonical);
+        count++;
+        if (count % 200 === 0) console.log(`prerendered ${count}...`);
+      } catch (err) {
+        console.warn(`skipped ${book.code} ${chapter} ${version}: ${err.message}`);
+        skipped++;
+      }
     }
   }
 }
@@ -77,10 +105,9 @@ Allow: /
 Sitemap: ${SITE}/sitemap.xml
 `);
 
-// Simple XML sitemap (split into pages of 5,000 if exceeded later)
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${sitemapUrls.map((u) => `  <url><loc>${u.replace(/&/g, "&amp;")}</loc></url>`).join("\n")}
 </urlset>`;
 await writeFile("dist/sitemap.xml", xml);
-console.log(`Prerendered ${count} chapters + robots.txt + sitemap.xml (${sitemapUrls.length} URLs).`);
+console.log(`Prerendered ${count} chapters (${skipped} skipped) + robots.txt + sitemap.xml (${sitemapUrls.length} URLs).`);
