@@ -15,7 +15,7 @@ const escape = (s) => String(s ?? "")
 
 // Fetch JSON with retries and a timeout; returns null on final failure
 // instead of throwing, so one bad chapter can never crash the whole build.
-async function fetchJson(url, { retries = 3, timeoutMs = 15000 } = {}) {
+async function fetchJson(url, { retries = 5, timeoutMs = 30000 } = {}) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
