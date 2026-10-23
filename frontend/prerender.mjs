@@ -81,14 +81,23 @@ for (const version of VERSIONS) {
   <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml" />
   ${cssLink}
   <style>
-    body { margin: 0; background: #faf9f6; color: #1a1a1a;
-           font-family: Georgia, 'Times New Roman', serif; }
+    :root { --bg: #f7f6f2; --ink: #292a27; --muted: #777870; --accent: #754d2b; }
+    :root.dark { --bg: #1d201e; --ink: #e9e8e1; --muted: #a4a69c; --accent: #d0a274; }
+    body { margin: 0; background: var(--bg); color: var(--ink);
+           font-family: "DM Sans", -apple-system, "Segoe UI", sans-serif; }
     #ssr-content { max-width: 46rem; margin: 0 auto; padding: 2rem 1.25rem; }
     #ssr-content h1 { font-size: 1.6rem; margin: 0 0 1.5rem; }
     .ssr-verse { line-height: 1.75; margin: 0 0 0.9rem; font-size: 1.05rem; }
-    .ssr-verse sup { color: #8a7f6a; margin-right: 0.4em; font-size: 0.75em; }
-    #ssr-content a { color: #6b5b3f; }
+    .ssr-verse sup { color: var(--muted); margin-right: 0.4em; font-size: 0.75em; }
+    #ssr-content a { color: var(--accent); }
   </style>
+  <script>
+    try {
+      var t = localStorage.getItem("theme");
+      if (t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches)
+        document.documentElement.classList.add("dark");
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <div id="ssr-content">
