@@ -2,7 +2,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const API = process.env.PRERENDER_API_BASE || "https://api.bibliographia.com";
+const API = process.env.PRERENDER_API_BASE || "https://api.bibliagraphia.com";
 const SITE = "https://bibliagraphia.com";
 const VERSIONS = (process.env.PRERENDER_VERSIONS || "KJV")
   .split(",")
