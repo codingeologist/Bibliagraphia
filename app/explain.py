@@ -327,6 +327,22 @@ def _max_tokens() -> int:
         return MAX_TOKENS
 
 
+def _flatten_content(content: str | list | None) -> str:
+    """Mistral's spec allows message.content to be a plain string or a
+    list of typed chunks; reasoning-capable models return the list form.
+    Keep only the text chunks so downstream code always sees a string."""
+    if content is None or isinstance(content, str):
+        return content or ""
+    if isinstance(content, list):
+        return "".join(
+            part.get("text", "") for part in content
+            if isinstance(part, dict) and part.get("type") == "text"
+        )
+    raise ExplainError(
+        f"Unexpected content type from the Mistral API: {type(content).__name__}"
+    )
+
+
 def _request_chat(messages: list[dict], base: str, model: str, api_key: str,
                    timeout: float) -> tuple[str, str | None]:
     """One round trip to the chat-completions endpoint; returns the raw
@@ -355,7 +371,7 @@ def _request_chat(messages: list[dict], base: str, model: str, api_key: str,
         )
     try:
         choice = response.json()["choices"][0]
-        return choice["message"]["content"], choice.get("finish_reason")
+        return _flatten_content(choice["message"]["content"]), choice.get("finish_reason")
     except (KeyError, IndexError, ValueError) as exc:
         raise ExplainError(
             f"Unexpected response shape from the Mistral API: {exc}"
